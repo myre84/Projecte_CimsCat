@@ -1,0 +1,19 @@
+:root {
+  --color-background: #f3f3f1;
+  --color-surface: #ffffff;
+  --color-navbar: #d9d9d9;
+  --color-footer: #d9d9d9;
+  --color-text: #1e1e1e;
+  --color-text-soft: #6a6a6a;
+  --color-border: #9a9a9a;
+  --color-button-primary: #2f2f2f;
+  --color-button-primary-text: #ffffff;
+  --color-button-secondary: #ffffff;
+  --color-button-secondary-text: #2f2f2f;
+  --color-input-background: #e9e4ec;
+  --color-accent-green: #3f6b4f;
+  --color-accent-green-soft: #b8c7b5;
+  --font-main: 'Segoe UI', sans-serif;
+  --font-heading: 'Segoe UI', sans-serif;
+
+}
