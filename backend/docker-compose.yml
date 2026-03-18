@@ -1,0 +1,31 @@
+# Definicio de serveis Docker del projecte en local.
+services:
+  # Aquest servei arrenca una instancia PostgreSQL per desenvolupament.
+  postgres:
+    # Imatge oficial lleugera de Postgres 16 basada en Alpine.
+    image: postgres:16-alpine
+
+    # Nom clar del contenidor per localitzar-lo facilment amb docker ps.
+    container_name: cimscat-postgres
+
+    # Si el contenidor cau, intentara reiniciar-se automaticament.
+    restart: unless-stopped
+
+    # Variables que Postgres necessita per crear usuari i base de dades inicial.
+    environment:
+      # Sintaxi ${VAR:-valor} => usa VAR si existeix, si no usa valor per defecte.
+      POSTGRES_USER: ${POSTGRES_USER:-cimscat}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-cimscat123}
+      POSTGRES_DB: ${POSTGRES_DB:-cimscat}
+
+    # Exposem el port del contenidor al host per connectar des del backend.
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+
+    # Volum persistent: evita perdre dades en reiniciar o recrear contenidor.
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+# Definicio del volum anomenat que Docker gestionara automaticament.
+volumes:
+  postgres_data:
