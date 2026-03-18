@@ -1,0 +1,22 @@
+# Dependencias instal.lades localment (es poden regenerar amb npm install)
+node_modules/
+
+# Fitxers de configuracio local amb secrets
+.env
+.env.local
+
+# Logs de gestors de paquets (soroll de desenvolupament)
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Fitxer de metadades de macOS
+.DS_Store
+
+# Ignorem fitxers reals pujats a uploads per no omplir el repositori
+uploads/*
+
+# Pero mantenim .gitkeep per conservar l'estructura de carpetes
+!uploads/.gitkeep
+!uploads/**/.gitkeep

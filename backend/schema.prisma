@@ -1,0 +1,297 @@
+// ------------------------------------------------------------
+// GENERATOR
+// ------------------------------------------------------------
+// Aquest bloc li diu a Prisma que generi el client JS que despres importem
+// al backend amb: const { PrismaClient } = require('@prisma/client')
+generator client {
+  provider = "prisma-client-js"
+}
+
+// ------------------------------------------------------------
+// DATASOURCE
+// ------------------------------------------------------------
+// Aqui definim la base de dades real del projecte.
+// provider: quin motor de BD fem servir.
+// url: connexio principal per consultes normals.
+// directUrl: connexio directa per migracions / tasques admin.
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+// ------------------------------------------------------------
+// MODEL: Usuari
+// ------------------------------------------------------------
+// Representa cada compte de la plataforma.
+model Usuari {
+  // ID unic del registre (string amb cuid automatic)
+  id                    String               @id @default(cuid())
+
+  // Nom curt/handle visible a la comunitat (unic)
+  nomUsuari             String               @unique
+
+  // Dades personals basiques
+  nom                   String
+  cognom                String
+
+  // Mail unic per login
+  mail                  String               @unique
+
+  // Contrasenya xifrada (mai en text pla)
+  contrasenyaHash       String
+
+  // Rol funcional (usuari, admin...)
+  rol                   String               @default("usuari")
+
+  // Ruta local de la foto de perfil (pot ser null)
+  fotoPerfil            String?
+
+  // Relacions 1-N cap a contingut creat per l'usuari
+  publicacions          Publicacio[]
+  comentaris            Comentari[]
+  likesPublicacions     LikePublicacio[]
+  favoritsCims          FavoritCim[]
+  publicacionsGuardades PublicacioGuardada[]
+  rutesPlanificades     RutaPlanificada[]
+
+  // Timestamps de control
+  createdAt             DateTime             @default(now())
+  updatedAt             DateTime             @updatedAt
+
+  // Indexos per accelerar consultes frequents
+  @@index([mail])
+  @@index([nomUsuari])
+}
+
+// ------------------------------------------------------------
+// MODEL: Cim
+// ------------------------------------------------------------
+// Cataleg de cims de la plataforma.
+model Cim {
+  // ID unic del cim
+  id                String            @id @default(cuid())
+
+  // Dades geografiques i descriptives del cim
+  nom               String
+  alcada            Int
+  comarca           String
+  lat               Float
+  lon               Float
+  dificultat        String
+  descripcio        String
+
+  // Ruta local de la imatge principal
+  imatgeUrl         String?
+  massis            String
+  zonaProtegida     String?
+
+  // Relacions amb contingut vinculat a aquest cim
+  publicacions      Publicacio[]
+  favoritsCims      FavoritCim[]
+  rutesPlanificades RutaPlanificada[]
+
+  // Timestamps
+  createdAt         DateTime          @default(now())
+  updatedAt         DateTime          @updatedAt
+
+  // Indexos per filtres habituals
+  @@index([nom])
+  @@index([comarca])
+  @@index([massis])
+}
+
+// ------------------------------------------------------------
+// MODEL: Publicacio
+// ------------------------------------------------------------
+// Activitat publicada per un usuari, associada a un cim.
+model Publicacio {
+  // ID unic de la publicacio
+  id               String               @id @default(cuid())
+
+  // Claus foranes basiques
+  usuariId         String
+  cimId            String
+
+  // Enllac opcional a una ruta planificada
+  rutaPlanificadaId String?
+
+  // Contingut descriptiu
+  titol            String
+  descripcio       String
+
+  // Data i metriques de l'activitat
+  dataActivitat    DateTime
+  dificultat       String
+  distanciaKm      Float
+  desnivellPosM    Int
+  desnivellNegM    Int
+  tempsMin         Int
+  altitudMaxM      Int
+  altitudMinM      Int
+
+  // Track i portada (rutes locals o URL segons decisio funcional)
+  trackUrl         String?
+  portadaUrl       String?
+
+  // Relacions de pertinença
+  usuari           Usuari               @relation(fields: [usuariId], references: [id], onDelete: Cascade)
+  cim              Cim                  @relation(fields: [cimId], references: [id], onDelete: Cascade)
+  rutaPlanificada  RutaPlanificada?     @relation(fields: [rutaPlanificadaId], references: [id], onDelete: SetNull)
+
+  // Relacions amb contingut social associat
+  imatges          ImatgePublicacio[]
+  comentaris       Comentari[]
+  likes            LikePublicacio[]
+  guardades        PublicacioGuardada[]
+
+  // Timestamps
+  createdAt        DateTime             @default(now())
+  updatedAt        DateTime             @updatedAt
+
+  // Indexos per feed i filtres
+  @@index([usuariId])
+  @@index([cimId])
+  @@index([rutaPlanificadaId])
+  @@index([dataActivitat])
+}
+
+// ------------------------------------------------------------
+// MODEL: ImatgePublicacio
+// ------------------------------------------------------------
+// Imatges extra d'una publicacio, ordenades per ordreIndex.
+model ImatgePublicacio {
+  id          String     @id @default(cuid())
+  publicacioId String
+  imageUrl    String
+  ordreIndex  Int
+  publicacio  Publicacio @relation(fields: [publicacioId], references: [id], onDelete: Cascade)
+  createdAt   DateTime   @default(now())
+
+  @@index([publicacioId])
+}
+
+// ------------------------------------------------------------
+// MODEL: Comentari
+// ------------------------------------------------------------
+// Comentari que un usuari publica dins d'una publicacio.
+model Comentari {
+  id          String     @id @default(cuid())
+  publicacioId String
+  usuariId    String
+  text        String
+  publicacio  Publicacio @relation(fields: [publicacioId], references: [id], onDelete: Cascade)
+  usuari      Usuari     @relation(fields: [usuariId], references: [id], onDelete: Cascade)
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+
+  @@index([publicacioId])
+  @@index([usuariId])
+}
+
+// ------------------------------------------------------------
+// MODEL: LikePublicacio
+// ------------------------------------------------------------
+// Taula d'unio Usuari <-> Publicacio per marcar likes.
+// Te clau composta per evitar duplicats del mateix usuari.
+model LikePublicacio {
+  usuariId    String
+  publicacioId String
+  usuari      Usuari     @relation(fields: [usuariId], references: [id], onDelete: Cascade)
+  publicacio  Publicacio @relation(fields: [publicacioId], references: [id], onDelete: Cascade)
+  createdAt   DateTime   @default(now())
+
+  @@id([usuariId, publicacioId])
+  @@index([publicacioId])
+}
+
+// ------------------------------------------------------------
+// MODEL: FavoritCim
+// ------------------------------------------------------------
+// Taula d'unio Usuari <-> Cim per marcar cims favorits.
+model FavoritCim {
+  usuariId  String
+  cimId     String
+  usuari    Usuari   @relation(fields: [usuariId], references: [id], onDelete: Cascade)
+  cim       Cim      @relation(fields: [cimId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@id([usuariId, cimId])
+  @@index([cimId])
+}
+
+// ------------------------------------------------------------
+// MODEL: PublicacioGuardada
+// ------------------------------------------------------------
+// Taula d'unio Usuari <-> Publicacio per guardar al perfil.
+model PublicacioGuardada {
+  usuariId    String
+  publicacioId String
+  usuari      Usuari     @relation(fields: [usuariId], references: [id], onDelete: Cascade)
+  publicacio  Publicacio @relation(fields: [publicacioId], references: [id], onDelete: Cascade)
+  createdAt   DateTime   @default(now())
+
+  @@id([usuariId, publicacioId])
+  @@index([publicacioId])
+}
+
+// ------------------------------------------------------------
+// MODEL: RutaPlanificada
+// ------------------------------------------------------------
+// Ruta que l'usuari planifica, vinculada a un cim.
+model RutaPlanificada {
+  // ID unic de la ruta
+  id            String      @id @default(cuid())
+
+  // Relacions de propietari i cim objectiu
+  usuariId      String
+  cimId         String
+
+  // Dades descriptives i tecniques de planificacio
+  nom           String
+  tipusActivitat String
+  ritme         String
+  distanciaKm   Float
+  desnivellPosM Int
+  desnivellNegM Int
+  tempsMin      Int
+  altitudMaxM   Int
+  altitudMinM   Int
+
+  // Track i notes opcionals
+  trackUrl      String?
+  notes         String?
+
+  // Relacions
+  usuari        Usuari      @relation(fields: [usuariId], references: [id], onDelete: Cascade)
+  cim           Cim         @relation(fields: [cimId], references: [id], onDelete: Cascade)
+  puntsRuta     PuntRuta[]
+  publicacions  Publicacio[]
+
+  // Timestamps
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+
+  // Indexos per consultes
+  @@index([usuariId])
+  @@index([cimId])
+}
+
+// ------------------------------------------------------------
+// MODEL: PuntRuta
+// ------------------------------------------------------------
+// Punt intermedi d'una ruta planificada (sortida, pas, cim, etc.)
+model PuntRuta {
+  id         String          @id @default(cuid())
+  rutaId     String
+  etiqueta   String?
+  nomPunt    String
+  lat        Float
+  lon        Float
+  ordreIndex Int
+  ruta       RutaPlanificada @relation(fields: [rutaId], references: [id], onDelete: Cascade)
+  createdAt  DateTime        @default(now())
+
+  @@index([rutaId])
+  @@index([ordreIndex])
+}
