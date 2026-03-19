@@ -1,10 +1,12 @@
 <template>
+  <!-- Footer simple com al wireframe. -->
   <footer class="footer">
     <span>CIMSCAT</span>
   </footer>
 </template>
 
 <style scoped>
+/* Peu de pàgina integrat al contenidor principal de l'app. */
 .footer {
   background-color: var(--color-footer);
   color: var(--color-text);
