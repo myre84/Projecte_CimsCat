@@ -1,44 +1,61 @@
 <template>
+  <!--
+    Aquesta és la barra de navegació principal del projecte.
+    Canvia part del seu contingut segons si l'usuari està autenticat o no.
+  -->
   <nav class="navbar">
     <div class="navbar-left">
+      <!-- Logo i nom del projecte. Clicant aquí tornem a la home. -->
       <RouterLink to="/" class="navbar-brand">
         <img src="/logo.svg" alt="CimsCat" class="navbar-logo" 
              onerror="this.style.display='none'" />
         <span class="navbar-name">CimsCat</span>
       </RouterLink>
+
+      <!-- Aquest botó menú de moment és només visual. -->
       <button class="navbar-menu">☰</button>
+
+      <!-- Cercador visual. Ara mateix encara no té lògica real de cerca. -->
       <div class="navbar-search">
         <input type="text" placeholder="Cerca..." />
         <button>🔍</button>
       </div>
     </div>
 
-  <div class="navbar-right">
-  <RouterLink :to="planRouteLink" class="btn-plan">Planificar nova ruta</RouterLink>
+    <div class="navbar-right">
+      <!-- Aquest botó canvia de ruta segons si l'usuari està loguejat o no. -->
+      <RouterLink :to="planRouteLink" class="btn-plan">Planificar nova ruta</RouterLink>
 
-  <template v-if="userStore.isAuthenticated">
-    <RouterLink :to="`/perfil/${userStore.user?.id}`" class="btn-user-name">
-      {{ userStore.user?.nomUsuari }}
-    </RouterLink>
-    <button class="btn-icon">👤</button>
-  </template>
+      <!-- Si l'usuari està autenticat, mostrem el seu nom i un botó d'icona. -->
+      <template v-if="userStore.isAuthenticated">
+        <RouterLink :to="`/perfil/${userStore.user?.id}`" class="btn-user-name">
+          {{ userStore.user?.nomUsuari }}
+        </RouterLink>
+        <button class="btn-icon">👤</button>
+      </template>
 
-  <template v-else>
-    <RouterLink to="/login" class="btn-primary">Iniciar sessió</RouterLink>
-    <RouterLink to="/registre" class="btn-primary">Registrar-se</RouterLink>
-  </template>
-</div>
+      <!-- Si no està autenticat, mostrem els botons de login i registre. -->
+      <template v-else>
+        <RouterLink to="/login" class="btn-primary">Iniciar sessió</RouterLink>
+        <RouterLink to="/registre" class="btn-primary">Registrar-se</RouterLink>
+      </template>
+    </div>
   </nav>
 </template>
 
 
 
 <script setup>
+// computed ens permet construir una ruta dinàmica que depèn de l'estat d'autenticació.
 import { computed } from 'vue'
+
+// Agafem la store global de l'usuari per saber si hi ha sessió iniciada.
 import { useUserStore } from '../stores/user'
 
 const userStore = useUserStore()
 
+// Si l'usuari està autenticat, "Planificar nova ruta" porta a /planificar.
+// Si no ho està, el fem passar abans per registre.
 const planRouteLink = computed(() =>
   userStore.isAuthenticated ? '/planificar' : '/registre'
 )
@@ -46,6 +63,7 @@ const planRouteLink = computed(() =>
 </script>
 
 <style scoped>
+/* Barra principal. */
 .navbar {
   display: flex;
   justify-content: space-between;
@@ -55,27 +73,37 @@ const planRouteLink = computed(() =>
   border-bottom: 1px solid var(--color-border);
   height: 60px;
 }
+
+/* Zona esquerra amb marca, menú i cerca. */
 .navbar-left {
   display: flex;
   align-items: center;
   gap: 1rem;
 }
+
+/* Enllaç principal del logo. */
 .navbar-brand {
   display: flex;
   align-items: center;
   gap: 0.4rem;
   text-decoration: none;
 }
+
+/* Logo del projecte. */
 .navbar-logo {
   height: 40px;
   width: 40px;
   object-fit: contain;
 }
+
+/* Text "CimsCat" al costat del logo. */
 .navbar-name {
   font-size: 0.75rem;
   color: var(--color-text);
   font-weight: 500;
 }
+
+/* Botó menú de tres ratlles. */
 .navbar-menu {
   background: none;
   border: none;
@@ -83,6 +111,8 @@ const planRouteLink = computed(() =>
   cursor: pointer;
   color: var(--color-text);
 }
+
+/* Contenidor del cercador. */
 .navbar-search {
   display: flex;
   align-items: center;
@@ -91,6 +121,8 @@ const planRouteLink = computed(() =>
   padding: 0.3rem 0.8rem;
   gap: 0.5rem;
 }
+
+/* Input del cercador. */
 .navbar-search input {
   border: none;
   background: none;
@@ -99,19 +131,27 @@ const planRouteLink = computed(() =>
   font-size: 0.9rem;
   color: var(--color-text);
 }
+
+/* Color del placeholder del cercador. */
 .navbar-search input::placeholder {
   color: var(--color-text-soft);
 }
+
+/* Botó de la lupa. */
 .navbar-search button {
   background: none;
   border: none;
   cursor: pointer;
 }
+
+/* Zona dreta amb planificar, login, registre o nom d'usuari. */
 .navbar-right {
   display: flex;
   align-items: center;
   gap: 0.8rem;
 }
+
+/* Botó clar de planificar. */
 .btn-plan {
   border-radius: 20px;
   padding: 0.3rem 0.8rem;
@@ -121,6 +161,8 @@ const planRouteLink = computed(() =>
   color: var(--color-button-secondary-text);
   border: 1px solid var(--color-border);
 }
+
+/* Botons foscos de login i registre. */
 .btn-primary {
   background-color: var(--color-button-primary);
   color: var(--color-button-primary-text);
@@ -131,6 +173,8 @@ const planRouteLink = computed(() =>
   text-decoration: none;
   cursor: pointer;
 }
+
+/* Botó que mostra el nom d'usuari quan hi ha sessió. */
 .btn-user-name {
   background-color: var(--color-button-primary);
   color: var(--color-button-primary-text);
@@ -139,6 +183,8 @@ const planRouteLink = computed(() =>
   text-decoration: none;
   font-size: 0.85rem;
 }
+
+/* Botó circular amb la icona d'usuari. */
 .btn-icon {
   background: none;
   border: 1px solid var(--color-border);
