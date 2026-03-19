@@ -1,0 +1,40 @@
+{
+  "_explicacioGeneral": "Aquest package.json defineix metadades del projecte, scripts i dependencias necessaries per executar el backend.",
+  "name": "cimscat-backend",
+  "version": "1.0.0",
+  "description": "Backend base del projecte CimsCat",
+  "main": "src/server.js",
+  "_explicacioType": "commonjs indica que farem servir require/module.exports en lloc de import/export ESModules.",
+  "type": "commonjs",
+  "_explicacioScripts": "Scripts de comoditat per executar el projecte i eines Prisma des de terminal.",
+  "scripts": {
+    "dev": "nodemon src/server.js",
+    "start": "node src/server.js",
+    "prisma:generate": "prisma generate --schema ./schema.prisma",
+    "prisma:migrate": "prisma migrate dev --schema ./schema.prisma --name init",
+    "prisma:studio": "prisma studio --schema ./schema.prisma",
+    "seed": "node prisma/seed.js"
+  },
+  "_explicacioPrismaSeed": "Configuracio oficial de Prisma per saber quina comanda executar quan demanem fer seed.",
+  "prisma": {
+    "seed": "node prisma/seed.js"
+  },
+  "_explicacioDependencies": "Llibreries necessaries en execucio normal del backend.",
+  "dependencies": {
+    "@prisma/client": "^6.5.0",
+    "bcrypt": "^5.1.1",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.5",
+    "express": "^4.19.2",
+    "jsonwebtoken": "^9.0.2",
+    "prisma": "^6.5.0"
+  },
+  "_explicacioDevDependencies": "Eines nomes per desenvolupament, en aquest cas reinici automatic del servidor.",
+  "devDependencies": {
+    "nodemon": "^3.1.0"
+  },
+  "_explicacioEngines": "Versio minima recomanada de Node.js per evitar incompatibilitats.",
+  "engines": {
+    "node": ">=20"
+  }
+}
