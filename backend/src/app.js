@@ -10,6 +10,9 @@ const path = require('path');
 // Importo les rutes de health check.
 const healthRoutes = require('./routes/health.routes');
 
+// Importo el router del modul d'autenticacio (register, login, me).
+const authRoutes = require('./modules/auth/auth.routes');
+
 // Creo la instancia principal de l'aplicacio Express.
 const app = express();
 
@@ -25,6 +28,8 @@ app.use(express.json());
 app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 
 // Registro les rutes del modul health al path arrel.
+// Tot el modul auth queda penjat sota /auth.
+app.use('/auth', authRoutes);
 app.use('/', healthRoutes);
 
 // Exporto l'app per poder arrencar-la des de server.js

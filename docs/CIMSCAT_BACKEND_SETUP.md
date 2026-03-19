@@ -171,7 +171,7 @@ npm run dev
   - `npm run prisma:studio`
 3. Comprovar que les rutes d'imatge a BD comencen per `/uploads/`.
 
-## Proves detallades de validacio (pas a pas)
+## Proves detallades de validacio
 
 ### 1) Comprovar prerequisits locals
 Executa:
