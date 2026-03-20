@@ -112,7 +112,7 @@ async function getPeaksList(filters) {
         select: {
           publicacions: true,
           rutesPlanificades: true,
-          favoritsCims: true
+          savedByUsers: true
         }
       }
     }
@@ -134,7 +134,7 @@ async function getPeaksList(filters) {
     stats: {
       publicacionsCount: peak._count.publicacions,
       rutesCount: peak._count.rutesPlanificades,
-      favoritsCount: peak._count.favoritsCims
+      savedCount: peak._count.savedByUsers
     }
   }));
 }
@@ -164,7 +164,7 @@ async function getPeakDetailById(id) {
         select: {
           publicacions: true,
           rutesPlanificades: true,
-          favoritsCims: true
+          savedByUsers: true
         }
       },
       // Incloem rutes vinculades al cim amb ordre estable.
@@ -262,7 +262,7 @@ async function getPeakDetailById(id) {
     stats: {
       publicacionsCount: peak._count.publicacions,
       rutesCount: peak._count.rutesPlanificades,
-      favoritsCount: peak._count.favoritsCims
+      savedCount: peak._count.savedByUsers
     },
     // Resum de rutes vinculades al cim.
     routes: peak.rutesPlanificades.map((route) => ({

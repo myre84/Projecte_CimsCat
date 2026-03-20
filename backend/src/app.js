@@ -19,6 +19,14 @@ const authRoutes = require('./modules/auth/auth.routes');
 // - GET /peaks/:id
 const peaksRoutes = require('./modules/peaks/peaks.routes');
 
+// Importo el router del modul users.
+// Aquest modul encapsula endpoints de:
+// - perfil public
+// - actualitzacio de perfil propi
+// - publicacions d'usuari
+// - cims guardats (ruta /saved)
+const usersRoutes = require('./modules/users/users.routes');
+
 // Creo la instancia principal de l'aplicacio Express.
 const app = express();
 
@@ -39,6 +47,10 @@ app.use('/auth', authRoutes);
 
 // Tot el modul peaks queda penjat sota /peaks i es PUBLIC (sense auth middleware).
 app.use('/peaks', peaksRoutes);
+
+// Munto el modul users sota /users.
+// Dins del propi router ja s'aplica requireAuth nomes on toca.
+app.use('/users', usersRoutes);
 
 // Health es deixa a arrel per comprovacions rapides de vida del backend.
 app.use('/', healthRoutes);
