@@ -51,8 +51,7 @@ model Usuari {
   publicacions          Publicacio[]
   comentaris            Comentari[]
   likesPublicacions     LikePublicacio[]
-  favoritsCims          FavoritCim[]
-  publicacionsGuardades PublicacioGuardada[]
+  savedPeaks            SavedPeak[]
   rutesPlanificades     RutaPlanificada[]
 
   // Timestamps de control
@@ -88,7 +87,7 @@ model Cim {
 
   // Relacions amb contingut vinculat a aquest cim
   publicacions      Publicacio[]
-  favoritsCims      FavoritCim[]
+  savedByUsers      SavedPeak[]
   rutesPlanificades RutaPlanificada[]
 
   // Timestamps
@@ -143,7 +142,6 @@ model Publicacio {
   imatges          ImatgePublicacio[]
   comentaris       Comentari[]
   likes            LikePublicacio[]
-  guardades        PublicacioGuardada[]
 
   // Timestamps
   createdAt        DateTime             @default(now())
@@ -206,10 +204,10 @@ model LikePublicacio {
 }
 
 // ------------------------------------------------------------
-// MODEL: FavoritCim
+// MODEL: SavedPeak
 // ------------------------------------------------------------
-// Taula d'unio Usuari <-> Cim per marcar cims favorits.
-model FavoritCim {
+// Taula d'unio Usuari <-> Cim per marcar cims guardats.
+model SavedPeak {
   usuariId  String
   cimId     String
   usuari    Usuari   @relation(fields: [usuariId], references: [id], onDelete: Cascade)
@@ -218,21 +216,7 @@ model FavoritCim {
 
   @@id([usuariId, cimId])
   @@index([cimId])
-}
-
-// ------------------------------------------------------------
-// MODEL: PublicacioGuardada
-// ------------------------------------------------------------
-// Taula d'unio Usuari <-> Publicacio per guardar al perfil.
-model PublicacioGuardada {
-  usuariId    String
-  publicacioId String
-  usuari      Usuari     @relation(fields: [usuariId], references: [id], onDelete: Cascade)
-  publicacio  Publicacio @relation(fields: [publicacioId], references: [id], onDelete: Cascade)
-  createdAt   DateTime   @default(now())
-
-  @@id([usuariId, publicacioId])
-  @@index([publicacioId])
+  @@map("SavedPeak")
 }
 
 // ------------------------------------------------------------

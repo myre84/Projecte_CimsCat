@@ -73,14 +73,14 @@ S'han modelat aquests dominis:
 - Usuaris (`Usuari`)
 - Cataleg de cims (`Cim`)
 - Activitat social/publicacions (`Publicacio`, `ImatgePublicacio`, `Comentari`)
-- Interaccions (`LikePublicacio`, `FavoritCim`, `PublicacioGuardada`)
+- Interaccions (`LikePublicacio`, `SavedPeak`)
 - Planificacio de rutes (`RutaPlanificada`, `PuntRuta`)
 
 Caracteristiques clau:
 - IDs String amb `cuid()` als models principals.
 - `createdAt` a tots els models.
 - `updatedAt` als models editables principals.
-- Claus compostes a likes, favorits i guardades.
+- Claus compostes a likes i cims guardats.
 - Relacions amb `onDelete` coherents (Cascade o SetNull segons el cas).
 
 ## Com funciona el seed
@@ -97,8 +97,7 @@ Caracteristiques clau:
   - imatges de publicacio
   - comentaris
   - likes
-  - favorits
-  - publicacions guardades
+  - cims guardats
 
 Important:
 - Els camps d'imatge del seed usen rutes locals `/uploads/...`.
@@ -237,7 +236,7 @@ Resultat esperat:
 ### 6) Validar que el seed ha carregat totes les taules
 Executa:
 ```powershell
-node -e "const {PrismaClient}=require('@prisma/client');const p=new PrismaClient();(async()=>{const d={usuaris:await p.usuari.count(),cims:await p.cim.count(),rutes:await p.rutaPlanificada.count(),punts:await p.puntRuta.count(),publicacions:await p.publicacio.count(),imatges:await p.imatgePublicacio.count(),comentaris:await p.comentari.count(),likes:await p.likePublicacio.count(),favorits:await p.favoritCim.count(),guardades:await p.publicacioGuardada.count()};console.log(d);const sample=await p.publicacio.findFirst({select:{portadaUrl:true}});console.log('samplePortadaUrl=',sample?.portadaUrl);})().catch(e=>{console.error(e);process.exit(1)}).finally(async()=>{await p.`$disconnect()})"
+node -e "const {PrismaClient}=require('@prisma/client');const p=new PrismaClient();(async()=>{const d={usuaris:await p.usuari.count(),cims:await p.cim.count(),rutes:await p.rutaPlanificada.count(),punts:await p.puntRuta.count(),publicacions:await p.publicacio.count(),imatges:await p.imatgePublicacio.count(),comentaris:await p.comentari.count(),likes:await p.likePublicacio.count(),savedPeaks:await p.savedPeak.count()};console.log(d);const sample=await p.publicacio.findFirst({select:{portadaUrl:true}});console.log('samplePortadaUrl=',sample?.portadaUrl);})().catch(e=>{console.error(e);process.exit(1)}).finally(async()=>{await p.`$disconnect()})"
 ```
 
 Resultat esperat aproximat:
@@ -249,8 +248,7 @@ Resultat esperat aproximat:
 - `imatges: 12`
 - `comentaris: 10`
 - `likes: 10`
-- `favorits: 9`
-- `guardades: 7`
+- `savedPeaks: 9`
 - `samplePortadaUrl` comencant per `/uploads/`
 
 ### 7) Validar servei d'arxius a /uploads

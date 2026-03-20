@@ -94,7 +94,7 @@ A `peaks.service.js` (`getPeaksList`):
 - `_count` per obtenir estadistiques:
   - `publicacions`
   - `rutesPlanificades`
-  - `favoritsCims`
+  - `savedByUsers`
 
 ## Contracte de resposta de GET /peaks
 
@@ -128,7 +128,7 @@ A `peaks.service.js` (`getPeaksList`):
       "stats": {
         "publicacionsCount": 1,
         "rutesCount": 1,
-        "favoritsCount": 1
+        "savedCount": 1
       }
     }
   ]
@@ -157,7 +157,7 @@ A `peaks.service.js` (`getPeakDetailById`):
 - `_count` de:
   - `publicacions`
   - `rutesPlanificades`
-  - `favoritsCims`
+  - `savedByUsers`
 - `rutesPlanificades` incloses amb:
   - camps resumits de ruta
   - `puntsRuta` inclosos i ordenats per `ordreIndex asc`
@@ -195,7 +195,7 @@ Si el cim no existeix:
     "stats": {
       "publicacionsCount": 1,
       "rutesCount": 1,
-      "favoritsCount": 1
+      "savedCount": 1
     },
     "routes": [
       {
@@ -307,7 +307,7 @@ No s'han afegit llibreries noves.
 
 ```powershell
 node -v
-npm -v
+npm -v  (npm.cmd -v desde el portatil de dxc)
 docker --version
 docker compose version
 ```
@@ -316,12 +316,13 @@ docker compose version
 
 ```powershell
 cd backend
+Copy-Item .env.example .env -Force
 docker compose up -d
-npm install
-npm run prisma:generate
-npm run prisma:migrate
-npm run seed
-npm run dev
+npm install (npm.cmd install desde el portatil de dxc)
+npm run prisma:generate ($env:NODE_TLS_REJECT_UNAUTHORIZED="0" i desrpés npm.cmd run prisma:generate desde el portatil de dxc)
+npm run prisma:migrate (npm.cmd run prisma:migrate desde el portatil de dxc)
+npm run seed (npm.cmd run seed desde el portatil de dxc)
+npm run dev (npm.cmd run dev desde el portatil de dxc)
 ```
 
 Resultat esperat:
