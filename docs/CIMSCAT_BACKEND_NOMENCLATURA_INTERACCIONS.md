@@ -29,10 +29,6 @@ Frase funcional recomanada:
   - `likes`, `likesCount`, `LikePublicacio`
 - Quan parlem de cims guardats:
   - `saved`, `savedPeaks`, `savedByUsers`, `SavedPeak`
-- Evitar noms ambigus tipus:
-  - `favorites` per parlar de cims
-  - `saved` per parlar de publicacions
-  - models separats per "favorites" de publicacions
 
 ## Notes per futures implementacions
 - Si es crea modul de likes, ha d'operar sobre `Publicacio`.
