@@ -13,7 +13,7 @@ export const homeFeaturedPublications = [
     elevation: 3143,
     region: "Pallars Sobira",
     authorName: "Mireia",
-    likes: 28,
+    savedCount: 28,
     excerpt: "La porta del cel a Catalunya!",
     imageUrl:
       "https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?auto=format&fit=crop&w=900&q=80",
@@ -29,7 +29,7 @@ export const homeFeaturedPublications = [
     elevation: 2506,
     region: "Bergueda",
     authorName: "Dani",
-    likes: 34,
+    savedCount: 34,
     excerpt: "Un simbol del nostre pais!",
     imageUrl:
       "https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=900&q=80",
@@ -44,7 +44,7 @@ export const homeFeaturedPublications = [
     elevation: 1104,
     region: "Valles Occidental",
     authorName: "Laia",
-    likes: 19,
+    savedCount: 19,
     excerpt: "Perfecte per un diumenge en familia!",
     imageUrl:
       "https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=900&q=80",
@@ -52,7 +52,7 @@ export const homeFeaturedPublications = [
     lng: 2.0179,
   },
   {
-    // Aquestes publicacions extra ens permeten ordenar per likes i tenir més contingut al scroll.
+    // Aquestes publicacions extra ens permeten ordenar per guardats i tenir més contingut al scroll.
     id: 4,
     peakId: 104,
     publicationId: 1004,
@@ -60,7 +60,7 @@ export const homeFeaturedPublications = [
     elevation: 2913,
     region: "Ripolles",
     authorName: "Jordi",
-    likes: 41,
+    savedCount: 41,
     excerpt: "Vistes increibles de la Cerdanya des de dalt!",
     imageUrl:
       "https://images.unsplash.com/photo-1519681393784-d120267933ba?auto=format&fit=crop&w=900&q=80",
@@ -75,7 +75,7 @@ export const homeFeaturedPublications = [
     elevation: 2784,
     region: "Catalunya Nord",
     authorName: "Anna",
-    likes: 37,
+    savedCount: 37,
     excerpt: "El cim sagrat dels catalans!",
     imageUrl:
       "https://images.unsplash.com/photo-1434394354979-a235cd36269d?auto=format&fit=crop&w=900&q=80",
@@ -90,7 +90,7 @@ export const homeFeaturedPublications = [
     elevation: 1236,
     region: "Bages",
     authorName: "Marc",
-    likes: 52,
+    savedCount: 52,
     excerpt: "Roca espectacular, paisatge unic a Catalunya.",
     imageUrl:
       "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?auto=format&fit=crop&w=900&q=80",
@@ -105,7 +105,7 @@ export const homeFeaturedPublications = [
     elevation: 2443,
     region: "Alta Ribagorca",
     authorName: "Pere",
-    likes: 15,
+    savedCount: 15,
     excerpt: "Ruta tranquil·la pels Pirineus centrals.",
     imageUrl:
       "https://images.unsplash.com/photo-1454496522488-7a8e488e8606?auto=format&fit=crop&w=900&q=80",
