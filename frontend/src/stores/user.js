@@ -3,13 +3,27 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 
+function readStoredUser() {
+  const storedUser = localStorage.getItem('user')
+
+  if (!storedUser) return null
+
+  try {
+    return JSON.parse(storedUser)
+  } catch {
+    localStorage.removeItem('user')
+    return null
+  }
+}
+
 export const useUserStore = defineStore('user', () => {
   // Quan carreguem l'app, intentem recuperar la sessió guardada al navegador.
   const token = ref(localStorage.getItem('token') || null)
-  const user = ref(JSON.parse(localStorage.getItem('user')) || null)
+  const user = ref(readStoredUser())
 
   // Aquesta propietat ens diu de manera senzilla si hi ha usuari autenticat.
   const isAuthenticated = computed(() => !!token.value)
+  const isAdmin = computed(() => user.value?.rol === 'admin')
 
   function setUser(userData, userToken) {
     // Guardem les dades de l'usuari i el token a memòria.
@@ -30,5 +44,5 @@ export const useUserStore = defineStore('user', () => {
   }
 
   // Exposem tot el que necessitarem des d'altres components.
-  return { token, user, isAuthenticated, setUser, logout }
+  return { token, user, isAuthenticated, isAdmin, setUser, logout }
 })

@@ -115,10 +115,10 @@ const peakIcon = L.divIcon({
   popupAnchor: [0, -34],
 })
 
-// Aquí preparem les publicacions que volem mostrar a la home.
-// Les ordenem de més likes a menys likes perquè la home ha d'ensenyar les més destacades.
+// Aquí preparem els cims destacats que volem mostrar a la home.
+// Les ordenem de més guardats a menys guardats perquè la home ha d'ensenyar els favorits.
 const featuredPublications = computed(() =>
-  [...homeFeaturedPublications].sort((a, b) => b.likes - a.likes)
+  [...homeFeaturedPublications].sort((a, b) => b.savedCount - a.savedCount)
 )
 
 // Llista d'imatges del carrusel.

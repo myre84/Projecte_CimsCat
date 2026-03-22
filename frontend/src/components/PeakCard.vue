@@ -8,21 +8,35 @@
     <img :src="publication.imageUrl" :alt="publication.peakName" class="peak-card__image" />
 
     <div class="peak-card__content">
-      <!-- Part superior de la card: informació a l'esquerra i botó de like a la dreta. -->
+      <!-- Part superior de la card: informació a l'esquerra i botó de guardar a la dreta. -->
       <div class="peak-card__top">
         <div>
           <h3 class="peak-card__title">{{ publication.peakName }}</h3>
           <p class="peak-card__meta">{{ publication.elevation }} m</p>
           <p class="peak-card__meta">{{ publication.region }}</p>
+          <p class="peak-card__meta peak-card__meta--accent">
+            {{ savedCount }} guardats
+          </p>
         </div>
 
         <!--
-          Aquest botó fa de "like".
+          Aquest botó marca el cim com a guardat.
           Si l'usuari no està autenticat, el redirigim a registre.
-          Si està autenticat, canviem l'estat del cor localment.
+          Si està autenticat, canviem l'estat de guardat localment.
         -->
-        <button class="peak-card__like" @click="handleLike">
-          {{ isLiked ? '❤' : '♡' }}
+        <button
+          class="peak-card__save"
+          :class="{ 'peak-card__save--active': isSaved }"
+          :aria-pressed="isSaved"
+          :title="isSaved ? 'Treure de guardats' : 'Guardar cim'"
+          :data-tooltip="isSaved ? 'Treure de guardats' : 'Guardar cim'"
+          @click="handleSave"
+        >
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path
+              d="M7 3.75h10a1.25 1.25 0 0 1 1.25 1.25v15.01a.25.25 0 0 1-.4.2L12 15.75l-5.85 4.46a.25.25 0 0 1-.4-.2V5A1.25 1.25 0 0 1 7 3.75Z"
+            />
+          </svg>
         </button>
       </div>
 
@@ -38,7 +52,7 @@
 </template>
 
 <script setup>
-// ref ens serveix per guardar l'estat del like dins la targeta.
+// ref ens serveix per guardar l'estat local del guardat dins la targeta.
 import { ref } from 'vue'
 
 // useRouter el fem servir per navegar per codi, per exemple quan volem enviar a registre.
@@ -58,25 +72,25 @@ const props = defineProps({
 const router = useRouter()
 const userStore = useUserStore()
 
-// isLiked controla només l'estat visual actual del cor dins aquesta card.
-const isLiked = ref(false)
+// isSaved controla només l'estat visual actual del guardat dins aquesta card.
+const isSaved = ref(false)
 
-// Guardem també el recompte de likes per si volem mostrar-lo o modificar-lo després.
-const likesCount = ref(props.publication.likes)
+// Guardem també el recompte de guardats per mantenir el feedback visual coherent.
+const savedCount = ref(props.publication.savedCount)
 
-function handleLike() {
-  // Si l'usuari no està autenticat, no pot fer like i l'enviem a registre.
+function handleSave() {
+  // Si l'usuari no està autenticat, no pot guardar cims i l'enviem a registre.
   if (!userStore.isAuthenticated) {
     router.push('/registre')
     return
   }
 
-  // Si està autenticat, canviem l'estat local del cor.
-  isLiked.value = !isLiked.value
+  // Si està autenticat, canviem l'estat local del guardat.
+  isSaved.value = !isSaved.value
 
   // També sumem o restem 1 al comptador local.
-  // Això de moment és només visual perquè encara no ho connectem a backend.
-  likesCount.value += isLiked.value ? 1 : -1
+  // Això de moment és només visual perquè encara no ho connectem a favorits reals de backend.
+  savedCount.value += isSaved.value ? 1 : -1
 }
 </script>
 
@@ -128,6 +142,11 @@ function handleLike() {
   font-size: 0.92rem;
 }
 
+.peak-card__meta--accent {
+  color: #2d6a4f;
+  font-weight: 600;
+}
+
 /* Descripció curta. */
 .peak-card__excerpt {
   margin: 0;
@@ -135,13 +154,56 @@ function handleLike() {
   font-size: 0.95rem;
 }
 
-/* Botó del cor. */
-.peak-card__like {
-  border: none;
+/* Botó de guardar. */
+.peak-card__save {
+  width: 44px;
+  height: 44px;
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
   background: transparent;
   cursor: pointer;
-  font-size: 1.8rem;
-  color: var(--color-text);
+  color: #5c625a;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+}
+
+.peak-card__save svg {
+  width: 24px;
+  height: 24px;
+  fill: currentColor;
+}
+
+.peak-card__save::after {
+  content: attr(data-tooltip);
+  position: absolute;
+  right: calc(100% + 0.65rem);
+  top: 50%;
+  transform: translateY(-50%) scale(0.96);
+  opacity: 0;
+  pointer-events: none;
+  white-space: nowrap;
+  padding: 0.45rem 0.7rem;
+  border-radius: 8px;
+  background: rgba(39, 52, 43, 0.96);
+  color: #fff;
+  font-size: 0.82rem;
+  line-height: 1;
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.16);
+  transition: opacity 0.18s ease, transform 0.18s ease;
+}
+
+.peak-card__save:hover::after,
+.peak-card__save:focus-visible::after {
+  opacity: 1;
+  transform: translateY(-50%) scale(1);
+}
+
+.peak-card__save--active {
+  background: #edf4ee;
+  color: #2d6a4f;
+  border-color: #9fc0a9;
 }
 
 /* Botó/enllaç per entrar a la fitxa del cim. */

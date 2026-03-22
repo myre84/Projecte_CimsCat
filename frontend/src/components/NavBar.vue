@@ -28,6 +28,9 @@
 
       <!-- Si l'usuari està autenticat, mostrem el seu nom i un botó d'icona. -->
       <template v-if="userStore.isAuthenticated">
+        <RouterLink v-if="userStore.isAdmin" to="/admin" class="btn-admin">
+          Admin
+        </RouterLink>
         <RouterLink :to="`/perfil/${userStore.user?.id}`" class="btn-user-name">
           {{ userStore.user?.nomUsuari }}
         </RouterLink>
@@ -172,6 +175,16 @@ const planRouteLink = computed(() =>
   font-size: 0.85rem;
   text-decoration: none;
   cursor: pointer;
+}
+
+.btn-admin {
+  border-radius: 6px;
+  padding: 0.4rem 0.9rem;
+  text-decoration: none;
+  font-size: 0.85rem;
+  background: #edf2ea;
+  color: #294637;
+  border: 1px solid #cfd8ca;
 }
 
 /* Botó que mostra el nom d'usuari quan hi ha sessió. */
