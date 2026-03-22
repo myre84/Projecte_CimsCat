@@ -1,7 +1,13 @@
+// Aquest fitxer no ve de backend.
+// És un mock temporal que fem servir per poder continuar el frontend encara que l'API no estigui preparada.
+// La idea és que més endavant aquestes dades es substitueixin per una crida real.
 export const homeFeaturedPublications = [
   {
+    // id intern del mock.
     id: 1,
+    // peakId és l'id del cim, que fem servir per enllaçar amb la fitxa oficial del cim.
     peakId: 101,
+    // publicationId seria l'id propi de la publicació d'usuari.
     publicationId: 1001,
     peakName: "Pica d'Estats",
     elevation: 3143,
@@ -15,6 +21,7 @@ export const homeFeaturedPublications = [
     lng: 1.4069,
   },
   {
+    // Repetim la mateixa estructura per mantenir les dades homogènies i fàcils de reemplaçar després.
     id: 2,
     peakId: 102,
     publicationId: 1002,
@@ -45,6 +52,7 @@ export const homeFeaturedPublications = [
     lng: 2.0179,
   },
   {
+    // Aquestes publicacions extra ens permeten ordenar per likes i tenir més contingut al scroll.
     id: 4,
     peakId: 104,
     publicationId: 1004,

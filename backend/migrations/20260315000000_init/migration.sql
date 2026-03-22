@@ -127,21 +127,12 @@ CREATE TABLE "LikePublicacio" (
 );
 
 -- CreateTable
-CREATE TABLE "FavoritCim" (
+CREATE TABLE "SavedPeak" (
     "usuariId" TEXT NOT NULL,
     "cimId" TEXT NOT NULL,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
-    CONSTRAINT "FavoritCim_pkey" PRIMARY KEY ("usuariId", "cimId")
-);
-
--- CreateTable
-CREATE TABLE "PublicacioGuardada" (
-    "usuariId" TEXT NOT NULL,
-    "publicacioId" TEXT NOT NULL,
-    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-
-    CONSTRAINT "PublicacioGuardada_pkey" PRIMARY KEY ("usuariId", "publicacioId")
+    CONSTRAINT "SavedPeak_pkey" PRIMARY KEY ("usuariId", "cimId")
 );
 
 -- CreateTable
@@ -210,10 +201,7 @@ CREATE INDEX "Comentari_usuariId_idx" ON "Comentari"("usuariId");
 CREATE INDEX "LikePublicacio_publicacioId_idx" ON "LikePublicacio"("publicacioId");
 
 -- CreateIndex
-CREATE INDEX "FavoritCim_cimId_idx" ON "FavoritCim"("cimId");
-
--- CreateIndex
-CREATE INDEX "PublicacioGuardada_publicacioId_idx" ON "PublicacioGuardada"("publicacioId");
+CREATE INDEX "SavedPeak_cimId_idx" ON "SavedPeak"("cimId");
 
 -- CreateIndex
 CREATE INDEX "PuntRuta_rutaId_idx" ON "PuntRuta"("rutaId");
@@ -252,16 +240,10 @@ ALTER TABLE "LikePublicacio" ADD CONSTRAINT "LikePublicacio_usuariId_fkey" FOREI
 ALTER TABLE "LikePublicacio" ADD CONSTRAINT "LikePublicacio_publicacioId_fkey" FOREIGN KEY ("publicacioId") REFERENCES "Publicacio"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "FavoritCim" ADD CONSTRAINT "FavoritCim_usuariId_fkey" FOREIGN KEY ("usuariId") REFERENCES "Usuari"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE "SavedPeak" ADD CONSTRAINT "SavedPeak_usuariId_fkey" FOREIGN KEY ("usuariId") REFERENCES "Usuari"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "FavoritCim" ADD CONSTRAINT "FavoritCim_cimId_fkey" FOREIGN KEY ("cimId") REFERENCES "Cim"("id") ON DELETE CASCADE ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "PublicacioGuardada" ADD CONSTRAINT "PublicacioGuardada_usuariId_fkey" FOREIGN KEY ("usuariId") REFERENCES "Usuari"("id") ON DELETE CASCADE ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "PublicacioGuardada" ADD CONSTRAINT "PublicacioGuardada_publicacioId_fkey" FOREIGN KEY ("publicacioId") REFERENCES "Publicacio"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE "SavedPeak" ADD CONSTRAINT "SavedPeak_cimId_fkey" FOREIGN KEY ("cimId") REFERENCES "Cim"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "PuntRuta" ADD CONSTRAINT "PuntRuta_rutaId_fkey" FOREIGN KEY ("rutaId") REFERENCES "RutaPlanificada"("id") ON DELETE CASCADE ON UPDATE CASCADE;

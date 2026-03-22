@@ -18,8 +18,7 @@ async function main() {
   // Esborro primer taules filles i despres taules pare per respectar FK.
   // Aquest ordre evita errors de "foreign key constraint".
   await prisma.likePublicacio.deleteMany();
-  await prisma.publicacioGuardada.deleteMany();
-  await prisma.favoritCim.deleteMany();
+  await prisma.savedPeak.deleteMany();
   await prisma.comentari.deleteMany();
   await prisma.imatgePublicacio.deleteMany();
   await prisma.puntRuta.deleteMany();
@@ -523,10 +522,10 @@ async function main() {
   ];
 
   // ------------------------------------------------------------
-  // 10) FAVORITS DE CIMS
+  // 10) CIMS GUARDATS
   // ------------------------------------------------------------
-  // Relacions usuari-cim per provar funcionalitat de favorits.
-  const favorits = [
+  // Relacions usuari-cim per provar funcionalitat de cims guardats.
+  const savedPeaks = [
     { usuariId: 'usr_daliajordan', cimId: 'cim_pedraforca' },
     { usuariId: 'usr_daliajordan', cimId: 'cim_puigmal' },
     { usuariId: 'usr_daliajordan', cimId: 'cim_bastiments' },
@@ -539,21 +538,7 @@ async function main() {
   ];
 
   // ------------------------------------------------------------
-  // 11) PUBLICACIONS GUARDADES
-  // ------------------------------------------------------------
-  // Relacions usuari-publicacio per provar "saved posts".
-  const guardades = [
-    { usuariId: 'usr_daliajordan', publicacioId: 'pub_pedraforca_verdet' },
-    { usuariId: 'usr_daliajordan', publicacioId: 'pub_bastiments_hivern' },
-    { usuariId: 'usr_mireiagibert', publicacioId: 'pub_lamola_sunrise' },
-    { usuariId: 'usr_mireiagibert', publicacioId: 'pub_turo_home_matinal' },
-    { usuariId: 'usr_danimoore', publicacioId: 'pub_puigmal_vent' },
-    { usuariId: 'usr_danimoore', publicacioId: 'pub_matagalls_capvespre' },
-    { usuariId: 'usr_danimoore', publicacioId: 'pub_lamola_sunrise' }
-  ];
-
-  // ------------------------------------------------------------
-  // 12) INSERCIO A LA BASE DE DADES
+  // 11) INSERCIO A LA BASE DE DADES
   // ------------------------------------------------------------
   // Inserim en ordre logic. skipDuplicates protegeix davant reexecucions.
   await prisma.usuari.createMany({ data: usuaris, skipDuplicates: true });
@@ -564,11 +549,10 @@ async function main() {
   await prisma.imatgePublicacio.createMany({ data: imatgesPublicacio, skipDuplicates: true });
   await prisma.comentari.createMany({ data: comentaris, skipDuplicates: true });
   await prisma.likePublicacio.createMany({ data: likes, skipDuplicates: true });
-  await prisma.favoritCim.createMany({ data: favorits, skipDuplicates: true });
-  await prisma.publicacioGuardada.createMany({ data: guardades, skipDuplicates: true });
+  await prisma.savedPeak.createMany({ data: savedPeaks, skipDuplicates: true });
 
   // ------------------------------------------------------------
-  // 13) RESUM FINAL
+  // 12) RESUM FINAL
   // ------------------------------------------------------------
   // Mostro per consola el recompte de dades creades, per validar rapidament.
   console.log('Seed completat amb exit:');
@@ -580,8 +564,7 @@ async function main() {
   console.log(`- Imatges de publicacio: ${imatgesPublicacio.length}`);
   console.log(`- Comentaris: ${comentaris.length}`);
   console.log(`- Likes: ${likes.length}`);
-  console.log(`- Favorits: ${favorits.length}`);
-  console.log(`- Publicacions guardades: ${guardades.length}`);
+  console.log(`- Cims guardats: ${savedPeaks.length}`);
 }
 
 // Execucio del seed:
