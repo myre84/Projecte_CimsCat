@@ -16,6 +16,9 @@ router.post('/register', authController.register);
 // Login amb mail + contrasenya.
 router.post('/login', authController.login);
 
+// Logout funcional per backend stateless (sense persistencia).
+router.post('/logout', requireAuth, authController.logout);
+
 // Retorna l'usuari autenticat actual (ruta protegida).
 router.get('/me', requireAuth, authController.me);
 

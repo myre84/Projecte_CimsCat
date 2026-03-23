@@ -5,7 +5,7 @@ const { sendError } = require('../../common/utils/http-error');
 const { validateRegisterBody, validateLoginBody } = require('./auth.validators');
 
 // Importo casos d'us (logica de negoci) del servei.
-const { registerUser, loginUser, getCurrentUser } = require('./auth.service');
+const { registerUser, loginUser, logoutUser, getCurrentUser } = require('./auth.service');
 
 // Controller de registre.
 // Responsabilitat: validar entrada, cridar servei i respondre HTTP.
@@ -70,9 +70,28 @@ async function me(req, res) {
   }
 }
 
+// Controller de logout.
+// En JWT stateless no invalidem token al servidor.
+async function logout(req, res) {
+  try {
+    // Validacio minima de context autenticat.
+    await logoutUser(req.auth);
+
+    // El client esborra token i dades locals.
+    return res.status(200).json({
+      ok: true,
+      message: 'Logout correcte'
+    });
+  } catch (error) {
+    // Mateix format d'errors que la resta del modul.
+    return sendError(res, error);
+  }
+}
+
 // Exporto controladors per associar-los a rutes.
 module.exports = {
   register,
   login,
+  logout,
   me
 };

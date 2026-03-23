@@ -21,6 +21,10 @@ router.get('/:id/publications', usersController.getUserPublications);
 // Ruta protegida: nomes el propietari pot veure els seus cims guardats.
 router.get('/:id/saved', requireAuth, usersController.getUserSavedPeaks);
 
+// GET /users/:id/likes
+// Ruta protegida: nomes el propietari pot veure likes que ha fet.
+router.get('/:id/likes', requireAuth, usersController.getUserLikedPublications);
+
 // GET /users/:id
 // Ruta publica: perfil public basic (sense camps sensibles).
 router.get('/:id', usersController.getUserProfile);

@@ -246,10 +246,106 @@ async function getOwnSavedPeaksById(userId) {
   }));
 }
 
+// Retorna publicacions a les quals el propi usuari ha donat like.
+// IMPORTANT: la consulta surt de LikePublicacio filtrant per usuariId.
+async function getOwnLikedPublicationsById(userId) {
+  // Comprovem existencia d'usuari abans de consultar likes.
+  await ensureUserExists(userId);
+
+  // Consulta likes del usuari amb publicacio relacionada.
+  const likedItems = await prisma.likePublicacio.findMany({
+    where: { usuariId: userId },
+    orderBy: { createdAt: 'desc' },
+    select: {
+      createdAt: true,
+      publicacio: {
+        select: {
+          id: true,
+          titol: true,
+          descripcio: true,
+          dataActivitat: true,
+          dificultat: true,
+          distanciaKm: true,
+          desnivellPosM: true,
+          desnivellNegM: true,
+          tempsMin: true,
+          altitudMaxM: true,
+          altitudMinM: true,
+          portadaUrl: true,
+          trackUrl: true,
+          cim: {
+            select: {
+              id: true,
+              nom: true,
+              alcada: true,
+              comarca: true,
+              massis: true,
+              imatgeUrl: true
+            }
+          },
+          usuari: {
+            select: {
+              id: true,
+              nomUsuari: true,
+              fotoPerfil: true
+            }
+          },
+          _count: {
+            select: {
+              likes: true,
+              comentaris: true,
+              imatges: true
+            }
+          }
+        }
+      }
+    }
+  });
+
+  // Map final de sortida de servei per controller.
+  return likedItems.map((likeItem) => ({
+    likedAt: likeItem.createdAt,
+    publication: {
+      id: likeItem.publicacio.id,
+      titol: likeItem.publicacio.titol,
+      descripcio: likeItem.publicacio.descripcio,
+      dataActivitat: likeItem.publicacio.dataActivitat,
+      dificultat: likeItem.publicacio.dificultat,
+      distanciaKm: likeItem.publicacio.distanciaKm,
+      desnivellPosM: likeItem.publicacio.desnivellPosM,
+      desnivellNegM: likeItem.publicacio.desnivellNegM,
+      tempsMin: likeItem.publicacio.tempsMin,
+      altitudMaxM: likeItem.publicacio.altitudMaxM,
+      altitudMinM: likeItem.publicacio.altitudMinM,
+      portadaUrl: likeItem.publicacio.portadaUrl,
+      trackUrl: likeItem.publicacio.trackUrl,
+      cim: {
+        id: likeItem.publicacio.cim.id,
+        nom: likeItem.publicacio.cim.nom,
+        alcada: likeItem.publicacio.cim.alcada,
+        comarca: likeItem.publicacio.cim.comarca,
+        massis: likeItem.publicacio.cim.massis,
+        imatgeUrl: likeItem.publicacio.cim.imatgeUrl
+      },
+      author: {
+        id: likeItem.publicacio.usuari.id,
+        nomUsuari: likeItem.publicacio.usuari.nomUsuari,
+        fotoPerfil: likeItem.publicacio.usuari.fotoPerfil
+      },
+      counts: {
+        likesCount: likeItem.publicacio._count.likes,
+        commentsCount: likeItem.publicacio._count.comentaris,
+        imagesCount: likeItem.publicacio._count.imatges
+      }
+    }
+  }));
+}
+
 // Exporto serveis publics del modul users.
 module.exports = {
   getPublicUserProfileById,
   updateOwnProfile,
   getUserPublicationsById,
-  getOwnSavedPeaksById
+  getOwnSavedPeaksById,
+  getOwnLikedPublicationsById
 };
