@@ -34,6 +34,9 @@
         <RouterLink :to="`/perfil/${userStore.user?.id}`" class="btn-user-name">
           {{ userStore.user?.nomUsuari }}
         </RouterLink>
+        <button class="btn-logout" type="button">
+          Tancar sessio
+        </button>
         <button class="btn-icon">👤</button>
       </template>
 
@@ -185,6 +188,16 @@ const planRouteLink = computed(() =>
   background: #edf2ea;
   color: #294637;
   border: 1px solid #cfd8ca;
+}
+
+.btn-logout {
+  background: #f5f4ef;
+  color: var(--color-text);
+  border: 1px solid var(--color-border);
+  border-radius: 6px;
+  padding: 0.4rem 0.9rem;
+  font-size: 0.85rem;
+  cursor: default;
 }
 
 /* Botó que mostra el nom d'usuari quan hi ha sessió. */
