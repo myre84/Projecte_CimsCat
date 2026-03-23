@@ -131,6 +131,14 @@ async function loginUser(input) {
   };
 }
 
+// Cas d'us: logout funcional en backend stateless.
+async function logoutUser(auth) {
+  // Validacio minima coherent amb rutes protegides.
+  if (!auth || !auth.userId) {
+    throw createAppError(401, 'AUTH_TOKEN_INVALID', 'Token invalid o caducat');
+  }
+}
+
 // Cas d'us: obtenir perfil de l'usuari autenticat actual.
 async function getCurrentUser(auth) {
   // Si no hi ha auth o userId, token invalid.
@@ -156,5 +164,6 @@ async function getCurrentUser(auth) {
 module.exports = {
   registerUser,
   loginUser,
+  logoutUser,
   getCurrentUser
 };

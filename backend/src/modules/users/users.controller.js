@@ -16,7 +16,8 @@ const {
   getPublicUserProfileById,
   updateOwnProfile,
   getUserPublicationsById,
-  getOwnSavedPeaksById
+  getOwnSavedPeaksById,
+  getOwnLikedPublicationsById
 } = require('./users.service');
 
 // Controller de GET /users/:id
@@ -118,10 +119,37 @@ async function getUserSavedPeaks(req, res) {
   }
 }
 
+// Controller de GET /users/:id/likes
+// Endpoint protegit owner only de likes de publicacions.
+async function getUserLikedPublications(req, res) {
+  try {
+    // 1) Valido id.
+    const userId = validateUserIdParam(req.params);
+
+    // 2) Comprovo que qui consulta es el propietari.
+    validateOwnerAccess(req.auth, userId);
+
+    // 3) Recupero likes de publicacions del servei.
+    const likes = await getOwnLikedPublicationsById(userId);
+
+    // 4) Retorno resposta d'exit.
+    return res.status(200).json({
+      ok: true,
+      message: 'Likes recuperats correctament',
+      count: likes.length,
+      likes
+    });
+  } catch (error) {
+    // Error en format comu.
+    return sendError(res, error);
+  }
+}
+
 // Exporto controllers per connectar-los a users.routes.js
 module.exports = {
   getUserProfile,
   updateUserProfile,
   getUserPublications,
-  getUserSavedPeaks
+  getUserSavedPeaks,
+  getUserLikedPublications
 };
