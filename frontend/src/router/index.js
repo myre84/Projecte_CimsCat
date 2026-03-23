@@ -13,10 +13,24 @@ function getStoredUser() {
   }
 }
 
+function hasStoredToken() {
+  return !!localStorage.getItem('token')
+}
+
 const routes = [
   { path: '/', name: 'Home', component: () => import('../views/HomeView.vue') },
-  { path: '/login', name: 'Login', component: () => import('../views/LoginView.vue') },
-  { path: '/registre', name: 'Registre', component: () => import('../views/RegisterView.vue') },
+  {
+    path: '/login',
+    name: 'Login',
+    component: () => import('../views/LoginView.vue'),
+    meta: { guestOnly: true },
+  },
+  {
+    path: '/registre',
+    name: 'Registre',
+    component: () => import('../views/RegisterView.vue'),
+    meta: { guestOnly: true },
+  },
   { path: '/cim/:id', name: 'FitxaCim', component: () => import('../views/PeakDetailView.vue') },
   { path: '/publicacio/:id', name: 'Publicacio', component: () => import('../views/PublicationView.vue') },
   {
@@ -24,6 +38,7 @@ const routes = [
     name: 'CrearPublicacio',
     alias: ['/planificar'],
     component: () => import('../views/CreatePublicationView.vue'),
+    meta: { requiresAuth: true },
   },
   { path: '/perfil/:id', name: 'Perfil', component: () => import('../views/ProfileView.vue') },
   { path: '/cerca', name: 'Cerca', component: () => import('../views/SearchView.vue') },
@@ -31,7 +46,7 @@ const routes = [
     path: '/admin',
     name: 'AdminDashboard',
     component: () => import('../views/AdminDashboard.vue'),
-    meta: { requiresAdmin: true },
+    meta: { requiresAuth: true, requiresAdmin: true },
   },
 ]
 
@@ -41,15 +56,22 @@ const router = createRouter({
 })
 
 router.beforeEach((to) => {
-  if (!to.meta.requiresAdmin) return true
-
+  const isAuthenticated = hasStoredToken()
   const storedUser = getStoredUser()
 
-  if (storedUser?.rol === 'admin') {
-    return true
+  if (to.meta.requiresAuth && !isAuthenticated) {
+    return { name: 'Login' }
   }
 
-  return { name: 'Home' }
+  if (to.meta.guestOnly && isAuthenticated) {
+    return { name: 'Home' }
+  }
+
+  if (to.meta.requiresAdmin && storedUser?.rol !== 'admin') {
+    return { name: 'Home' }
+  }
+
+  return true
 })
 
 export default router

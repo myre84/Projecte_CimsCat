@@ -2,6 +2,7 @@
 // La fem amb Pinia perquè diferents components puguin saber si hi ha sessió iniciada.
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
+import api from '../api/axios'
 
 function readStoredUser() {
   const storedUser = localStorage.getItem('user')
@@ -17,9 +18,8 @@ function readStoredUser() {
 }
 
 export const useUserStore = defineStore('user', () => {
-  // Quan carreguem l'app, intentem recuperar la sessió guardada al navegador.
-  const token = ref(localStorage.getItem('token') || null)
-  const user = ref(readStoredUser())
+  const token = ref(null)
+  const user = ref(null)
 
   // Aquesta propietat ens diu de manera senzilla si hi ha usuari autenticat.
   const isAuthenticated = computed(() => !!token.value)
@@ -35,6 +35,35 @@ export const useUserStore = defineStore('user', () => {
     localStorage.setItem('user', JSON.stringify(userData))
   }
 
+  function loadFromStorage() {
+    token.value = localStorage.getItem('token') || null
+    user.value = readStoredUser()
+  }
+
+  async function login(credentials) {
+    const { data } = await api.post('/auth/login', {
+      mail: credentials.email.trim().toLowerCase(),
+      contrasenya: credentials.password,
+    })
+
+    setUser(data.user, data.token)
+    return data
+  }
+
+  async function register(payload) {
+    const { data } = await api.post('/auth/register', {
+      nom: payload.nom.trim(),
+      cognom: payload.cognom.trim(),
+      nomUsuari: payload.nomUsuari.trim().toLowerCase(),
+      mail: payload.email.trim().toLowerCase(),
+      contrasenya: payload.password,
+      fotoPerfil: null,
+    })
+
+    setUser(data.user, data.token)
+    return data
+  }
+
   function logout() {
     // Quan l'usuari tanca sessió, netegem tant l'estat intern com el localStorage.
     user.value = null
@@ -43,6 +72,18 @@ export const useUserStore = defineStore('user', () => {
     localStorage.removeItem('user')
   }
 
+  loadFromStorage()
+
   // Exposem tot el que necessitarem des d'altres components.
-  return { token, user, isAuthenticated, isAdmin, setUser, logout }
+  return {
+    token,
+    user,
+    isAuthenticated,
+    isAdmin,
+    setUser,
+    loadFromStorage,
+    login,
+    register,
+    logout,
+  }
 })
