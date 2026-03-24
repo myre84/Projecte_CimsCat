@@ -321,8 +321,78 @@ async function getPeakDetailById(id) {
   };
 }
 
+// Servei de POST /peaks.
+async function createPeak(data) {
+  const created = await prisma.cim.create({
+    data: {
+      nom: data.nom,
+      alcada: data.alcada,
+      comarca: data.comarca,
+      lat: data.lat,
+      lon: data.lon,
+      dificultat: data.dificultat,
+      descripcio: data.descripcio,
+      imatgeUrl: data.imatgeUrl,
+      massis: data.massis,
+      zonaProtegida: typeof data.zonaProtegida === 'undefined' ? null : data.zonaProtegida
+    },
+    select: {
+      id: true,
+      nom: true,
+      alcada: true,
+      comarca: true,
+      lat: true,
+      lon: true,
+      dificultat: true,
+      descripcio: true,
+      imatgeUrl: true,
+      massis: true,
+      zonaProtegida: true,
+      createdAt: true,
+      updatedAt: true
+    }
+  });
+
+  return created;
+}
+
+// Servei de PUT /peaks/:id.
+async function updatePeakById(id, data) {
+  try {
+    const updated = await prisma.cim.update({
+      where: { id },
+      data,
+      select: {
+        id: true,
+        nom: true,
+        alcada: true,
+        comarca: true,
+        lat: true,
+        lon: true,
+        dificultat: true,
+        descripcio: true,
+        imatgeUrl: true,
+        massis: true,
+        zonaProtegida: true,
+        createdAt: true,
+        updatedAt: true
+      }
+    });
+
+    return updated;
+  } catch (error) {
+    if (error && error.code === 'P2025') {
+      throw createAppError(404, 'PEAK_NOT_FOUND', "No s'ha trobat cap cim amb aquest id");
+    }
+
+    throw error;
+  }
+}
+
 // Exporto serveis per usar-los al controller.
 module.exports = {
   getPeaksList,
-  getPeakDetailById
+  getPeakDetailById,
+  createPeak,
+  updatePeakById
 };

@@ -19,6 +19,12 @@ const authRoutes = require('./modules/auth/auth.routes');
 // - GET /peaks/:id
 const peaksRoutes = require('./modules/peaks/peaks.routes');
 
+// Importo router de pujada de fitxers (POST /uploads/...).
+const uploadsRoutes = require('./modules/uploads/uploads.routes');
+
+// Importo router CRUD de publicacions.
+const publicacionsRoutes = require('./modules/publicacions/publicacions.routes');
+
 // Importo el router del modul users.
 // Aquest modul encapsula endpoints de:
 // - perfil public
@@ -36,6 +42,9 @@ app.use(cors());
 // Fa que Express entengui JSON al body de les peticions.
 app.use(express.json());
 
+// Primer munto POST /uploads/... per gestionar pujades.
+app.use('/uploads', uploadsRoutes);
+
 // Exposo la carpeta uploads com a recursos estatics.
 // Exemple: un fitxer a backend/uploads/publicacions/x.jpg sera accessible a
 // http://localhost:3000/uploads/publicacions/x.jpg
@@ -47,6 +56,9 @@ app.use('/auth', authRoutes);
 
 // Tot el modul peaks queda penjat sota /peaks i es PUBLIC (sense auth middleware).
 app.use('/peaks', peaksRoutes);
+
+// Modul CRUD de publicacions.
+app.use('/publicacions', publicacionsRoutes);
 
 // Munto el modul users sota /users.
 // Dins del propi router ja s'aplica requireAuth nomes on toca.

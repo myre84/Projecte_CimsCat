@@ -4,11 +4,21 @@ const { sendError } = require('../../common/utils/http-error');
 
 // Importo validators del modul peaks.
 // Aqui fem sanejament d'entrada abans de tocar la base de dades.
-const { validatePeaksQuery, validatePeakIdParam } = require('./peaks.validators');
+const {
+  validatePeaksQuery,
+  validatePeakIdParam,
+  validateCreatePeakBody,
+  validateUpdatePeakBody
+} = require('./peaks.validators');
 
 // Importo serveis amb la logica de negoci real i les consultes Prisma.
 // El controller nomes orquestra HTTP (entrada/sortida).
-const { getPeaksList, getPeakDetailById } = require('./peaks.service');
+const {
+  getPeaksList,
+  getPeakDetailById,
+  createPeak,
+  updatePeakById
+} = require('./peaks.service');
 
 // Controller de GET /peaks.
 // Flux:
@@ -62,8 +72,43 @@ async function getPeakById(req, res) {
   }
 }
 
+// Controller de POST /peaks.
+async function createPeakController(req, res) {
+  try {
+    const payload = validateCreatePeakBody(req.body);
+    const peak = await createPeak(payload);
+
+    return res.status(201).json({
+      ok: true,
+      message: 'Cim creat correctament',
+      peak
+    });
+  } catch (error) {
+    return sendError(res, error);
+  }
+}
+
+// Controller de PUT /peaks/:id.
+async function updatePeakController(req, res) {
+  try {
+    const id = validatePeakIdParam(req.params);
+    const payload = validateUpdatePeakBody(req.body);
+    const peak = await updatePeakById(id, payload);
+
+    return res.status(200).json({
+      ok: true,
+      message: 'Cim actualitzat correctament',
+      peak
+    });
+  } catch (error) {
+    return sendError(res, error);
+  }
+}
+
 // Exporto controllers per connectar-los a peaks.routes.js
 module.exports = {
   getPeaks,
-  getPeakById
+  getPeakById,
+  createPeak: createPeakController,
+  updatePeak: updatePeakController
 };

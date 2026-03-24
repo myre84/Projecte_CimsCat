@@ -11,6 +11,7 @@ const prisma = new PrismaClient();
 async function main() {
   // Hash de la contrasenya comuna de prova (mai guardem contrasenya en clar).
   const passwordHash = await bcrypt.hash('123456', 10);
+  const adminPasswordHash = await bcrypt.hash('Admin12345', 10);
 
   // ------------------------------------------------------------
   // 1) NETEJA INICIAL
@@ -365,6 +366,7 @@ async function main() {
       rutaPlanificadaId: 'rta_la_mola_can_robert',
       titol: 'Sortida a La Mola amb primera llum',
       descripcio: 'Ruta circular molt agradable. Ambient fred al cim i bones vistes del Valles.',
+      tipusActivitat: 'senderisme',
       dataActivitat: new Date('2026-02-08T07:30:00.000Z'),
       dificultat: 'moderada',
       distanciaKm: 11.6,
@@ -383,6 +385,7 @@ async function main() {
       rutaPlanificadaId: 'rta_puigmal_fontalba',
       titol: 'Puigmal amb vent fort a la carena',
       descripcio: 'Ascensio directa des de Fontalba. A la part final vam haver de reduir ritme.',
+      tipusActivitat: 'senderisme',
       dataActivitat: new Date('2026-01-25T09:10:00.000Z'),
       dificultat: 'alta',
       distanciaKm: 12.5,
@@ -401,6 +404,7 @@ async function main() {
       rutaPlanificadaId: 'rta_pedraforca_verdet',
       titol: 'Pedraforca pel Verdet en bones condicions',
       descripcio: 'Terreny sec i bona adherencia. Grimpada fluida i baixada controlada per la tartera.',
+      tipusActivitat: 'alpinisme',
       dataActivitat: new Date('2026-02-14T06:45:00.000Z'),
       dificultat: 'alta',
       distanciaKm: 9.8,
@@ -419,6 +423,7 @@ async function main() {
       rutaPlanificadaId: null,
       titol: 'Capvespre al Matagalls',
       descripcio: 'Sortida rapida de tarda amb boira baixa i molt bona llum de retorn.',
+      tipusActivitat: 'senderisme',
       dataActivitat: new Date('2026-02-20T15:20:00.000Z'),
       dificultat: 'moderada',
       distanciaKm: 10.1,
@@ -437,6 +442,7 @@ async function main() {
       rutaPlanificadaId: null,
       titol: 'Bastiments en ambient d hivern',
       descripcio: 'Neu dura a primera hora, grampons imprescindibles a les obagues.',
+      tipusActivitat: 'alpinisme',
       dataActivitat: new Date('2026-02-02T08:00:00.000Z'),
       dificultat: 'alta',
       distanciaKm: 13.3,
@@ -455,6 +461,7 @@ async function main() {
       rutaPlanificadaId: null,
       titol: 'Entrenament matinal al Turo de l Home',
       descripcio: 'Sessio curta per sumar desnivell, sense parades llargues.',
+      tipusActivitat: 'trail',
       dataActivitat: new Date('2026-02-27T06:55:00.000Z'),
       dificultat: 'moderada',
       distanciaKm: 8.9,
@@ -551,6 +558,29 @@ async function main() {
   await prisma.likePublicacio.createMany({ data: likes, skipDuplicates: true });
   await prisma.savedPeak.createMany({ data: savedPeaks, skipDuplicates: true });
 
+  // Garantim admin estable per provar endpoints admin.
+  await prisma.usuari.upsert({
+    where: { mail: 'admin@cimscat.local' },
+    update: {
+      nom: 'Admin',
+      cognom: 'CimsCat',
+      nomUsuari: 'admin',
+      contrasenyaHash: adminPasswordHash,
+      rol: 'admin',
+      fotoPerfil: '/uploads/usuaris/admin.jpg'
+    },
+    create: {
+      id: 'usr_admin_cimscat',
+      nom: 'Admin',
+      cognom: 'CimsCat',
+      nomUsuari: 'admin',
+      mail: 'admin@cimscat.local',
+      contrasenyaHash: adminPasswordHash,
+      rol: 'admin',
+      fotoPerfil: '/uploads/usuaris/admin.jpg'
+    }
+  });
+
   // ------------------------------------------------------------
   // 12) RESUM FINAL
   // ------------------------------------------------------------
@@ -565,6 +595,7 @@ async function main() {
   console.log(`- Comentaris: ${comentaris.length}`);
   console.log(`- Likes: ${likes.length}`);
   console.log(`- Cims guardats: ${savedPeaks.length}`);
+  console.log('- Admin de proves: admin@cimscat.local / Admin12345');
 }
 
 // Execucio del seed:

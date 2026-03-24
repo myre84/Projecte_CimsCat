@@ -10,6 +10,8 @@ const ALLOWED_SORT_BY = ['nom', 'alcada', 'comarca', 'massis', 'createdAt'];
 // Llista tancada d'ordres valids.
 // Nomes admetem ascendent o descendent.
 const ALLOWED_SORT_ORDER = ['asc', 'desc'];
+const REQUIRED_PEAK_STRING_FIELDS = ['nom', 'comarca', 'dificultat', 'descripcio', 'imatgeUrl', 'massis'];
+const REQUIRED_PEAK_NUMBER_FIELDS = ['alcada', 'lat', 'lon'];
 
 // Helper petit per no repetir literalment el mateix error a cada validacio.
 // Sempre que una query sigui invalida, retornarem aquest codi funcional.
@@ -120,8 +122,115 @@ function validatePeakIdParam(params) {
   return id;
 }
 
+function ensureObject(body) {
+  if (!body || typeof body !== 'object' || Array.isArray(body)) {
+    throw createAppError(400, 'INVALID_BODY', 'Body invalid. Cal enviar un objecte JSON');
+  }
+}
+
+function parseRequiredString(body, fieldName) {
+  const value = normalizeString(body[fieldName]);
+  if (!value) {
+    throw createAppError(400, 'INVALID_BODY', `El camp ${fieldName} es obligatori`);
+  }
+
+  return value;
+}
+
+function parseRequiredNumber(body, fieldName) {
+  const parsed = Number(body[fieldName]);
+  if (!Number.isFinite(parsed)) {
+    throw createAppError(400, 'INVALID_BODY', `El camp ${fieldName} ha de ser numeric`);
+  }
+
+  return parsed;
+}
+
+function parseOptionalString(body, fieldName) {
+  if (!Object.prototype.hasOwnProperty.call(body, fieldName)) {
+    return undefined;
+  }
+
+  if (body[fieldName] === null) {
+    return null;
+  }
+
+  const value = normalizeString(body[fieldName]);
+  if (!value) {
+    throw createAppError(400, 'INVALID_BODY', `El camp ${fieldName} no pot ser buit`);
+  }
+
+  return value;
+}
+
+function parseOptionalNumber(body, fieldName) {
+  if (!Object.prototype.hasOwnProperty.call(body, fieldName)) {
+    return undefined;
+  }
+
+  const parsed = Number(body[fieldName]);
+  if (!Number.isFinite(parsed)) {
+    throw createAppError(400, 'INVALID_BODY', `El camp ${fieldName} ha de ser numeric`);
+  }
+
+  return parsed;
+}
+
+function validateCreatePeakBody(body) {
+  ensureObject(body);
+
+  const data = {};
+
+  REQUIRED_PEAK_STRING_FIELDS.forEach((fieldName) => {
+    data[fieldName] = parseRequiredString(body, fieldName);
+  });
+
+  REQUIRED_PEAK_NUMBER_FIELDS.forEach((fieldName) => {
+    data[fieldName] = parseRequiredNumber(body, fieldName);
+  });
+
+  const zonaProtegida = parseOptionalString(body, 'zonaProtegida');
+  if (typeof zonaProtegida !== 'undefined') {
+    data.zonaProtegida = zonaProtegida;
+  }
+
+  return data;
+}
+
+function validateUpdatePeakBody(body) {
+  ensureObject(body);
+
+  if (!Object.keys(body).length) {
+    throw createAppError(400, 'INVALID_BODY', 'Body buit. Cal enviar almenys un camp editable');
+  }
+
+  const data = {};
+
+  [...REQUIRED_PEAK_STRING_FIELDS, 'zonaProtegida'].forEach((fieldName) => {
+    const value = parseOptionalString(body, fieldName);
+    if (typeof value !== 'undefined') {
+      data[fieldName] = value;
+    }
+  });
+
+  REQUIRED_PEAK_NUMBER_FIELDS.forEach((fieldName) => {
+    const value = parseOptionalNumber(body, fieldName);
+    if (typeof value !== 'undefined') {
+      data[fieldName] = value;
+    }
+  });
+
+  if (!Object.keys(data).length) {
+    throw createAppError(400, 'INVALID_BODY', 'No hi ha canvis per aplicar');
+  }
+
+  return data;
+}
+
 // Exporto validacions per reutilitzar-les al controller.
 module.exports = {
   validatePeaksQuery,
-  validatePeakIdParam
+  validatePeakIdParam,
+  validateCreatePeakBody,
+  validateUpdatePeakBody
 };
