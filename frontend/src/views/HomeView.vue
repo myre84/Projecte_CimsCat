@@ -62,6 +62,14 @@
           Fem un v-for per reutilitzar el component PeakCard per cada publicació.
         -->
         <div class="featured-section__cards">
+          <p v-if="isLoadingPeaks" class="featured-section__status">
+            Carregant cims destacats...
+          </p>
+
+          <p v-else-if="peaksError" class="featured-section__status featured-section__status--error">
+            {{ peaksError }}
+          </p>
+
           <PeakCard
             v-for="publication in featuredPublications"
             :key="publication.id"
@@ -82,7 +90,7 @@
 // computed ens serveix per derivar dades a partir d'altres.
 // onMounted/onBeforeUnmount ens deixen executar codi quan el component es crea o es destrueix.
 // ref ens serveix per guardar valors reactius o referències a elements del DOM.
-import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
+import { computed, nextTick, onBeforeUnmount, onMounted, ref } from 'vue'
 
 // Leaflet és la llibreria que fem servir per pintar el mapa.
 import L from 'leaflet'
@@ -93,10 +101,8 @@ import PeakCard from '../components/PeakCard.vue'
 
 // Navbar reutilitzada a la home.
 import NavBar from '../components/NavBar.vue'
-
-// Dades mock temporals.
-// Les fem servir perquè el backend encara no ens dóna aquest endpoint.
-import { homeFeaturedPublications } from '../mocks/homeFeaturedPublications'
+import api from '../api/axios'
+import { resolveMediaUrl } from '../utils/media'
 
 // Aquest és un marcador personalitzat perquè el punt del mapa sigui més coherent amb l'estètica del projecte.
 // En lloc d'usar el marcador blau per defecte de Leaflet, construïm un petit "pin" verd.
@@ -117,8 +123,33 @@ const peakIcon = L.divIcon({
 
 // Aquí preparem els cims destacats que volem mostrar a la home.
 // Les ordenem de més guardats a menys guardats perquè la home ha d'ensenyar els favorits.
+const peaks = ref([])
+const isLoadingPeaks = ref(true)
+const peaksError = ref('')
+
 const featuredPublications = computed(() =>
-  [...homeFeaturedPublications].sort((a, b) => b.savedCount - a.savedCount)
+  [...peaks.value]
+    .sort((a, b) => b.stats.savedCount - a.stats.savedCount)
+    .map((peak) => ({
+      id: peak.id,
+      peakId: peak.id,
+      publicationId: `${peak.id}-featured`,
+      peakName: peak.nom,
+      elevation: peak.alcada,
+      region: peak.comarca || 'Comarca no informada',
+      authorName: 'CimsCat',
+      savedCount: peak.stats.savedCount,
+      excerpt:
+        peak.zonaProtegida ||
+        peak.massis ||
+        peak.dificultat ||
+        'Consulta la fitxa del cim per veure’n més informació.',
+      imageUrl:
+        resolveMediaUrl(peak.imatgeUrl) ||
+        'https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?auto=format&fit=crop&w=900&q=80',
+      lat: peak.lat,
+      lng: peak.lon,
+    }))
 )
 
 // Llista d'imatges del carrusel.
@@ -137,9 +168,71 @@ const mapContainer = ref(null)
 
 // Guardem aquí la instància del mapa per poder-la eliminar després.
 let map = null
+let markerLayer = null
 
 // Guardem també l'interval del carrusel per netejar-lo quan sortim de la pantalla.
 let slideInterval = null
+
+function getApiErrorMessage(error) {
+  return (
+    error?.response?.data?.message ||
+    error?.response?.data?.error?.message ||
+    'No hem pogut carregar els cims destacats.'
+  )
+}
+
+async function renderMarkers() {
+  if (!map) return
+
+  await nextTick()
+
+  if (markerLayer) {
+    markerLayer.clearLayers()
+  } else {
+    markerLayer = L.layerGroup().addTo(map)
+  }
+
+  const markers = []
+
+  featuredPublications.value.forEach((publication) => {
+    if (!publication.lat || !publication.lng) return
+
+    const marker = L.marker([publication.lat, publication.lng], { icon: peakIcon })
+      .bindPopup(`
+        <strong>${publication.peakName}</strong><br/>
+        ${publication.region}
+      `)
+
+    markerLayer.addLayer(marker)
+    markers.push(marker)
+  })
+
+  if (markers.length) {
+    map.invalidateSize()
+    const bounds = L.featureGroup(markers).getBounds().pad(0.2)
+    map.fitBounds(bounds)
+  }
+
+  setTimeout(() => {
+    map?.invalidateSize()
+  }, 0)
+}
+
+async function fetchPeaks() {
+  isLoadingPeaks.value = true
+  peaksError.value = ''
+
+  try {
+    const { data } = await api.get('/peaks')
+    peaks.value = data.peaks || []
+    await renderMarkers()
+  } catch (error) {
+    peaks.value = []
+    peaksError.value = getApiErrorMessage(error)
+  } finally {
+    isLoadingPeaks.value = false
+  }
+}
 
 onMounted(() => {
   // Quan la vista es carrega, fem que el carrusel canviï d'imatge cada 3.5 segons.
@@ -159,18 +252,11 @@ onMounted(() => {
     attribution: '&copy; OpenStreetMap contributors',
   }).addTo(map)
 
-  // Recorrem totes les publicacions destacades i, si tenen coordenades, hi afegim un marcador.
-  featuredPublications.value.forEach((publication) => {
-    if (!publication.lat || !publication.lng) return
+  setTimeout(() => {
+    map?.invalidateSize()
+  }, 0)
 
-    // Cada marcador mostra un petit popup amb el nom del cim i la zona.
-    L.marker([publication.lat, publication.lng], { icon: peakIcon })
-      .addTo(map)
-      .bindPopup(`
-        <strong>${publication.peakName}</strong><br/>
-        ${publication.region}
-      `)
-  })
+  fetchPeaks()
 })
 
 onBeforeUnmount(() => {
@@ -185,6 +271,8 @@ onBeforeUnmount(() => {
     map.remove()
     map = null
   }
+
+  markerLayer = null
 })
 </script>
 
@@ -320,6 +408,21 @@ onBeforeUnmount(() => {
   padding-right: 0.6rem;
   scrollbar-width: auto;
   scrollbar-color: #c0c0c0 #f0f0f0;
+}
+
+.featured-section__status {
+  margin: 0;
+  padding: 1rem;
+  border-radius: 10px;
+  background: #f5f5f0;
+  color: var(--color-text-soft);
+  line-height: 1.5;
+}
+
+.featured-section__status--error {
+  background: #fff5f5;
+  color: #8a5252;
+  border: 1px solid #e5c8c8;
 }
 
 /* Personalitzem una mica l'scrollbar per semblar-nos més al wireframe. */
