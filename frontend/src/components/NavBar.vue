@@ -34,7 +34,7 @@
         <RouterLink :to="`/perfil/${userStore.user?.id}`" class="btn-user-name">
           {{ userStore.user?.nomUsuari }}
         </RouterLink>
-        <button class="btn-logout" type="button">
+        <button class="btn-logout" type="button" @click="handleLogout">
           Tancar sessio
         </button>
         <button class="btn-icon">👤</button>
@@ -54,10 +54,12 @@
 <script setup>
 // computed ens permet construir una ruta dinàmica que depèn de l'estat d'autenticació.
 import { computed } from 'vue'
+import { useRouter } from 'vue-router'
 
 // Agafem la store global de l'usuari per saber si hi ha sessió iniciada.
 import { useUserStore } from '../stores/user'
 
+const router = useRouter()
 const userStore = useUserStore()
 
 // Si l'usuari està autenticat, "Planificar nova ruta" porta a /planificar.
@@ -65,6 +67,15 @@ const userStore = useUserStore()
 const planRouteLink = computed(() =>
   userStore.isAuthenticated ? '/planificar' : '/registre'
 )
+
+function handleLogout() {
+  const confirmed = window.confirm('Vols tancar sessio?')
+
+  if (!confirmed) return
+
+  userStore.logout()
+  router.push('/')
+}
 
 </script>
 
@@ -197,7 +208,7 @@ const planRouteLink = computed(() =>
   border-radius: 6px;
   padding: 0.4rem 0.9rem;
   font-size: 0.85rem;
-  cursor: default;
+  cursor: pointer;
 }
 
 /* Botó que mostra el nom d'usuari quan hi ha sessió. */
