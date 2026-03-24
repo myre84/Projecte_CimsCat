@@ -118,6 +118,7 @@ model Publicacio {
   // Contingut descriptiu
   titol            String
   descripcio       String
+  tipusActivitat   String
 
   // Data i metriques de l'activitat
   dataActivitat    DateTime
