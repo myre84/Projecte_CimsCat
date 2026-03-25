@@ -11,64 +11,66 @@ const { createAppError } = require('../../common/utils/http-error');
 // - nomes afegir condicions que realment s'han enviat
 // - mantenir codi clar i facil de mantenir
 function buildPeaksWhere(filters) {
+  const safeFilters = filters && typeof filters === 'object' ? filters : {};
+
   // Anirem acumulant condicions; al final les unirem amb AND.
   const andConditions = [];
 
   // Filtre de cerca lliure (search): busca parcialment i sense distingir maj/min
   // sobre nom, comarca i massis.
-  if (filters.search) {
+  if (safeFilters.search) {
     andConditions.push({
       OR: [
-        { nom: { contains: filters.search, mode: 'insensitive' } },
-        { comarca: { contains: filters.search, mode: 'insensitive' } },
-        { massis: { contains: filters.search, mode: 'insensitive' } }
+        { nom: { contains: safeFilters.search, mode: 'insensitive' } },
+        { comarca: { contains: safeFilters.search, mode: 'insensitive' } },
+        { massis: { contains: safeFilters.search, mode: 'insensitive' } }
       ]
     });
   }
 
   // Filtre estricte de comarca (equals) case-insensitive.
-  if (filters.comarca) {
+  if (safeFilters.comarca) {
     andConditions.push({
       comarca: {
-        equals: filters.comarca,
+        equals: safeFilters.comarca,
         mode: 'insensitive'
       }
     });
   }
 
   // Filtre estricte de massis (equals) case-insensitive.
-  if (filters.massis) {
+  if (safeFilters.massis) {
     andConditions.push({
       massis: {
-        equals: filters.massis,
+        equals: safeFilters.massis,
         mode: 'insensitive'
       }
     });
   }
 
   // Filtre estricte de dificultat (equals) case-insensitive.
-  if (filters.dificultat) {
+  if (safeFilters.dificultat) {
     andConditions.push({
       dificultat: {
-        equals: filters.dificultat,
+        equals: safeFilters.dificultat,
         mode: 'insensitive'
       }
     });
   }
 
   // Filtre de rang d'alcada (gte/lte) quan s'ha informat algun limit.
-  if (filters.minAlcada !== null || filters.maxAlcada !== null) {
+  if (safeFilters.minAlcada !== null || safeFilters.maxAlcada !== null) {
     // Objecte intern de Prisma per alcada.
     const alcadaFilter = {};
 
     // Si hi ha minim, alcada >= min.
-    if (filters.minAlcada !== null) {
-      alcadaFilter.gte = filters.minAlcada;
+    if (safeFilters.minAlcada !== null) {
+      alcadaFilter.gte = safeFilters.minAlcada;
     }
 
     // Si hi ha maxim, alcada <= max.
-    if (filters.maxAlcada !== null) {
-      alcadaFilter.lte = filters.maxAlcada;
+    if (safeFilters.maxAlcada !== null) {
+      alcadaFilter.lte = safeFilters.maxAlcada;
     }
 
     // Afegeixo condicio combinada d'alcada.
@@ -87,9 +89,14 @@ function buildPeaksWhere(filters) {
 // Servei de GET /peaks.
 // Retorna un llistat simple i lleuger, ideal per cataleg/home/mapa/cerca.
 async function getPeaksList(filters) {
+  const safeFilters = filters && typeof filters === 'object' ? filters : {};
+
+  const sortBy = typeof safeFilters.sortBy === 'string' && safeFilters.sortBy ? safeFilters.sortBy : 'nom';
+  const sortOrder = safeFilters.sortOrder === 'desc' ? 'desc' : 'asc';
+
   // Construim filtre where i ordre dinamic segons validators.
-  const where = buildPeaksWhere(filters);
-  const orderBy = { [filters.sortBy]: filters.sortOrder };
+  const where = buildPeaksWhere(safeFilters);
+  const orderBy = { [sortBy]: sortOrder };
 
   // Consulta principal:
   // - select nomes els camps necessaris

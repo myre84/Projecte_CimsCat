@@ -31,7 +31,7 @@ function normalizeString(value) {
 // - Si no arriba el parametre -> null (no filtrar per aquest camp)
 // - Si arriba buit o no numeric -> error 400 controlat
 // - Si es valid -> numero
-function parseOptionalNumber(rawValue) {
+function parseOptionalQueryNumber(rawValue) {
   // Quan el client no envia el parametre, no es error: simplement no hi ha filtre.
   if (typeof rawValue === 'undefined') {
     return null;
@@ -62,15 +62,19 @@ function parseOptionalNumber(rawValue) {
 // 1) sanejar i posar defaults
 // 2) rebutjar valors no permesos amb error funcional 400
 function validatePeaksQuery(query) {
+  // Defensa extra: si per algun motiu query arriba null/undefined,
+  // el convertim a objecte buit per evitar errors en runtime.
+  const safeQuery = query && typeof query === 'object' ? query : {};
+
   // Camps de text opcionals: trim + null si queden buits.
-  const search = normalizeString(query.search) || null;
-  const comarca = normalizeString(query.comarca) || null;
-  const massis = normalizeString(query.massis) || null;
-  const dificultat = normalizeString(query.dificultat) || null;
+  const search = normalizeString(safeQuery.search) || null;
+  const comarca = normalizeString(safeQuery.comarca) || null;
+  const massis = normalizeString(safeQuery.massis) || null;
+  const dificultat = normalizeString(safeQuery.dificultat) || null;
 
   // Parseig numeric dels rangs d'alcada.
-  const minAlcada = parseOptionalNumber(query.minAlcada);
-  const maxAlcada = parseOptionalNumber(query.maxAlcada);
+  const minAlcada = parseOptionalQueryNumber(safeQuery.minAlcada);
+  const maxAlcada = parseOptionalQueryNumber(safeQuery.maxAlcada);
 
   // Validacio de coherencia del rang numeric: min no pot superar max.
   if (minAlcada !== null && maxAlcada !== null && minAlcada > maxAlcada) {
@@ -79,8 +83,8 @@ function validatePeaksQuery(query) {
 
   // Llegeixo ordenacio enviada pel client.
   // sortOrder el passo a lowercase per acceptar ASC/Desc/etc.
-  const sortByInput = normalizeString(query.sortBy);
-  const sortOrderInput = normalizeString(query.sortOrder).toLowerCase();
+  const sortByInput = normalizeString(safeQuery.sortBy);
+  const sortOrderInput = normalizeString(safeQuery.sortOrder).toLowerCase();
 
   // Defaults demanats: nom + asc.
   const sortBy = sortByInput || 'nom';
@@ -110,8 +114,10 @@ function validatePeaksQuery(query) {
 // Valida parametre d'id de GET /peaks/:id.
 // Aqui fem validacio basica: que existeixi i no sigui buit.
 function validatePeakIdParam(params) {
+  const safeParams = params && typeof params === 'object' ? params : {};
+
   // Netegem espais per evitar ids "   " o similars.
-  const id = normalizeString(params.id);
+  const id = normalizeString(safeParams.id);
 
   // Mateix codi d'error de query params invalids (segons requisit).
   if (!id) {
