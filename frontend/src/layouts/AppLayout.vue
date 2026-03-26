@@ -26,6 +26,8 @@
 // computed ens deixa crear una variable reactiva a partir de la ruta actual.
 import { computed } from 'vue'
 import { useRoute } from 'vue-router'
+
+// Aquests dos components formen l'esquelet general compartit.
 import NavBar from '../components/NavBar.vue'
 import Footer from '../components/Footer.vue'
 

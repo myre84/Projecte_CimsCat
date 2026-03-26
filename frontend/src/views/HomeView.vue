@@ -128,6 +128,8 @@ const isLoadingPeaks = ref(true)
 const peaksError = ref('')
 
 const featuredPublications = computed(() =>
+  // Aquí transformem les dades reals de "cim" en el format que espera PeakCard.
+  // Ho fem així per no haver de reescriure el component de targeta.
   [...peaks.value]
     .sort((a, b) => b.stats.savedCount - a.stats.savedCount)
     .map((peak) => ({
@@ -174,6 +176,7 @@ let markerLayer = null
 let slideInterval = null
 
 function getApiErrorMessage(error) {
+  // Aquesta funció intenta rescatar el missatge més útil possible del backend.
   return (
     error?.response?.data?.message ||
     error?.response?.data?.error?.message ||
@@ -182,6 +185,7 @@ function getApiErrorMessage(error) {
 }
 
 async function renderMarkers() {
+  // Aquesta funció pinta al mapa un marcador per cada cim destacat que tingui coordenades.
   if (!map) return
 
   await nextTick()
@@ -195,6 +199,7 @@ async function renderMarkers() {
   const markers = []
 
   featuredPublications.value.forEach((publication) => {
+    // Si algun cim no té lat/lng, l'ignorem per evitar errors a Leaflet.
     if (!publication.lat || !publication.lng) return
 
     const marker = L.marker([publication.lat, publication.lng], { icon: peakIcon })
@@ -219,6 +224,8 @@ async function renderMarkers() {
 }
 
 async function fetchPeaks() {
+  // Aquí demanem al backend el catàleg de cims.
+  // Si la crida falla, deixem la secció en estat d'error perquè l'usuari ho vegi.
   isLoadingPeaks.value = true
   peaksError.value = ''
 

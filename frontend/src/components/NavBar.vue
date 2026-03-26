@@ -28,16 +28,25 @@
 
       <!-- Si l'usuari està autenticat, mostrem el seu nom i un botó d'icona. -->
       <template v-if="userStore.isAuthenticated">
+        <RouterLink to="/crear-publicacio" class="btn-create-publication">
+          Crear publicació
+        </RouterLink>
         <RouterLink v-if="userStore.isAdmin" to="/admin" class="btn-admin">
           Admin
-        </RouterLink>
-        <RouterLink :to="`/perfil/${userStore.user?.id}`" class="btn-user-name">
-          {{ userStore.user?.nomUsuari }}
         </RouterLink>
         <button class="btn-logout" type="button" @click="handleLogout">
           Tancar sessio
         </button>
-        <button class="btn-icon">👤</button>
+        <RouterLink :to="`/perfil/${userStore.user?.id}`" class="btn-profile">
+          <img
+            v-if="profileImage"
+            :src="profileImage"
+            :alt="userStore.user?.nomUsuari || 'Perfil'"
+            class="btn-profile__avatar"
+          />
+          <span v-else class="btn-profile__fallback">👤</span>
+          <span class="btn-profile__name">{{ userStore.user?.nomUsuari }}</span>
+        </RouterLink>
       </template>
 
       <!-- Si no està autenticat, mostrem els botons de login i registre. -->
@@ -58,17 +67,27 @@ import { useRouter } from 'vue-router'
 
 // Agafem la store global de l'usuari per saber si hi ha sessió iniciada.
 import { useUserStore } from '../stores/user'
+import { resolveMediaUrl } from '../utils/media'
 
 const router = useRouter()
 const userStore = useUserStore()
 
+// Aquesta variable reactiva decideix on enviem l'usuari quan clica "Planificar nova ruta".
+// Ho fem així perquè una mateixa navbar pugui reaccionar a si hi ha login o no.
 // Si l'usuari està autenticat, "Planificar nova ruta" porta a /planificar.
 // Si no ho està, el fem passar abans per registre.
 const planRouteLink = computed(() =>
   userStore.isAuthenticated ? '/planificar' : '/registre'
 )
 
+// Aquí preparem la foto de perfil que es mostrarà a la dreta.
+// Si l'usuari no en té cap, més avall al template ensenyarem el ninot de fallback.
+const profileImage = computed(() =>
+  userStore.user?.fotoPerfil ? resolveMediaUrl(userStore.user.fotoPerfil) : ''
+)
+
 function handleLogout() {
+  // Abans de tancar la sessió, demanem confirmació per no fer logout accidentalment.
   const confirmed = window.confirm('Vols tancar sessio?')
 
   if (!confirmed) return
@@ -179,6 +198,17 @@ function handleLogout() {
   border: 1px solid var(--color-border);
 }
 
+.btn-create-publication {
+  /* Aquest botó destaca la creació de publicacions quan hi ha login. */
+  border-radius: 20px;
+  padding: 0.3rem 0.8rem;
+  font-size: 0.85rem;
+  text-decoration: none;
+  background-color: #eef3e9;
+  color: #294637;
+  border: 1px solid #cfd8ca;
+}
+
 /* Botons foscos de login i registre. */
 .btn-primary {
   background-color: var(--color-button-primary);
@@ -211,22 +241,36 @@ function handleLogout() {
   cursor: pointer;
 }
 
-/* Botó que mostra el nom d'usuari quan hi ha sessió. */
-.btn-user-name {
+.btn-profile {
+  /* Bloc que ajunta foto de perfil + nom d'usuari en una sola peça visual. */
+  display: inline-flex;
+  align-items: center;
+  gap: 0.55rem;
+  text-decoration: none;
+  color: var(--color-text);
+}
+
+.btn-profile__avatar,
+.btn-profile__fallback {
+  /* Tant la foto real com el fallback comparteixen la mateixa caixa circular. */
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: 1px solid var(--color-border);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: #f5f4ef;
+  object-fit: cover;
+  flex-shrink: 0;
+}
+
+.btn-profile__name {
+  /* El nom el mantenim en una capsa fosca perquè visualment dialogui amb la resta de botons. */
   background-color: var(--color-button-primary);
   color: var(--color-button-primary-text);
   border-radius: 6px;
   padding: 0.4rem 1rem;
-  text-decoration: none;
   font-size: 0.85rem;
-}
-
-/* Botó circular amb la icona d'usuari. */
-.btn-icon {
-  background: none;
-  border: 1px solid var(--color-border);
-  border-radius: 50%;
-  padding: 0.3rem 0.5rem;
-  cursor: pointer;
 }
 </style>

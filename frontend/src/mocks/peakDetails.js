@@ -1,3 +1,5 @@
+// Aquest mock representa fitxes de cim completes.
+// Ens serveix sobretot quan el backend del detall del cim falla i volem continuar maquetant.
 export const peakDetailsMock = {
   '101': {
     id: '101',

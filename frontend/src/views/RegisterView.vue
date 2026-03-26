@@ -1,4 +1,8 @@
 <template>
+  <!--
+    Aquesta és la pantalla de registre.
+    Aquí recollim les dades mínimes que el backend ens demana per crear un compte.
+  -->
   <section class="auth-shell">
     <div class="auth-panel">
       <header class="auth-topbar">
@@ -137,6 +141,7 @@ const loading = ref(false)
 const serverError = ref('')
 
 function resetErrors() {
+  // Amb això netegem tots els errors del formulari d'una sola passada.
   Object.keys(errors).forEach((key) => {
     errors[key] = ''
   })
@@ -144,6 +149,7 @@ function resetErrors() {
 }
 
 function validateForm() {
+  // Cada cop que validem, comencem des d'un estat net.
   resetErrors()
 
   let isValid = true
@@ -194,16 +200,20 @@ function validateForm() {
 }
 
 async function handleSubmit() {
+  // Igual que al login, primer validem i només després intentem el registre real.
   if (!validateForm()) return
 
   loading.value = true
 
   try {
+    // La store s'encarrega de traduir el formulari al contracte real del backend.
     const result = await userStore.register(form)
 
     if (result.token) {
+      // Si backend ja ens retorna token, entrem directament a l'app.
       router.push('/')
     } else {
+      // Si en algun moment backend registrés sense loguejar automàticament, ens preparem per enviar a login.
       router.push('/login')
     }
   } catch (error) {

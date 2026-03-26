@@ -72,6 +72,7 @@ const props = defineProps({
 const router = useRouter()
 const userStore = useUserStore()
 
+// props.publication arriba des del pare amb totes les dades que necessitem per omplir la targeta.
 // isSaved controla només l'estat visual actual del guardat dins aquesta card.
 const isSaved = ref(false)
 
@@ -79,6 +80,8 @@ const isSaved = ref(false)
 const savedCount = ref(props.publication.savedCount)
 
 function handleSave() {
+  // Aquesta acció encara no està connectada al backend real.
+  // Per això aquí fem un comportament visual/local per poder provar la UX.
   // Si l'usuari no està autenticat, no pot guardar cims i l'enviem a registre.
   if (!userStore.isAuthenticated) {
     router.push('/registre')
@@ -156,6 +159,8 @@ function handleSave() {
 
 /* Botó de guardar. */
 .peak-card__save {
+  /* position: relative ens permet col·locar el tooltip just al costat del botó. */
+  position: relative;
   width: 44px;
   height: 44px;
   border: 1px solid var(--color-border);
