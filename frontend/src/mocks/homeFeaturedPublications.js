@@ -3,7 +3,7 @@
 // La idea és que més endavant aquestes dades es substitueixin per una crida real.
 export const homeFeaturedPublications = [
   {
-    // id intern del mock.
+    // id intern del mock per identificar aquesta targeta dins del frontend.
     id: 1,
     // peakId és l'id del cim, que fem servir per enllaçar amb la fitxa oficial del cim.
     peakId: 101,

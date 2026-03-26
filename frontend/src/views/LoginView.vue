@@ -1,4 +1,11 @@
 <template>
+  <!--
+    Aquesta és la pantalla d'inici de sessió.
+    La fem molt simple perquè el flux important aquí és:
+    1) omplir correu i contrasenya
+    2) validar mínimament
+    3) demanar el login a la store
+  -->
   <section class="auth-shell">
     <div class="auth-panel">
       <header class="auth-topbar">
@@ -50,6 +57,7 @@
 </template>
 
 <script setup>
+// reactive ens va bé per formularis amb diversos camps i errors.
 import { reactive, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { useUserStore } from '../stores/user'
@@ -71,6 +79,7 @@ const loading = ref(false)
 const serverError = ref('')
 
 function validateForm() {
+  // Sempre netegem errors abans de tornar a validar.
   errors.email = ''
   errors.password = ''
   serverError.value = ''
@@ -94,14 +103,17 @@ function validateForm() {
 }
 
 async function handleSubmit() {
+  // Si la validació falla, no intentem anar al backend.
   if (!validateForm()) return
 
   loading.value = true
 
   try {
+    // La store encapsula la petició real al backend i la persistència de la sessió.
     await userStore.login(form)
     router.push('/')
   } catch (error) {
+    // Aquí mostrem el missatge del backend si existeix.
     serverError.value = error.response?.data?.error?.message || 'No hem pogut iniciar sessio.'
   } finally {
     loading.value = false
@@ -116,6 +128,7 @@ async function handleSubmit() {
 }
 
 .auth-panel {
+  /* Aquesta "targeta" central és la caixa principal del login. */
   width: min(100%, 1040px);
   margin: 0 auto;
   background: #fff;

@@ -1,13 +1,17 @@
 // Aquesta és la instància central d'Axios.
 // La fem servir perquè totes les peticions al backend comparteixin la mateixa configuració base.
+// La idea és tenir un únic "client HTTP" en lloc d'anar fent fetch o axios.create a cada fitxer.
 import axios from 'axios'
 
-// baseURL ens evita repetir "http://localhost:3000/api" a cada petició.
+// baseURL ens evita repetir la base del backend a cada petició.
+// Això simplifica molt el codi de les vistes.
 const api = axios.create({
   baseURL: 'http://localhost:3000',
 })
 
 api.interceptors.request.use((config) => {
+  // Aquest interceptor s'executa just abans d'enviar qualsevol petició.
+  // És molt útil perquè aquí podem injectar el token una sola vegada per a tot el projecte.
   // Abans d'enviar qualsevol petició, comprovem si l'usuari té token.
   const token = localStorage.getItem('token')
 

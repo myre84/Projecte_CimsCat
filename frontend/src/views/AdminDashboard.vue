@@ -86,6 +86,9 @@
 </template>
 
 <script setup>
+// Aquest dashboard encara és sobretot visual.
+// L'objectiu és deixar una base de panell admin encara que moltes accions
+// reals encara depenguin del backend.
 import { computed } from 'vue'
 import { useUserStore } from '../stores/user'
 import { homeFeaturedPublications } from '../mocks/homeFeaturedPublications'
@@ -97,6 +100,7 @@ const peaks = computed(() =>
 )
 
 const moderationSections = [
+  // Cada targeta de moderació representa una funcionalitat futura.
   {
     title: 'Publicacions',
     description: 'Preparat per revisar i eliminar publicacions quan existeixi l\'endpoint real.',

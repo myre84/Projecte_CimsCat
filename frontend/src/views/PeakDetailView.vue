@@ -1,4 +1,11 @@
 <template>
+  <!--
+    Aquesta és la fitxa tècnica d'un cim.
+    Aquí intentem mostrar:
+    - la informació oficial del cim
+    - la seva imatge
+    - i les publicacions relacionades que apunten a aquest cim
+  -->
   <section class="peak-detail-view">
     <div v-if="isLoading" class="peak-detail-state">
       <p class="peak-detail-state__title">Carregant fitxa del cim...</p>
@@ -109,6 +116,7 @@
 </template>
 
 <script setup>
+// computed ens serveix per construir llistes derivades segons les dades del cim.
 import { computed, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import api from '../api/axios'
@@ -122,12 +130,16 @@ const isLoading = ref(true)
 const errorMessage = ref('')
 const isUsingMockData = ref(false)
 
+// Si el cim no té imatge o la ruta és incorrecta, fem servir una foto de suport.
 const fallbackImage =
   'https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?auto=format&fit=crop&w=900&q=80'
 
+// Aquesta computed construeix la URL final de la imatge del cim.
 const resolvedPeakImage = computed(() => resolveMediaUrl(peak.value?.imatgeUrl) || fallbackImage)
 
 const locationItems = computed(() => {
+  // Aquesta secció intenta aprofitar primer la forma "rica" del mock.
+  // Si no hi és, reconstruïm la localització amb els camps bàsics del backend.
   if (!peak.value) return []
   if (peak.value.detailSections?.location) return peak.value.detailSections.location
 
@@ -147,6 +159,8 @@ const locationItems = computed(() => {
 })
 
 const accessItems = computed(() => {
+  // Igual que a localització, aquí usem detailSections.access si existeix.
+  // Si no, intentem reconstruir la informació a partir de la ruta principal del cim.
   if (!peak.value) return []
   if (peak.value.detailSections?.access) return peak.value.detailSections.access
 
@@ -169,6 +183,7 @@ const accessItems = computed(() => {
 })
 
 const technicalItems = computed(() => {
+  // Aquest bloc agrupa la part més "numèrica" o resum tècnic del cim.
   if (!peak.value) return []
   if (peak.value.detailSections?.technical) return peak.value.detailSections.technical
 
@@ -192,6 +207,8 @@ const technicalItems = computed(() => {
 })
 
 const refugeItems = computed(() => {
+  // Aquesta part l'omplim amb els refugis del mock o, si no n'hi ha,
+  // amb punts de la primera ruta vinculada al cim.
   if (!peak.value) return []
   if (peak.value.detailSections?.refuges) return peak.value.detailSections.refuges
 
@@ -202,6 +219,8 @@ const refugeItems = computed(() => {
 })
 
 function resolvePublicationImage(publication) {
+  // Cada publicació relacionada pot tenir portada pròpia.
+  // Si no en té, reutilitzem la del cim per no deixar buits visuals.
   return resolveMediaUrl(publication.portadaUrl) || resolvedPeakImage.value
 }
 
@@ -214,6 +233,8 @@ function getApiErrorMessage(error) {
 }
 
 async function fetchPeakDetail() {
+  // Primer intentem carregar el cim real des de backend.
+  // Si el backend falla i tenim mock per aquell id, el mostrem igualment.
   isLoading.value = true
   errorMessage.value = ''
   isUsingMockData.value = false
@@ -255,6 +276,7 @@ function formatTime(value) {
 }
 
 function formatAuthor(author) {
+  // Preferim el nom d'usuari, i si no existeix muntem nom + cognom.
   return author?.nomUsuari || [author?.nom, author?.cognom].filter(Boolean).join(' ') || 'Autor desconegut'
 }
 

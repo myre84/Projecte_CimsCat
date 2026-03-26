@@ -8,6 +8,7 @@
 <style scoped>
 /* Peu de pàgina integrat al contenidor principal de l'app. */
 .footer {
+  /* El footer és intencionadament simple perquè al wireframe només necessitàvem una franja amb el nom del projecte. */
   background-color: var(--color-footer);
   color: var(--color-text);
   padding: 1rem 1.5rem;
