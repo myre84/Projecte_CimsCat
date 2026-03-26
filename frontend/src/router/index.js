@@ -56,7 +56,17 @@ const routes = [
     component: () => import('../views/PlanRouteView.vue'),
     meta: { requiresAuth: true },
   },
-  { path: '/perfil/:id', name: 'Perfil', component: () => import('../views/ProfileView.vue') },
+  {
+    path: '/perfil/:id',
+    name: 'Perfil',
+    component: () => import('../views/ProfileView.vue'),
+    meta: { requiresAuth: true },
+  },
+  {
+    path: '/usuari/:id',
+    name: 'PerfilAlie',
+    component: () => import('../views/ForeignProfileView.vue'),
+  },
   { path: '/cerca', name: 'Cerca', component: () => import('../views/SearchView.vue') },
   {
     path: '/admin',

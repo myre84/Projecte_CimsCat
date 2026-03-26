@@ -29,14 +29,14 @@
             <p class="publication-eyebrow">Pàgina de publicació</p>
             <h1 class="publication-title">{{ publication.titol }}</h1>
 
-            <div class="publication-author">
+            <RouterLink :to="authorProfileLink" class="publication-author">
               <span class="publication-author__label">by {{ authorName }}</span>
               <img
                 :src="authorImage"
                 :alt="publication.author.nomUsuari || publication.author.nom || 'Autor'"
                 class="publication-author__avatar"
               />
-            </div>
+            </RouterLink>
           </div>
 
           <div class="publication-header__actions">
@@ -278,6 +278,14 @@ const authorName = computed(() => {
 const authorImage = computed(
   () => resolveMediaUrl(publication.value?.author?.fotoPerfil) || fallbackAvatar,
 )
+
+const authorProfileLink = computed(() => {
+  const authorId = publication.value?.author?.id
+
+  if (!authorId) return '/login'
+
+  return userStore.user?.id === authorId ? `/perfil/${authorId}` : `/usuari/${authorId}`
+})
 
 function getApiErrorMessage(error) {
   return (
