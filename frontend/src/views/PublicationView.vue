@@ -793,7 +793,6 @@ watch(
 }
 
 @media (max-width: 900px) {
-  .publication-header__top,
   .publication-comments__header,
   .publication-comments__actions,
   .publication-map-placeholder {
@@ -823,6 +822,36 @@ watch(
   .publication-card,
   .publication-state {
     padding: 1.1rem;
+  }
+
+  .publication-header__top {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: start;
+    gap: 1rem;
+  }
+
+  .publication-header__main {
+    min-width: 0;
+  }
+
+  .publication-author {
+    width: fit-content;
+  }
+
+  .publication-header__actions {
+    flex-direction: column;
+    align-items: flex-end;
+    grid-column: 2;
+    grid-row: 1 / span 2;
+    justify-self: end;
+    align-self: start;
+    margin-top: 0;
+  }
+
+  .publication-like,
+  .publication-peak-link {
+    min-width: 120px;
   }
 
   .publication-banner__grid {

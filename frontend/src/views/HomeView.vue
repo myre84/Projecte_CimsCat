@@ -54,7 +54,9 @@
 
     <!-- Secció de cims/publicacions destacades. -->
     <section class="featured-section">
-      <h2 class="featured-section__title">Cims destacats</h2>
+      <div class="featured-section__header">
+        <h2 class="featured-section__title">Cims destacats</h2>
+      </div>
 
       <div class="featured-section__content">
         <!--
@@ -70,8 +72,15 @@
             {{ peaksError }}
           </p>
 
+          <p
+            v-else-if="!displayedPublications.length"
+            class="featured-section__status featured-section__status--empty"
+          >
+            Ara mateix no hi ha cims per mostrar.
+          </p>
+
           <PeakCard
-            v-for="publication in featuredPublications"
+            v-for="publication in displayedPublications"
             :key="publication.id"
             :publication="publication"
           />
@@ -127,32 +136,34 @@ const peaks = ref([])
 const isLoadingPeaks = ref(true)
 const peaksError = ref('')
 
-const featuredPublications = computed(() =>
-  // Aquí transformem les dades reals de "cim" en el format que espera PeakCard.
-  // Ho fem així per no haver de reescriure el component de targeta.
-  [...peaks.value]
+function mapPeakToCard(peak) {
+  return {
+    id: peak.id,
+    peakId: peak.id,
+    publicationId: `${peak.id}-featured`,
+    peakName: peak.nom,
+    elevation: peak.alcada,
+    region: peak.comarca || 'Comarca no informada',
+    authorName: 'CimsCat',
+    savedCount: peak.stats.savedCount,
+    excerpt:
+      peak.zonaProtegida ||
+      peak.massis ||
+      peak.dificultat ||
+      'Consulta la fitxa del cim per veure’n més informació.',
+    imageUrl:
+      resolveMediaUrl(peak.imatgeUrl) ||
+      'https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?auto=format&fit=crop&w=900&q=80',
+    lat: peak.lat,
+    lng: peak.lon,
+  }
+}
+
+const displayedPublications = computed(() => {
+  return [...peaks.value]
     .sort((a, b) => b.stats.savedCount - a.stats.savedCount)
-    .map((peak) => ({
-      id: peak.id,
-      peakId: peak.id,
-      publicationId: `${peak.id}-featured`,
-      peakName: peak.nom,
-      elevation: peak.alcada,
-      region: peak.comarca || 'Comarca no informada',
-      authorName: 'CimsCat',
-      savedCount: peak.stats.savedCount,
-      excerpt:
-        peak.zonaProtegida ||
-        peak.massis ||
-        peak.dificultat ||
-        'Consulta la fitxa del cim per veure’n més informació.',
-      imageUrl:
-        resolveMediaUrl(peak.imatgeUrl) ||
-        'https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?auto=format&fit=crop&w=900&q=80',
-      lat: peak.lat,
-      lng: peak.lon,
-    }))
-)
+    .map(mapPeakToCard)
+})
 
 // Llista d'imatges del carrusel.
 // Ara mateix també són imatges externes temporals per avançar en el frontend.
@@ -177,11 +188,16 @@ let slideInterval = null
 
 function getApiErrorMessage(error) {
   // Aquesta funció intenta rescatar el missatge més útil possible del backend.
-  return (
+  const message =
     error?.response?.data?.message ||
     error?.response?.data?.error?.message ||
     'No hem pogut carregar els cims destacats.'
-  )
+
+  if (message.includes("Can't reach database server")) {
+    return 'El backend no pot connectar amb la base de dades ara mateix.'
+  }
+
+  return message
 }
 
 async function renderMarkers() {
@@ -198,7 +214,7 @@ async function renderMarkers() {
 
   const markers = []
 
-  featuredPublications.value.forEach((publication) => {
+  displayedPublications.value.forEach((publication) => {
     // Si algun cim no té lat/lng, l'ignorem per evitar errors a Leaflet.
     if (!publication.lat || !publication.lng) return
 
@@ -232,6 +248,7 @@ async function fetchPeaks() {
   try {
     const { data } = await api.get('/peaks')
     peaks.value = data.peaks || []
+
     await renderMarkers()
   } catch (error) {
     peaks.value = []
@@ -389,11 +406,29 @@ onBeforeUnmount(() => {
   padding: 3rem 1rem 2rem;
 }
 
+.featured-section__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1.25rem;
+}
+
 /* Títol de secció. */
 .featured-section__title {
-  margin: 0 0 1.5rem;
+  margin: 0;
   font-size: 2.3rem;
   color: var(--color-text);
+}
+
+.featured-section__button {
+  min-height: 42px;
+  border-radius: 8px;
+  border: 1px solid var(--color-border);
+  background: #fff;
+  color: var(--color-text);
+  padding: 0.65rem 0.95rem;
+  cursor: pointer;
 }
 
 /* Layout a dues columnes: cards a l'esquerra i mapa a la dreta. */
@@ -432,6 +467,12 @@ onBeforeUnmount(() => {
   border: 1px solid #e5c8c8;
 }
 
+.featured-section__status--empty {
+  background: #f4f2fb;
+  color: #625a86;
+  border: 1px solid #dcd6f3;
+}
+
 /* Personalitzem una mica l'scrollbar per semblar-nos més al wireframe. */
 .featured-section__cards::-webkit-scrollbar {
   width: 8px;
@@ -465,6 +506,10 @@ onBeforeUnmount(() => {
 
 /* Quan la pantalla és més petita, apilem cards i mapa un sota l'altre. */
 @media (max-width: 900px) {
+  .featured-section__header {
+    align-items: flex-start;
+  }
+
   .featured-section__content {
     grid-template-columns: 1fr;
   }

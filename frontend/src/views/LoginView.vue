@@ -36,7 +36,7 @@
               v-model="form.password"
               type="password"
               autocomplete="current-password"
-              placeholder="Ha de tenir minim 8 caracters"
+              placeholder="Introdueix la teva contrasenya"
             />
             <small v-if="errors.password">{{ errors.password }}</small>
           </label>

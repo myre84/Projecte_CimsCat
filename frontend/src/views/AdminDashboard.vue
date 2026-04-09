@@ -1,12 +1,20 @@
 <template>
   <section class="admin-dashboard">
+    <div v-if="isLoading" class="admin-feedback">
+      Carregant dades reals del panell d&apos;administracio...
+    </div>
+
+    <div v-else-if="errorMessage" class="admin-feedback admin-feedback--error">
+      {{ errorMessage }}
+    </div>
+
     <header class="admin-dashboard__header">
       <div>
         <p class="admin-dashboard__eyebrow">Panell d'administracio</p>
         <h1>Gestio de plataforma</h1>
         <p class="admin-dashboard__lead">
-          Des d'aqui pots revisar els cims destacats actuals i veure quines eines de moderacio
-          queden pendents de connectar amb backend.
+          Des d'aqui pots revisar el cataleg real de cims i connectar la gestio admin que ja
+          existeix al backend.
         </p>
       </div>
 
@@ -22,14 +30,14 @@
           <p class="admin-section__eyebrow">Gestio de cims</p>
           <h2>Llistat actual</h2>
         </div>
-        <button class="admin-button admin-button--primary" disabled>
+        <button class="admin-button admin-button--primary admin-button--clickable" type="button" @click="openCreateModal">
           Crear nou cim
         </button>
       </div>
 
       <p class="admin-section__note">
-        La UI esta preparada, pero la creacio, edicio i eliminacio queden pendents de la connexio
-        amb els endpoints reals del backend.
+        La part de cims ja es connecta a backend per llistar, crear i editar. L&apos;eliminacio encara
+        queda pendent perque no hi ha endpoint `DELETE /peaks/:id`.
       </p>
 
       <div class="admin-table-wrapper">
@@ -45,12 +53,14 @@
           </thead>
           <tbody>
             <tr v-for="peak in peaks" :key="peak.id">
-              <td>{{ peak.peakName }}</td>
-              <td>{{ peak.elevation }} m</td>
-              <td>{{ peak.region }}</td>
-              <td>{{ peak.savedCount }}</td>
+              <td>{{ peak.nom }}</td>
+              <td>{{ peak.alcada }} m</td>
+              <td>{{ peak.comarca }}</td>
+              <td>{{ peak.stats?.savedCount ?? 0 }}</td>
               <td class="admin-table__actions">
-                <button class="admin-button" disabled>Editar</button>
+                <button class="admin-button admin-button--clickable" type="button" @click="openEditModal(peak)">
+                  Editar
+                </button>
                 <button class="admin-button admin-button--danger" disabled>Eliminar</button>
               </td>
             </tr>
@@ -78,45 +88,135 @@
           <button class="admin-button admin-button--danger" disabled>
             {{ section.action }}
           </button>
-          <span class="moderation-card__status">Pendent de backend</span>
+          <span class="moderation-card__status">{{ section.status }}</span>
         </article>
       </div>
     </section>
+
+    <AdminPeakModal
+      v-if="isPeakModalOpen"
+      :mode="peakModalMode"
+      :initial-peak="editingPeak"
+      :loading="isSavingPeak"
+      @close="closePeakModal"
+      @submit="handlePeakSubmit"
+    />
   </section>
 </template>
 
 <script setup>
-// Aquest dashboard encara és sobretot visual.
-// L'objectiu és deixar una base de panell admin encara que moltes accions
-// reals encara depenguin del backend.
-import { computed } from 'vue'
+import { onMounted, ref } from 'vue'
+import api from '../api/axios'
+import AdminPeakModal from '../components/AdminPeakModal.vue'
 import { useUserStore } from '../stores/user'
-import { homeFeaturedPublications } from '../mocks/homeFeaturedPublications'
 
 const userStore = useUserStore()
 
-const peaks = computed(() =>
-  [...homeFeaturedPublications].sort((a, b) => b.savedCount - a.savedCount)
-)
+const peaks = ref([])
+const isLoading = ref(true)
+const errorMessage = ref('')
+const isPeakModalOpen = ref(false)
+const peakModalMode = ref('create')
+const editingPeak = ref(null)
+const isSavingPeak = ref(false)
+
+function getApiErrorMessage(error, fallbackMessage) {
+  return error?.response?.data?.message || error?.response?.data?.error?.message || fallbackMessage
+}
+
+async function fetchPeaks() {
+  isLoading.value = true
+  errorMessage.value = ''
+
+  try {
+    const { data } = await api.get('/peaks')
+    peaks.value = data.peaks || []
+  } catch (error) {
+    peaks.value = []
+    errorMessage.value = getApiErrorMessage(error, 'No hem pogut carregar el cataleg de cims.')
+  } finally {
+    isLoading.value = false
+  }
+}
+
+function openCreateModal() {
+  peakModalMode.value = 'create'
+  editingPeak.value = null
+  isPeakModalOpen.value = true
+}
+
+function openEditModal(peak) {
+  peakModalMode.value = 'edit'
+  editingPeak.value = peak
+  isPeakModalOpen.value = true
+}
+
+function closePeakModal() {
+  isPeakModalOpen.value = false
+  editingPeak.value = null
+}
+
+async function uploadPeakImage(file) {
+  const formData = new FormData()
+  formData.append('image', file)
+
+  const { data } = await api.post('/uploads/peaks', formData, {
+    headers: {
+      'Content-Type': 'multipart/form-data',
+    },
+  })
+
+  return data.file.url
+}
+
+async function handlePeakSubmit({ form, file }) {
+  isSavingPeak.value = true
+
+  try {
+    const finalImageUrl = file ? await uploadPeakImage(file) : form.imatgeUrl
+    const payload = {
+      ...form,
+      imatgeUrl: finalImageUrl,
+      zonaProtegida: form.zonaProtegida || undefined,
+    }
+
+    if (peakModalMode.value === 'create') {
+      await api.post('/peaks', payload)
+    } else {
+      await api.put(`/peaks/${editingPeak.value.id}`, payload)
+    }
+
+    closePeakModal()
+    await fetchPeaks()
+  } catch (error) {
+    window.alert(getApiErrorMessage(error, 'No hem pogut guardar el cim.'))
+  } finally {
+    isSavingPeak.value = false
+  }
+}
 
 const moderationSections = [
-  // Cada targeta de moderació representa una funcionalitat futura.
   {
     title: 'Publicacions',
-    description: 'Preparat per revisar i eliminar publicacions quan existeixi l\'endpoint real.',
+    description: 'El frontend encara no pot moderar publicacions com a admin: el DELETE actual es owner-only.',
     action: 'Eliminar publicacio',
+    status: 'Pendent de backend admin',
   },
   {
     title: 'Comentaris',
-    description: 'Espai reservat per moderar comentaris reportats o contingut inadequat.',
+    description: 'Encara no existeix un endpoint real de moderacio admin per comentaris.',
     action: 'Eliminar comentari',
+    status: 'Pendent de backend admin',
   },
   {
     title: 'Usuaris',
-    description: 'UI llesta per gestionar perfils quan el backend permeti la moderacio.',
+    description: 'La gestio administrativa d usuaris encara no te endpoint de moderacio o eliminacio.',
     action: 'Eliminar perfil',
+    status: 'Pendent de backend admin',
   },
 ]
+
+onMounted(fetchPeaks)
 </script>
 
 <style scoped>
@@ -127,6 +227,20 @@ const moderationSections = [
   display: flex;
   flex-direction: column;
   gap: 2rem;
+}
+
+.admin-feedback {
+  background: #f4f1e6;
+  border: 1px solid #d8d2bc;
+  border-radius: 16px;
+  padding: 1rem 1.25rem;
+  color: var(--color-text-soft);
+}
+
+.admin-feedback--error {
+  background: #fff4f3;
+  border-color: #efc9c2;
+  color: #9a3e34;
 }
 
 .admin-dashboard__header,
@@ -234,6 +348,10 @@ const moderationSections = [
   padding: 0.55rem 0.9rem;
   cursor: not-allowed;
   font-size: 0.9rem;
+}
+
+.admin-button--clickable {
+  cursor: pointer;
 }
 
 .admin-button--primary {
