@@ -24,45 +24,34 @@
     <!-- Quan ja tenim dades del perfil, renderitzem el contingut real -->
     <article v-else-if="profile" class="profile-card">
       <header class="profile-header">
-        <!--
-          Aquest bloc esquerre és la "part editorial" del perfil:
-          nom gran + primera secció de contingut.
-          Ho fem així perquè visualment s'assembla més al wireframe.
-        -->
         <div class="profile-header__main">
           <div class="profile-header__identity">
             <h1 class="profile-header__title">{{ fullName }}</h1>
           </div>
 
-          <!--
-            Primera fila important del perfil:
-            últimes publicacions pròpies de l'usuari.
-            Reutilitzem el component de carousel perquè després el puguem fer servir
-            també a altres seccions.
-          -->
-          <HorizontalCarousel
-            title="Últimes publicacions"
-            :items="ownPublications"
-            empty-text="Encara no has publicat cap sortida."
-          >
-            <template #item="{ item }">
-              <ProfilePublicationCard :publication="item" />
-            </template>
-          </HorizontalCarousel>
-        </div>
-
-        <!--
-          Aquesta columna dreta representa la part de "identitat":
-          foto de perfil + acció principal d'editar.
-        -->
-        <div class="profile-header__aside">
-          <img :src="profileImage" :alt="fullName" class="profile-header__avatar" />
-
           <button class="profile-header__edit" type="button" @click="isEditModalOpen = true">
             Editar perfil
           </button>
         </div>
+
+        <!--
+          Aquesta columna dreta representa la part de "identitat":
+          foto de perfil.
+        -->
+        <div class="profile-header__aside">
+          <img :src="profileImage" :alt="fullName" class="profile-header__avatar" />
+        </div>
       </header>
+
+      <HorizontalCarousel
+        title="Últimes publicacions"
+        :items="ownPublications"
+        empty-text="Encara no has publicat cap sortida."
+      >
+        <template #item="{ item }">
+          <ProfilePublicationCard :publication="item" />
+        </template>
+      </HorizontalCarousel>
 
       <!--
         Aquesta secció visualment diu "Publicacions guardades",
@@ -331,19 +320,21 @@ watch(
   gap: 2rem;
 }
 
-/* Header principal del perfil: contingut a l'esquerra i identitat a la dreta */
+/* Header principal del perfil: identitat textual a l'esquerra i foto/edició a la dreta */
 .profile-header {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 320px;
+  grid-template-columns: minmax(0, 1fr) 220px;
   gap: 2rem;
   align-items: start;
 }
 
-/* Columna principal del header: nom + primera secció */
+/* Columna principal del header: només la identitat principal */
 .profile-header__main {
   display: flex;
   flex-direction: column;
-  gap: 1.5rem;
+  align-items: flex-start;
+  gap: 0.9rem;
+  min-height: 100%;
 }
 
 .profile-header__title {
@@ -356,19 +347,15 @@ watch(
 /* Columna dreta: foto i boto d'editar */
 .profile-header__aside {
   display: flex;
-  flex-direction: column;
-  align-items: stretch;
-  gap: 1rem;
+  justify-content: flex-end;
 }
 
 .profile-header__avatar {
-  width: 220px;
-  height: 220px;
+  width: 136px;
+  height: 136px;
   border-radius: 50%;
   object-fit: cover;
   border: 1px solid var(--color-border);
-  justify-self: center;
-  align-self: center;
   background: #f2f1ec;
 }
 
@@ -378,7 +365,7 @@ watch(
   border-radius: 12px;
   background: #efe9f7;
   color: var(--color-text);
-  padding: 0.9rem 1rem;
+  padding: 0.7rem 0.95rem;
   cursor: pointer;
   font: inherit;
 }
@@ -428,18 +415,32 @@ watch(
 }
 
 @media (max-width: 900px) {
-  /* En pantalles petites passem a una sola columna perquè el layout respiri millor */
   .profile-header {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr) 92px;
+    align-items: start;
+    gap: 1rem;
+  }
+
+  .profile-header__main {
+    grid-column: 1;
+    grid-row: 1;
+    gap: 0.7rem;
   }
 
   .profile-header__aside {
-    align-items: flex-start;
+    grid-column: 2;
+    grid-row: 1;
+    justify-content: flex-end;
+    align-self: start;
   }
 
   .profile-header__avatar {
-    width: 170px;
-    height: 170px;
+    width: 88px;
+    height: 88px;
+  }
+
+  .profile-header__edit {
+    padding: 0.6rem 0.9rem;
   }
 
   .profile-awards-grid {

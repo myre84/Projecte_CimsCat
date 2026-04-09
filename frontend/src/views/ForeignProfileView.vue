@@ -22,29 +22,24 @@
     <!-- Contingut principal quan ja tenim dades -->
     <article v-else-if="profile" class="foreign-profile-card">
       <header class="foreign-profile-header">
-        <!-- Mateixa idea visual que al perfil propi: contingut a l'esquerra, foto a la dreta -->
         <div class="foreign-profile-header__main">
           <div class="foreign-profile-header__identity">
             <h1 class="foreign-profile-header__title">{{ fullName }}</h1>
           </div>
-
-          <!--
-            En perfil aliè mantenim només la secció pública de publicacions.
-            No mostrem likes personals, ni cims guardats, ni editar perfil.
-          -->
-          <HorizontalCarousel
-            title="Últimes publicacions"
-            :items="publications"
-            empty-text="Aquest usuari encara no té publicacions visibles."
-          >
-            <template #item="{ item }">
-              <ProfilePublicationCard :publication="item" />
-            </template>
-          </HorizontalCarousel>
         </div>
 
         <img :src="profileImage" :alt="fullName" class="foreign-profile-header__avatar" />
       </header>
+
+      <HorizontalCarousel
+        title="Últimes publicacions"
+        :items="publications"
+        empty-text="Aquest usuari encara no té publicacions visibles."
+      >
+        <template #item="{ item }">
+          <ProfilePublicationCard :publication="item" />
+        </template>
+      </HorizontalCarousel>
 
       <!-- Placeholder simple d'awards per mantenir el buit funcional reservat -->
       <section class="foreign-profile-section foreign-profile-section--placeholder">
@@ -159,7 +154,7 @@ watch(
   color: #9a4d4d;
 }
 
-/* Header amb dues columnes: contingut i avatar */
+/* Header amb dues columnes: nom a l'esquerra i avatar a la dreta */
 .foreign-profile-header {
   display: grid;
   grid-template-columns: minmax(0, 1fr) 320px;
@@ -167,11 +162,11 @@ watch(
   gap: 2rem;
 }
 
-/* Columna esquerra del header */
+/* Columna esquerra del header: només la identitat principal */
 .foreign-profile-header__main {
   display: flex;
-  flex-direction: column;
-  gap: 1.5rem;
+  align-items: center;
+  min-height: 100%;
 }
 
 .foreign-profile-header__title {
@@ -221,6 +216,10 @@ watch(
   /* En mòbil eliminem la doble columna i ho apilem */
   .foreign-profile-header {
     grid-template-columns: 1fr;
+  }
+
+  .foreign-profile-header__main {
+    align-items: flex-start;
   }
 
   .foreign-profile-header__avatar {
