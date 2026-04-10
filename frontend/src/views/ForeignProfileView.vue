@@ -41,13 +41,29 @@
         </template>
       </HorizontalCarousel>
 
-      <!-- Placeholder simple d'awards per mantenir el buit funcional reservat -->
       <section class="foreign-profile-section foreign-profile-section--placeholder">
         <h2 class="foreign-profile-section__title">Awards</h2>
         <p class="foreign-profile-section__text">
-          Aquesta part quedarà disponible més endavant quan es defineixi i s’implementi la part
-          d’estadístiques i insígnies.
+          Aquesta versió pública mostra el progrés general de muntanya a partir de les
+          publicacions visibles d’aquest perfil.
         </p>
+
+        <ProfileStatsBanner :stats="stats" />
+
+        <p v-if="hasTemporaryDefinitions" class="foreign-profile-section__note">
+          Els reptes es calculen temporalment al frontend a partir del catàleg actual de cims i de
+          les publicacions visibles.
+        </p>
+
+        <div class="foreign-profile-awards-grid">
+          <AwardDonutCard
+            v-for="challenge in challenges"
+            :key="challenge.id"
+            :challenge="challenge"
+          />
+        </div>
+
+        <BadgeGrid :badges="badges" />
       </section>
     </article>
   </section>
@@ -60,7 +76,11 @@ import { useRoute } from 'vue-router'
 import api from '../api/axios'
 import HorizontalCarousel from '../components/HorizontalCarousel.vue'
 import ProfilePublicationCard from '../components/ProfilePublicationCard.vue'
+import ProfileStatsBanner from '../components/ProfileStatsBanner.vue'
+import AwardDonutCard from '../components/AwardDonutCard.vue'
+import BadgeGrid from '../components/BadgeGrid.vue'
 import { resolveMediaUrl } from '../utils/media'
+import { useProfileAwards } from '../composables/useProfileAwards'
 
 const route = useRoute()
 
@@ -69,6 +89,9 @@ const profile = ref(null)
 const publications = ref([])
 const isLoading = ref(true)
 const errorMessage = ref('')
+const { stats, challenges, badges, hasTemporaryDefinitions } = useProfileAwards(publications, {
+  compact: true,
+})
 
 // Imatge de suport si l'usuari no té avatar o la ruta falla
 const fallbackAvatar =
@@ -212,6 +235,19 @@ watch(
   line-height: 1.7;
 }
 
+.foreign-profile-section__note {
+  margin: 1rem 0 0;
+  color: var(--color-text-soft);
+  line-height: 1.6;
+}
+
+.foreign-profile-awards-grid {
+  margin-top: 1rem;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+}
+
 @media (max-width: 760px) {
   /* En mòbil eliminem la doble columna i ho apilem */
   .foreign-profile-header {
@@ -225,6 +261,10 @@ watch(
   .foreign-profile-header__avatar {
     width: 160px;
     height: 160px;
+  }
+
+  .foreign-profile-awards-grid {
+    grid-template-columns: 1fr;
   }
 }
 </style>

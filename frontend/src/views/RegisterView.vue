@@ -5,13 +5,6 @@
   -->
   <section class="auth-shell">
     <div class="auth-panel">
-      <header class="auth-topbar">
-        <RouterLink to="/" class="auth-topbar__brand">
-          <img src="/logo.svg" alt="CimsCat" class="auth-topbar__logo" />
-          <span>CimsCat</span>
-        </RouterLink>
-      </header>
-
       <div class="auth-content auth-content--register">
         <h1>Pagina de Registre</h1>
 
@@ -45,7 +38,7 @@
                 v-model.trim="form.nomUsuari"
                 type="text"
                 autocomplete="username"
-                placeholder="Nom d'usuari en minuscules"
+                placeholder="Minim 3 caracters, minuscules, numeros, . o _"
               />
               <small v-if="errors.nomUsuari">{{ errors.nomUsuari }}</small>
             </label>
@@ -67,7 +60,7 @@
                 v-model="form.password"
                 type="password"
                 autocomplete="new-password"
-                placeholder="Ha de tenir minim 8 caracters"
+                placeholder="8-30 caracters, 1 majuscula i 1 numero"
               />
               <small v-if="errors.password">{{ errors.password }}</small>
             </label>
@@ -103,16 +96,19 @@
           <button class="auth-submit register-submit" type="submit" :disabled="loading">
             {{ loading ? 'Creant compte...' : 'Crear Compte' }}
           </button>
+
+          <p class="register-login-link">
+            Ja tens compte?
+            <RouterLink to="/login">Inicia sessio</RouterLink>
+          </p>
         </form>
       </div>
-
-      <footer class="auth-footer">CIMSCAT</footer>
     </div>
   </section>
 </template>
 
 <script setup>
-import { reactive, ref } from 'vue'
+import { reactive, ref, watchEffect } from 'vue'
 import { useRouter } from 'vue-router'
 import { useUserStore } from '../stores/user'
 
@@ -139,6 +135,12 @@ const errors = reactive({
 
 const loading = ref(false)
 const serverError = ref('')
+
+watchEffect(() => {
+  if (userStore.isAuthenticated) {
+    router.replace('/')
+  }
+})
 
 function resetErrors() {
   // Amb això netegem tots els errors del formulari d'una sola passada.
@@ -226,44 +228,26 @@ async function handleSubmit() {
 
 <style scoped>
 .auth-shell {
-  min-height: 100%;
-  padding: 1rem;
+  min-height: calc(100vh - 9rem);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
 }
 
 .auth-panel {
-  width: min(100%, 1040px);
-  margin: 0 auto;
+  width: min(100%, 1080px);
+  margin: auto;
   background: #fff;
-  border: 1px solid #c6c6c6;
-}
-
-.auth-topbar {
-  background: #d9d9d9;
-  padding: 0.65rem 1rem;
-}
-
-.auth-topbar__brand {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.75rem;
-  color: #1e1e1e;
-  text-decoration: none;
-  font-weight: 700;
-  font-size: 1.1rem;
-}
-
-.auth-topbar__logo {
-  width: 44px;
-  height: 44px;
-  object-fit: contain;
+  padding: 2.4rem 1.5rem 1.9rem;
 }
 
 .auth-content {
-  padding: 2.4rem 1.75rem 1.8rem;
+  padding: 0;
 }
 
 .auth-content--register h1 {
-  margin: 0 0 2.25rem;
+  margin: 0 0 1.9rem;
   text-align: center;
   font-size: clamp(3rem, 6vw, 4rem);
   line-height: 1;
@@ -273,10 +257,10 @@ async function handleSubmit() {
 .register-layout {
   display: grid;
   grid-template-columns: 1fr 280px;
-  column-gap: 5rem;
+  column-gap: 3.2rem;
   row-gap: 1rem;
   align-items: start;
-  max-width: 760px;
+  max-width: 860px;
   margin: 0 auto;
 }
 
@@ -412,18 +396,41 @@ async function handleSubmit() {
   margin-top: 0.6rem;
 }
 
-.auth-footer {
-  background: #d9d9d9;
-  padding: 1rem 1.4rem;
-  color: #1e1e1e;
-  font-size: 1rem;
+.register-login-link {
+  grid-column: 1 / -1;
+  margin: 0.35rem 0 0;
+  text-align: center;
+  color: #5b5b5b;
+}
+
+.register-login-link a {
+  color: #1f4332;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.register-login-link a:hover {
+  text-decoration: underline;
 }
 
 @media (max-width: 860px) {
+  .auth-shell {
+    align-items: flex-start;
+    min-height: auto;
+  }
+
+  .auth-panel {
+    padding: 2.15rem 1rem 1.55rem;
+  }
+
+  .auth-content--register h1 {
+    margin-bottom: 1.45rem;
+  }
+
   .register-layout {
     grid-template-columns: 1fr;
     justify-items: center;
-    row-gap: 1.3rem;
+    row-gap: 1.1rem;
   }
 
   .register-fields {
@@ -439,6 +446,28 @@ async function handleSubmit() {
   .register-submit {
     width: 100%;
     max-width: 340px;
+  }
+}
+
+@media (max-width: 560px) {
+  .auth-panel {
+    padding: 2rem 0.75rem 1.2rem;
+  }
+
+  .auth-field input,
+  .auth-field,
+  .register-submit {
+    max-width: 100%;
+  }
+
+  .register-avatar {
+    width: 124px;
+    height: 124px;
+    border-radius: 24px;
+  }
+
+  .register-side__note {
+    max-width: 260px;
   }
 }
 </style>
