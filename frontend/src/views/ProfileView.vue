@@ -89,22 +89,34 @@
         </p>
       </section>
 
-      <!-- Placeholder visual per a les estadístiques i insígnies futures -->
       <section class="profile-section profile-section--placeholder">
         <h2 class="profile-section__title">Awards</h2>
         <p class="profile-section__text">
-          Aquest bloc queda reservat per a estadístiques, insígnies i reptes. De moment només el
-          deixem preparat visualment per al futur.
+          Aquest bloc combina dades reals de les teves publicacions amb una definició temporal de
+          reptes i insígnies al frontend mentre el backend encara no té un sistema oficial
+          d’awards.
+        </p>
+
+        <ProfileStatsBanner :stats="stats" />
+
+        <p v-if="isCatalogLoading" class="profile-awards-note">
+          Estem carregant el catàleg de cims per calcular els reptes.
+        </p>
+
+        <p v-else-if="hasTemporaryDefinitions" class="profile-awards-note">
+          Els reptes oficials encara no existeixen al backend, així que aquest progrés es calcula
+          temporalment al frontend a partir de les teves publicacions i del catàleg actual de cims.
         </p>
 
         <div class="profile-awards-grid">
-          <article class="profile-award-stat">0 km aquest any</article>
-          <article class="profile-award-stat">0 km aquest mes</article>
-          <article class="profile-award-stat">0 km aquesta setmana</article>
-          <div class="profile-award-box">Gràfica de progrés pendent</div>
-          <div class="profile-award-box">Reptes i llistats pendents</div>
-          <div class="profile-award-box">Insígnies pendents</div>
+          <AwardDonutCard
+            v-for="challenge in challenges"
+            :key="challenge.id"
+            :challenge="challenge"
+          />
         </div>
+
+        <BadgeGrid :badges="badges" />
       </section>
     </article>
 
@@ -136,8 +148,12 @@ import HorizontalCarousel from '../components/HorizontalCarousel.vue'
 import ProfilePublicationCard from '../components/ProfilePublicationCard.vue'
 import ProfilePeakCard from '../components/ProfilePeakCard.vue'
 import EditProfileModal from '../components/EditProfileModal.vue'
+import ProfileStatsBanner from '../components/ProfileStatsBanner.vue'
+import AwardDonutCard from '../components/AwardDonutCard.vue'
+import BadgeGrid from '../components/BadgeGrid.vue'
 import { useUserStore } from '../stores/user'
 import { resolveMediaUrl } from '../utils/media'
+import { useProfileAwards } from '../composables/useProfileAwards'
 
 const route = useRoute()
 const router = useRouter()
@@ -152,6 +168,8 @@ const isLoading = ref(true)
 const errorMessage = ref('')
 const isEditModalOpen = ref(false)
 const isSavingProfile = ref(false)
+const { stats, challenges, badges, hasTemporaryDefinitions, isCatalogLoading } =
+  useProfileAwards(ownPublications)
 
 // Si el backend no retorna cap foto o la foto falla, fem servir aquesta imatge de suport.
 const fallbackAvatar =
@@ -390,28 +408,17 @@ watch(
   line-height: 1.7;
 }
 
-/* Graella d'awards provisional mentre no hi hagi dades reals */
+.profile-awards-note {
+  margin: 1rem 0 0;
+  color: var(--color-text-soft);
+  line-height: 1.6;
+}
+
 .profile-awards-grid {
   margin-top: 1rem;
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 1rem;
-}
-
-.profile-award-stat,
-.profile-award-box {
-  border-radius: 14px;
-  border: 1px solid #ddd8c6;
-  background: #fffaf1;
-  padding: 1rem;
-  color: var(--color-text-soft);
-}
-
-.profile-award-box {
-  min-height: 120px;
-  display: grid;
-  place-items: center;
-  text-align: center;
 }
 
 @media (max-width: 900px) {

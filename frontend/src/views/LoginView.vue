@@ -8,13 +8,6 @@
   -->
   <section class="auth-shell">
     <div class="auth-panel">
-      <header class="auth-topbar">
-        <RouterLink to="/" class="auth-topbar__brand">
-          <img src="/logo.svg" alt="CimsCat" class="auth-topbar__logo" />
-          <span>CimsCat</span>
-        </RouterLink>
-      </header>
-
       <div class="auth-content auth-content--login">
         <h1>Log in</h1>
 
@@ -58,7 +51,7 @@
 
 <script setup>
 // reactive ens va bé per formularis amb diversos camps i errors.
-import { reactive, ref } from 'vue'
+import { reactive, ref, watchEffect } from 'vue'
 import { useRouter } from 'vue-router'
 import { useUserStore } from '../stores/user'
 
@@ -77,6 +70,12 @@ const errors = reactive({
 
 const loading = ref(false)
 const serverError = ref('')
+
+watchEffect(() => {
+  if (userStore.isAuthenticated) {
+    router.replace('/')
+  }
+})
 
 function validateForm() {
   // Sempre netegem errors abans de tornar a validar.
@@ -123,41 +122,23 @@ async function handleSubmit() {
 
 <style scoped>
 .auth-shell {
-  min-height: 100%;
-  padding: 1rem;
+  min-height: calc(100vh - 9rem);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
 }
 
 .auth-panel {
-  /* Aquesta "targeta" central és la caixa principal del login. */
-  width: min(100%, 1040px);
-  margin: 0 auto;
+  /* Aquesta és només la columna principal del login, integrada dins del layout general. */
+  width: min(100%, 980px);
+  margin: auto;
   background: #fff;
-  border: 1px solid #c6c6c6;
-}
-
-.auth-topbar {
-  background: #d9d9d9;
-  padding: 0.65rem 1rem;
-}
-
-.auth-topbar__brand {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.75rem;
-  color: #1e1e1e;
-  text-decoration: none;
-  font-weight: 700;
-  font-size: 1.1rem;
-}
-
-.auth-topbar__logo {
-  width: 44px;
-  height: 44px;
-  object-fit: contain;
+  padding: 2.4rem 1.25rem 0;
 }
 
 .auth-content {
-  padding: 2.4rem 1.5rem 2rem;
+  padding: 1.6rem 1.5rem 2rem;
 }
 
 .auth-content--login {
@@ -167,7 +148,7 @@ async function handleSubmit() {
 }
 
 .auth-content h1 {
-  margin: 0 0 1.8rem;
+  margin: 0 0 1.35rem;
   font-size: clamp(3rem, 7vw, 4.2rem);
   line-height: 1;
   color: #111;
@@ -216,7 +197,7 @@ async function handleSubmit() {
 .auth-submit {
   display: block;
   width: 100%;
-  margin-top: 2rem;
+  margin-top: 1.4rem;
   height: 54px;
   border: 2px solid #5d8068;
   border-radius: 14px;
@@ -236,7 +217,34 @@ async function handleSubmit() {
 .auth-illustration img {
   display: block;
   width: 100%;
-  height: 180px;
+  height: 150px;
   object-fit: cover;
+  margin-bottom: -1.2rem;
+  position: relative;
+  z-index: 1;
+}
+
+@media (max-width: 700px) {
+  .auth-shell {
+    align-items: flex-start;
+    min-height: auto;
+  }
+
+  .auth-panel {
+    padding: 2.2rem 0.9rem 0;
+  }
+
+  .auth-content {
+    padding: 1.2rem 0.35rem 1.5rem;
+  }
+
+  .auth-form--login {
+    max-width: 100%;
+  }
+
+  .auth-illustration img {
+    height: 120px;
+    margin-bottom: -0.7rem;
+  }
 }
 </style>
