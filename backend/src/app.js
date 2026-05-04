@@ -25,6 +25,9 @@ const uploadsRoutes = require('./modules/uploads/uploads.routes');
 // Importo router CRUD de publicacions.
 const publicacionsRoutes = require('./modules/publicacions/publicacions.routes');
 
+// Importo router del modul comments (DELETE /comments/:id).
+const commentsRoutes = require('./modules/comments/comments.routes');
+
 // Importo el router del modul users.
 // Aquest modul encapsula endpoints de:
 // - perfil public
@@ -59,6 +62,9 @@ app.use('/peaks', peaksRoutes);
 
 // Modul CRUD de publicacions.
 app.use('/publicacions', publicacionsRoutes);
+
+// Modul comments separat per endpoint global DELETE /comments/:id.
+app.use('/comments', commentsRoutes);
 
 // Munto el modul users sota /users.
 // Dins del propi router ja s'aplica requireAuth nomes on toca.
