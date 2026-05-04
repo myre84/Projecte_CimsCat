@@ -4,6 +4,8 @@ const express = require('express');
 const { requireAuth } = require('../../common/middlewares/auth.middleware');
 // Controllers HTTP del modul.
 const publicacionsController = require('./publicacions.controller');
+const likesController = require('../likes/likes.controller');
+const commentsController = require('../comments/comments.controller');
 
 const router = express.Router();
 
@@ -11,6 +13,7 @@ const router = express.Router();
 // Aquestes rutes no requereixen login.
 router.get('/', publicacionsController.getPublicacions);
 router.get('/:id', publicacionsController.getPublicacioById);
+router.get('/:id/comments', commentsController.getPublicationComments);
 
 // CRUD protegit d escriptura.
 // Aquestes rutes SI requereixen usuari autenticat.
@@ -18,6 +21,9 @@ router.get('/:id', publicacionsController.getPublicacioById);
 router.post('/', requireAuth, publicacionsController.createPublicacio);
 router.put('/:id', requireAuth, publicacionsController.updatePublicacio);
 router.delete('/:id', requireAuth, publicacionsController.deletePublicacio);
+router.post('/:id/likes', requireAuth, likesController.createLike);
+router.delete('/:id/likes', requireAuth, likesController.deleteLike);
+router.post('/:id/comments', requireAuth, commentsController.createComment);
 
 // Exporto router per muntar-lo a app.js sota /publicacions.
 module.exports = router;
