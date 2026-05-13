@@ -35,6 +35,9 @@ const commentsRoutes = require('./modules/comments/comments.routes');
 // - publicacions d'usuari
 // - cims guardats (ruta /saved)
 const usersRoutes = require('./modules/users/users.routes');
+const statsRoutes = require('./modules/stats/stats.routes');
+const challengesRoutes = require('./modules/challenges/challenges.routes');
+const badgesRoutes = require('./modules/badges/badges.routes');
 
 // Creo la instancia principal de l'aplicacio Express.
 const app = express();
@@ -69,6 +72,10 @@ app.use('/comments', commentsRoutes);
 // Munto el modul users sota /users.
 // Dins del propi router ja s'aplica requireAuth nomes on toca.
 app.use('/users', usersRoutes);
+// Rutes addicionals relatives a users: stats, challenges i badges.
+app.use('/users', statsRoutes);
+app.use('/users', challengesRoutes);
+app.use('/users', badgesRoutes);
 
 // Health es deixa a arrel per comprovacions rapides de vida del backend.
 app.use('/', healthRoutes);

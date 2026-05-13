@@ -338,9 +338,28 @@ async function createPublication(userId, payload) {
     },
     select: { id: true }
   });
-
   // Retornem objecte ric i homogeni amb el mateix mapper de detall.
-  return getPublicationDetailById(created.id);
+  const detail = await getPublicationDetailById(created.id);
+
+  // Punt d'extensio: evaluacio de badges en segon pla.
+  // No ha d'interrompre la creacio de la publicacio si falla.
+  try {
+    // Require dinamic per evitar possibles cycles a l'inici.
+    // eslint-disable-next-line global-require
+    const { evaluateAndAssignBadges } = require('../badges/badges.service');
+    // No fem await bloquejant important; fem await pero capturem errors.
+    await evaluateAndAssignBadges(userId).catch((err) => {
+      // Important deixar rastre de l'error per debugeig.
+      // No llanquem cap error al client.
+      // eslint-disable-next-line no-console
+      console.error('Badge evaluation failed after publication creation:', err);
+    });
+  } catch (err) {
+    // eslint-disable-next-line no-console
+    console.error('Badge evaluation module error:', err);
+  }
+
+  return detail;
 }
 
 // Servei de llistat public (GET /publicacions).
