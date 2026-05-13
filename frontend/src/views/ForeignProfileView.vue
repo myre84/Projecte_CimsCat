@@ -41,7 +41,7 @@
         </template>
       </HorizontalCarousel>
 
-      <section class="foreign-profile-section foreign-profile-section--placeholder">
+      <section class="foreign-profile-section foreign-profile-section--awards">
         <h2 class="foreign-profile-section__title">Awards</h2>
         <p class="foreign-profile-section__text">
           Aquesta versió pública mostra el progrés general de muntanya a partir de les
@@ -50,9 +50,12 @@
 
         <ProfileStatsBanner :stats="stats" />
 
-        <p v-if="hasTemporaryDefinitions" class="foreign-profile-section__note">
-          Els reptes es calculen temporalment al frontend a partir del catàleg actual de cims i de
-          les publicacions visibles.
+        <p v-if="isCatalogLoading" class="foreign-profile-section__note">
+          Carregant dades d&apos;awards...
+        </p>
+
+        <p v-else-if="awardsError" class="foreign-profile-section__note foreign-profile-section__note--error">
+          {{ awardsError }}
         </p>
 
         <div class="foreign-profile-awards-grid">
@@ -89,9 +92,11 @@ const profile = ref(null)
 const publications = ref([])
 const isLoading = ref(true)
 const errorMessage = ref('')
-const { stats, challenges, badges, hasTemporaryDefinitions } = useProfileAwards(publications, {
-  compact: true,
-})
+const { stats, challenges, badges, isCatalogLoading, awardsError } = useProfileAwards(
+  publications,
+  computed(() => profile.value?.id || String(route.params.id || '')),
+  { compact: true },
+)
 
 // Imatge de suport si l'usuari no té avatar o la ruta falla
 const fallbackAvatar =
@@ -216,12 +221,12 @@ watch(
   gap: 2rem;
 }
 
-/* Caixa provisional per a awards futurs */
-.foreign-profile-section--placeholder {
+/* Caixa d'awards pública del perfil aliè */
+.foreign-profile-section--awards {
   padding: 1.25rem 1.35rem;
   border-radius: 16px;
   background: #f4f1e6;
-  border: 1px dashed #d8d2bc;
+  border: 1px solid #d8d2bc;
 }
 
 .foreign-profile-section__title {
@@ -239,6 +244,10 @@ watch(
   margin: 1rem 0 0;
   color: var(--color-text-soft);
   line-height: 1.6;
+}
+
+.foreign-profile-section__note--error {
+  color: #9a3e34;
 }
 
 .foreign-profile-awards-grid {

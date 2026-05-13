@@ -1,4 +1,11 @@
 <template>
+  <!--
+    Vista de planificació de ruta.
+    Estructura principal:
+    1) Hero superior: títol + estat de guardat.
+    2) Shell central: sidebar de configuració + mapa interactiu.
+    3) Panell tècnic: resum de mètriques + gràfic d'elevació.
+  -->
   <section class="route-planner-view">
     <header class="route-planner-hero">
       <p class="route-planner-eyebrow">Planificador de rutes</p>
@@ -184,14 +191,20 @@
 </template>
 
 <script setup>
+// computed: valors derivats (distància, temps, desnivell, etc.).
+// ref: estat reactiu (waypoints, tipus de ruta...).
+// lifecycle hooks: inicialitzar i destruir mapa Leaflet amb seguretat.
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import L from 'leaflet'
 import 'leaflet/dist/leaflet.css'
 import RouteElevationChart from '../components/RouteElevationChart.vue'
 
+// Centre per defecte: Catalunya (decisió UX per no demanar geolocalització).
 const CATALONIA_CENTER = [41.82, 1.86]
+// Radi terrestre per càlcul aproximat amb fórmula haversine.
 const EARTH_RADIUS_KM = 6371
 
+// Controls que l'usuari manipula des del sidebar.
 const activityType = ref('senderisme')
 const pace = ref('moderat')
 const routeType = ref('one-way')
@@ -199,11 +212,13 @@ const waypoints = ref([])
 const mapContainer = ref(null)
 const circularCloseHint = ref('')
 
+// Referències internes de Leaflet (mapa, capa de marcadors, línia de ruta).
 let map = null
 let waypointLayer = null
 let routeLine = null
 
 const routeTitle = computed(() => {
+  // Títol automàtic de ruta segons primer i últim waypoint.
   if (!waypoints.value.length) return 'Ruta sense punts'
   const firstPoint = waypoints.value[0]?.name || 'Punt A'
   const lastPoint = waypoints.value.at(-1)?.name || getWaypointLetter(waypoints.value.length - 1)
@@ -211,6 +226,7 @@ const routeTitle = computed(() => {
 })
 
 const baseDistance = computed(() => {
+  // Distància base: suma tram a tram entre waypoints consecutius.
   if (waypoints.value.length < 2) return 0
 
   return waypoints.value.slice(1).reduce((total, waypoint, index) => {
@@ -219,6 +235,8 @@ const baseDistance = computed(() => {
 })
 
 const estimatedDistance = computed(() => {
+  // Si és anada+tornada dupliquem distància.
+  // Si és circular o anada, deixem distància base.
   if (routeType.value === 'round-trip') return baseDistance.value * 2
   return baseDistance.value
 })
@@ -229,6 +247,9 @@ const formattedDistance = computed(() => {
 })
 
 const elevationProfile = computed(() => {
+  // PERFIL PROVISIONAL:
+  // De moment no tenim motor de rutes per camins + elevació real.
+  // Així que generem un perfil suau per visualitzar la UX del planificador.
   if (waypoints.value.length < 2) return []
 
   const samples = Math.max(6, waypoints.value.length * 3)
@@ -257,6 +278,8 @@ const positiveElevation = computed(() => calculateElevationGain(elevationProfile
 const negativeElevation = computed(() => calculateElevationGain(elevationProfile.value, 'negative'))
 
 const isCircularRouteClosed = computed(() => {
+  // Detectem si l'usuari ha tancat "manualment" la circular
+  // (últim punt molt proper al primer punt).
   if (routeType.value !== 'circular' || waypoints.value.length < 3) return false
   return getDistanceBetween(waypoints.value[0], waypoints.value.at(-1)) <= 0.06
 })

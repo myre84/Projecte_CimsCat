@@ -1,4 +1,11 @@
 <template>
+  <!--
+    Banner superior d'estadístiques.
+    Mostrem 3 targetes de km:
+    - setmana
+    - mes
+    - any
+  -->
   <section class="stats-banner">
     <article v-for="stat in stats" :key="stat.id" class="stats-banner__card">
       <span class="stats-banner__label">{{ stat.label }}</span>
@@ -8,6 +15,9 @@
 </template>
 
 <script setup>
+// "stats" és un array d'objectes amb forma:
+// { id, label, value }
+// Exemple: { id: 'week', label: 'Km aquesta setmana', value: 12.4 }
 defineProps({
   stats: {
     type: Array,

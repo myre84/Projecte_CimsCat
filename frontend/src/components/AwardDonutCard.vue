@@ -1,4 +1,11 @@
 <template>
+  <!--
+    Targeta d'un repte (challenge) del perfil.
+    Aquesta peça mostra:
+    1) un donut amb percentatge de progrés
+    2) un resum curt del repte
+    3) la llista de cims completats (si toca)
+  -->
   <article class="award-card">
     <div class="award-card__top">
       <div class="award-card__chart-wrap">
@@ -26,9 +33,13 @@
 </template>
 
 <script setup>
+// computed: per calcular el percentatge en temps real.
+// onMounted / onBeforeUnmount: per crear i destruir el Chart quan toca.
+// watch: per redibuixar el donut si canvien dades del repte.
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import Chart from 'chart.js/auto'
 
+// El component rep UN repte ja normalitzat des de useProfileAwards.
 const props = defineProps({
   challenge: {
     type: Object,
@@ -40,17 +51,23 @@ const canvasRef = ref(null)
 let chartInstance = null
 
 const percentage = computed(() => {
+  // Convertim a Number per evitar problemes si arriba string des d'API.
   const total = Number(props.challenge.total || 0)
   const current = Number(props.challenge.current || 0)
+  // Si no hi ha total, no podem calcular percentatge.
   if (!total) return 0
+  // Math.min(100, ...) evita que visualment passi de 100%.
   return Math.min(100, Math.round((current / total) * 100))
 })
 
 function renderChart() {
+  // Si encara no tenim el canvas del DOM, no podem pintar.
   if (!canvasRef.value) return
 
+  // Abans de dibuixar, destruïm el gràfic anterior per evitar "memory leaks".
   chartInstance?.destroy()
 
+  // Dades segures per construir el donut.
   const total = Number(props.challenge.total || 0)
   const current = Math.min(Number(props.challenge.current || 0), total || 0)
   const remaining = Math.max(0, total - current)
@@ -60,6 +77,7 @@ function renderChart() {
     data: {
       datasets: [
         {
+          // Si total és 0, posem [0,1] per evitar errors de divisió/render a Chart.js.
           data: total ? [current, remaining] : [0, 1],
           backgroundColor: [props.challenge.accentColor || '#4f7b64', '#ebe7d8'],
           borderWidth: 0,
@@ -79,7 +97,9 @@ function renderChart() {
 }
 
 onMounted(renderChart)
+// Quan canvia progressió, objectiu o color d'accent, repintem el donut.
 watch(() => [props.challenge.current, props.challenge.total, props.challenge.accentColor], renderChart)
+// Quan desapareix el component (canvi de pàgina), netegem el gràfic.
 onBeforeUnmount(() => chartInstance?.destroy())
 </script>
 

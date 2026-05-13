@@ -1,4 +1,9 @@
 <template>
+  <!--
+    Graella d'insígnies del perfil.
+    Cada badge pot estar desbloquejada o bloquejada.
+    Ho marquem amb classes diferents per donar feedback visual.
+  -->
   <section class="badge-grid">
     <article
       v-for="badge in badges"
@@ -26,6 +31,12 @@
 </template>
 
 <script setup>
+// Rebem un array de badges ja preparats des del composable.
+// Cada element porta, com a mínim:
+// - title / description
+// - unlocked (true/false)
+// - image o icon
+// - colors d'accent (accent + soft)
 defineProps({
   badges: {
     type: Array,

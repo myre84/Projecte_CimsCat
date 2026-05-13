@@ -1,4 +1,9 @@
 <template>
+  <!--
+    Gràfic de perfil d'elevació per al planificador de rutes.
+    Si tenim 2 o més punts, dibuixem línia.
+    Si no, mostrem missatge d'ajuda.
+  -->
   <article class="route-elevation-card">
     <div v-if="hasPoints" class="route-elevation-card__chart">
       <canvas ref="canvasRef"></canvas>
@@ -12,6 +17,8 @@
 </template>
 
 <script setup>
+// Aquest component encapsula tota la part de Chart.js.
+// Així mantenim PlanRouteView més net i reutilitzable.
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import Chart from 'chart.js/auto'
 
@@ -25,9 +32,11 @@ const props = defineProps({
 const canvasRef = ref(null)
 let chartInstance = null
 
+// Necessitem almenys dos punts per formar una línia.
 const hasPoints = computed(() => props.points.length >= 2)
 
 function renderChart() {
+  // Si no tenim dades suficients o no existeix el canvas, netegem i sortim.
   if (!canvasRef.value || !hasPoints.value) {
     chartInstance?.destroy()
     chartInstance = null
@@ -36,6 +45,9 @@ function renderChart() {
 
   chartInstance?.destroy()
 
+  // Creem un gràfic de línia on:
+  // - X = distància acumulada
+  // - Y = elevació estimada
   chartInstance = new Chart(canvasRef.value, {
     type: 'line',
     data: {
@@ -88,7 +100,9 @@ function renderChart() {
 }
 
 onMounted(renderChart)
+// Quan canvien punts (afegir/eliminar/moure waypoint), repintem.
 watch(() => props.points, renderChart, { deep: true })
+// Evitem deixar instàncies de gràfic vives en sortir de la vista.
 onBeforeUnmount(() => chartInstance?.destroy())
 </script>
 
