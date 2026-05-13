@@ -200,6 +200,73 @@ async function main() {
       massis: 'Massis del Carlit',
       zonaProtegida: 'Parc Natural Regional dels Pirineus Catalans'
     }
+    ,
+    // Afegim alguns cims de 3000m dels Pirineus per provar el repte 3000s
+    {
+      id: 'cim_aneto',
+      nom: 'Aneto',
+      alcada: 3404,
+      comarca: 'Benasque',
+      lat: 42.6460,
+      lon: 0.6590,
+      dificultat: 'alta',
+      descripcio: 'Sostre dels Pirineus; glaci i aproximacio llarga.',
+      imatgeUrl: '/uploads/cims/aneto.jpg',
+      massis: 'Posets-Aneto',
+      zonaProtegida: 'Parc Natural Posets-Maladeta'
+    },
+    {
+      id: 'cim_posets',
+      nom: 'Posets',
+      alcada: 3375,
+      comarca: 'Benasque',
+      lat: 42.6450,
+      lon: 0.4590,
+      dificultat: 'alta',
+      descripcio: 'Segon mes alt dels Pirineus, amb circ glacial i vistes.',
+      imatgeUrl: '/uploads/cims/posets.jpg',
+      massis: 'Posets-Aneto',
+      zonaProtegida: 'Parc Natural Posets-Maladeta'
+    },
+    {
+      id: 'cim_monte_perdido',
+      nom: 'Monte Perdido',
+      alcada: 3355,
+      comarca: 'Sobrarbe',
+      lat: 42.6833,
+      lon: -0.0450,
+      dificultat: 'alta',
+      descripcio: 'Cims del Parc Nacional d Ordesa amb corriols espectaculars.',
+      imatgeUrl: '/uploads/cims/monte-perdido.jpg',
+      massis: 'Monte Perdido',
+      zonaProtegida: 'Parc Nacional d Ordesa i Monte Perdido'
+    },
+    {
+      id: 'cim_vignemale',
+      nom: 'Vignemale',
+      alcada: 3298,
+      comarca: 'Ossau',
+      lat: 42.7319,
+      lon: -0.1206,
+      dificultat: 'alta',
+      descripcio: 'Cim fronterer amb glaci i caracters alpins.',
+      imatgeUrl: '/uploads/cims/vignemale.jpg',
+      massis: 'Vignemale',
+      zonaProtegida: 'Parc National des Pyrenees'
+    },
+    {
+      id: 'cim_pica_d_estats',
+      nom: 'Pica d Estats',
+      alcada: 3143,
+      comarca: 'Alta Ribagorca',
+      lat: 42.6592,
+      lon: 1.3975,
+      dificultat: 'alta',
+      descripcio: 'Pic mes alt de Catalunya amb itinerari rocós i panorames.',
+      imatgeUrl: '/uploads/cims/pica-d-estats.jpg',
+      massis: 'Montcalm-Pica d Estats',
+      zonaProtegida: 'Parc Natural de l Alt Pirineu'
+    }
   ];
 
   // ------------------------------------------------------------
@@ -557,6 +624,102 @@ async function main() {
   await prisma.comentari.createMany({ data: comentaris, skipDuplicates: true });
   await prisma.likePublicacio.createMany({ data: likes, skipDuplicates: true });
   await prisma.savedPeak.createMany({ data: savedPeaks, skipDuplicates: true });
+
+  // ------------------------------------------------------------
+  // 13) CHALLENGES I BADGES (UPsert)
+  // ------------------------------------------------------------
+  // Afegim reptes i badges definits a la especificacio.
+  // Fem upsert per ser idempotents en reexecucions del seed.
+
+  // Challenges
+  const challenges = [
+    {
+      slug: '100-cims-feec',
+      name: '100 Cims FEEC',
+      description: 'Completa els 100 cims del repte FEEC.',
+      type: 'STATIC_PEAK_LIST',
+      targetValue: 100,
+      ruleKey: null,
+      ruleValue: null,
+      active: true
+    },
+    {
+      slug: '3000s-pirineus',
+      name: '3000s Pirineus',
+      description: 'Completa cims dels Pirineus de 3000 metres o mes.',
+      type: 'RULE',
+      targetValue: null,
+      ruleKey: 'MIN_ALTITUDE',
+      ruleValue: 3000,
+      active: true
+    }
+  ];
+
+  for (const ch of challenges) {
+    await prisma.challenge.upsert({
+      where: { slug: ch.slug },
+      update: {
+        name: ch.name,
+        description: ch.description,
+        type: ch.type,
+        targetValue: ch.targetValue,
+        ruleKey: ch.ruleKey,
+        ruleValue: ch.ruleValue,
+        active: ch.active
+      },
+      create: ch
+    });
+  }
+
+  // Badges
+  const badges = [
+    { code: 'first_publication', name: 'Primera publicacio', description: 'Has publicat la teva primera activitat.', category: 'publications' },
+    { code: 'first_peak', name: 'Primer cim completat', description: 'Has registrat la teva primera ascensio.', category: 'peaks' },
+    { code: 'ten_peaks', name: '10 cims completats', description: 'Has completat 10 cims diferents.', category: 'peaks' },
+    { code: 'hundred_feec', name: '100 Cims FEEC', description: 'Has completat el repte dels 100 Cims FEEC.', category: 'challenges' },
+    { code: 'first_3000', name: 'Primer 3000', description: 'Has completat el teu primer cim de 3000 metres o mes.', category: 'challenges' },
+    { code: 'three_3000', name: 'Tres 3000s', description: 'Has completat tres cims de 3000 metres o mes.', category: 'challenges' },
+    { code: 'hundred_km', name: '100 km acumulats', description: 'Has acumulat 100 km en activitats publicades.', category: 'stats' },
+    { code: 'thousand_elevation', name: '1000 m de desnivell', description: 'Has acumulat 1000 metres de desnivell positiu.', category: 'stats' },
+    { code: 'five_comarques', name: 'Explorador de comarques', description: 'Has completat cims en 5 comarques diferents.', category: 'peaks' }
+  ];
+
+  for (const b of badges) {
+    await prisma.badge.upsert({
+      where: { code: b.code },
+      update: { name: b.name, description: b.description, category: b.category, active: true },
+      create: { ...b, active: true }
+    });
+  }
+
+  // ChallengePeak rows for 100-cims-feec: use a safe list of existing cims.
+  const feecChallenge = await prisma.challenge.findUnique({ where: { slug: '100-cims-feec' } });
+  if (feecChallenge) {
+    const feecCimIds = [
+      'cim_la_mola',
+      'cim_pedraforca',
+      'cim_puigmal',
+      'cim_matagalls',
+      'cim_turo_home',
+      'cim_bastiments',
+      'cim_puigpedros',
+      'cim_comabona',
+      'cim_carlit'
+    ];
+
+    for (const cimId of feecCimIds) {
+      // comprovar existeix cim
+      const cim = await prisma.cim.findUnique({ where: { id: cimId }, select: { id: true } });
+      if (!cim) continue;
+
+      // upsert ChallengePeak via create if not exists
+      try {
+        await prisma.challengePeak.create({ data: { challengeId: feecChallenge.id, cimId } });
+      } catch (err) {
+        // si ja existeix o falla per FK, ignorem per ser idempotents
+      }
+    }
+  }
 
   // Garantim admin estable per provar endpoints admin.
   await prisma.usuari.upsert({
