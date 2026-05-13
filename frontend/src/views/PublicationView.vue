@@ -20,7 +20,7 @@
 
     <article v-else-if="publication" class="publication-card">
       <p v-if="isUsingMockPublication" class="publication-mock-notice">
-        S&apos;està mostrant una publicació temporal mentre el backend de publicacions no està disponible.
+        S&apos;està mostrant una publicació local temporal perquè la càrrega del detall ha fallat en aquest moment.
       </p>
 
       <header class="publication-header">

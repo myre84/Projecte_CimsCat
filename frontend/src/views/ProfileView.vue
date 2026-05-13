@@ -89,23 +89,21 @@
         </p>
       </section>
 
-      <section class="profile-section profile-section--placeholder">
+      <section class="profile-section profile-section--awards">
         <h2 class="profile-section__title">Awards</h2>
         <p class="profile-section__text">
-          Aquest bloc combina dades reals de les teves publicacions amb una definició temporal de
-          reptes i insígnies al frontend mentre el backend encara no té un sistema oficial
-          d’awards.
+          Aquest bloc mostra estadístiques, reptes i insígnies calculats des dels endpoints oficials
+          del backend.
         </p>
 
         <ProfileStatsBanner :stats="stats" />
 
         <p v-if="isCatalogLoading" class="profile-awards-note">
-          Estem carregant el catàleg de cims per calcular els reptes.
+          Carregant dades d&apos;awards...
         </p>
 
-        <p v-else-if="hasTemporaryDefinitions" class="profile-awards-note">
-          Els reptes oficials encara no existeixen al backend, així que aquest progrés es calcula
-          temporalment al frontend a partir de les teves publicacions i del catàleg actual de cims.
+        <p v-else-if="awardsError" class="profile-awards-note profile-awards-note--error">
+          {{ awardsError }}
         </p>
 
         <div class="profile-awards-grid">
@@ -168,8 +166,10 @@ const isLoading = ref(true)
 const errorMessage = ref('')
 const isEditModalOpen = ref(false)
 const isSavingProfile = ref(false)
-const { stats, challenges, badges, hasTemporaryDefinitions, isCatalogLoading } =
-  useProfileAwards(ownPublications)
+const { stats, challenges, badges, isCatalogLoading, awardsError } = useProfileAwards(
+  ownPublications,
+  computed(() => userStore.user?.id || ''),
+)
 
 // Si el backend no retorna cap foto o la foto falla, fem servir aquesta imatge de suport.
 const fallbackAvatar =
@@ -396,6 +396,14 @@ watch(
   border: 1px dashed #d8d2bc;
 }
 
+/* El bloc d'awards ja va connectat amb backend, per això li donem un estil "real". */
+.profile-section--awards {
+  padding: 1.25rem 1.35rem;
+  border-radius: 16px;
+  background: #f4f1e6;
+  border: 1px solid #d8d2bc;
+}
+
 .profile-section__title {
   margin: 0 0 0.65rem;
   font-size: 1.65rem;
@@ -412,6 +420,10 @@ watch(
   margin: 1rem 0 0;
   color: var(--color-text-soft);
   line-height: 1.6;
+}
+
+.profile-awards-note--error {
+  color: #9a3e34;
 }
 
 .profile-awards-grid {
