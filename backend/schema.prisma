@@ -280,3 +280,69 @@ model PuntRuta {
   @@index([rutaId])
   @@index([ordreIndex])
 }
+
+// ------------------------------------------------------------
+// MODEL: Challenge, ChallengePeak, Badge, UserBadge
+// ------------------------------------------------------------
+model Challenge {
+  id             String          @id @default(cuid())
+  slug           String          @unique
+  name           String
+  description    String
+  type           String
+  targetValue    Int?
+  ruleKey        String?
+  ruleValue      Int?
+  active         Boolean         @default(true)
+
+  challengePeaks ChallengePeak[]
+
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+
+  @@index([slug])
+  @@index([active])
+}
+
+model ChallengePeak {
+  challengeId String
+  cimId       String
+
+  challenge   Challenge @relation(fields: [challengeId], references: [id], onDelete: Cascade)
+  cim         Cim       @relation(fields: [cimId], references: [id], onDelete: Cascade)
+
+  @@id([challengeId, cimId])
+  @@index([cimId])
+}
+
+model Badge {
+  id          String      @id @default(cuid())
+  code        String      @unique
+  name        String
+  description String
+  category    String
+  iconUrl     String?
+  active      Boolean     @default(true)
+
+  userBadges  UserBadge[]
+
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+
+  @@index([code])
+  @@index([active])
+}
+
+model UserBadge {
+  usuariId   String
+  badgeId    String
+  unlockedAt DateTime @default(now())
+  source     String?
+
+  usuari     Usuari @relation(fields: [usuariId], references: [id], onDelete: Cascade)
+  badge      Badge  @relation(fields: [badgeId], references: [id], onDelete: Cascade)
+
+  @@id([usuariId, badgeId])
+  @@index([badgeId])
+}
+
