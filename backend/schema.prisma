@@ -26,37 +26,38 @@ datasource db {
 // Representa cada compte de la plataforma.
 model Usuari {
   // ID unic del registre (string amb cuid automatic)
-  id                    String               @id @default(cuid())
+  id String @id @default(cuid())
 
   // Nom curt/handle visible a la comunitat (unic)
-  nomUsuari             String               @unique
+  nomUsuari String @unique
 
   // Dades personals basiques
-  nom                   String
-  cognom                String
+  nom    String
+  cognom String
 
   // Mail unic per login
-  mail                  String               @unique
+  mail String @unique
 
   // Contrasenya xifrada (mai en text pla)
-  contrasenyaHash       String
+  contrasenyaHash String
 
   // Rol funcional (usuari, admin...)
-  rol                   String               @default("usuari")
+  rol String @default("usuari")
 
   // Ruta local de la foto de perfil (pot ser null)
-  fotoPerfil            String?
+  fotoPerfil String?
 
   // Relacions 1-N cap a contingut creat per l'usuari
-  publicacions          Publicacio[]
-  comentaris            Comentari[]
-  likesPublicacions     LikePublicacio[]
-  savedPeaks            SavedPeak[]
-  rutesPlanificades     RutaPlanificada[]
+  publicacions      Publicacio[]
+  comentaris        Comentari[]
+  likesPublicacions LikePublicacio[]
+  savedPeaks        SavedPeak[]
+  rutesPlanificades RutaPlanificada[]
+  badges            UserBadge[]
 
   // Timestamps de control
-  createdAt             DateTime             @default(now())
-  updatedAt             DateTime             @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   // Indexos per accelerar consultes frequents
   @@index([mail])
@@ -69,30 +70,31 @@ model Usuari {
 // Cataleg de cims de la plataforma.
 model Cim {
   // ID unic del cim
-  id                String            @id @default(cuid())
+  id String @id @default(cuid())
 
   // Dades geografiques i descriptives del cim
-  nom               String
-  alcada            Int
-  comarca           String
-  lat               Float
-  lon               Float
-  dificultat        String
-  descripcio        String
+  nom        String
+  alcada     Int
+  comarca    String
+  lat        Float
+  lon        Float
+  dificultat String
+  descripcio String
 
   // Ruta local de la imatge principal
-  imatgeUrl         String?
-  massis            String
-  zonaProtegida     String?
+  imatgeUrl     String?
+  massis        String
+  zonaProtegida String?
 
   // Relacions amb contingut vinculat a aquest cim
   publicacions      Publicacio[]
   savedByUsers      SavedPeak[]
   rutesPlanificades RutaPlanificada[]
+  challengePeaks    ChallengePeak[]
 
   // Timestamps
-  createdAt         DateTime          @default(now())
-  updatedAt         DateTime          @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   // Indexos per filtres habituals
   @@index([nom])
@@ -106,47 +108,47 @@ model Cim {
 // Activitat publicada per un usuari, associada a un cim.
 model Publicacio {
   // ID unic de la publicacio
-  id               String               @id @default(cuid())
+  id String @id @default(cuid())
 
   // Claus foranes basiques
-  usuariId         String
-  cimId            String
+  usuariId String
+  cimId    String
 
   // Enllac opcional a una ruta planificada
   rutaPlanificadaId String?
 
   // Contingut descriptiu
-  titol            String
-  descripcio       String
-  tipusActivitat   String
+  titol          String
+  descripcio     String
+  tipusActivitat String
 
   // Data i metriques de l'activitat
-  dataActivitat    DateTime
-  dificultat       String
-  distanciaKm      Float
-  desnivellPosM    Int
-  desnivellNegM    Int
-  tempsMin         Int
-  altitudMaxM      Int
-  altitudMinM      Int
+  dataActivitat DateTime
+  dificultat    String
+  distanciaKm   Float
+  desnivellPosM Int
+  desnivellNegM Int
+  tempsMin      Int
+  altitudMaxM   Int
+  altitudMinM   Int
 
   // Track i portada (rutes locals o URL segons decisio funcional)
-  trackUrl         String?
-  portadaUrl       String?
+  trackUrl   String?
+  portadaUrl String?
 
   // Relacions de pertinença
-  usuari           Usuari               @relation(fields: [usuariId], references: [id], onDelete: Cascade)
-  cim              Cim                  @relation(fields: [cimId], references: [id], onDelete: Cascade)
-  rutaPlanificada  RutaPlanificada?     @relation(fields: [rutaPlanificadaId], references: [id], onDelete: SetNull)
+  usuari          Usuari           @relation(fields: [usuariId], references: [id], onDelete: Cascade)
+  cim             Cim              @relation(fields: [cimId], references: [id], onDelete: Cascade)
+  rutaPlanificada RutaPlanificada? @relation(fields: [rutaPlanificadaId], references: [id], onDelete: SetNull)
 
   // Relacions amb contingut social associat
-  imatges          ImatgePublicacio[]
-  comentaris       Comentari[]
-  likes            LikePublicacio[]
+  imatges    ImatgePublicacio[]
+  comentaris Comentari[]
+  likes      LikePublicacio[]
 
   // Timestamps
-  createdAt        DateTime             @default(now())
-  updatedAt        DateTime             @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   // Indexos per feed i filtres
   @@index([usuariId])
@@ -160,12 +162,12 @@ model Publicacio {
 // ------------------------------------------------------------
 // Imatges extra d'una publicacio, ordenades per ordreIndex.
 model ImatgePublicacio {
-  id          String     @id @default(cuid())
+  id           String     @id @default(cuid())
   publicacioId String
-  imageUrl    String
-  ordreIndex  Int
-  publicacio  Publicacio @relation(fields: [publicacioId], references: [id], onDelete: Cascade)
-  createdAt   DateTime   @default(now())
+  imageUrl     String
+  ordreIndex   Int
+  publicacio   Publicacio @relation(fields: [publicacioId], references: [id], onDelete: Cascade)
+  createdAt    DateTime   @default(now())
 
   @@index([publicacioId])
 }
@@ -175,14 +177,14 @@ model ImatgePublicacio {
 // ------------------------------------------------------------
 // Comentari que un usuari publica dins d'una publicacio.
 model Comentari {
-  id          String     @id @default(cuid())
+  id           String     @id @default(cuid())
   publicacioId String
-  usuariId    String
-  text        String
-  publicacio  Publicacio @relation(fields: [publicacioId], references: [id], onDelete: Cascade)
-  usuari      Usuari     @relation(fields: [usuariId], references: [id], onDelete: Cascade)
-  createdAt   DateTime   @default(now())
-  updatedAt   DateTime   @updatedAt
+  usuariId     String
+  text         String
+  publicacio   Publicacio @relation(fields: [publicacioId], references: [id], onDelete: Cascade)
+  usuari       Usuari     @relation(fields: [usuariId], references: [id], onDelete: Cascade)
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
 
   @@index([publicacioId])
   @@index([usuariId])
@@ -194,11 +196,11 @@ model Comentari {
 // Taula d'unio Usuari <-> Publicacio per marcar likes.
 // Te clau composta per evitar duplicats del mateix usuari.
 model LikePublicacio {
-  usuariId    String
+  usuariId     String
   publicacioId String
-  usuari      Usuari     @relation(fields: [usuariId], references: [id], onDelete: Cascade)
-  publicacio  Publicacio @relation(fields: [publicacioId], references: [id], onDelete: Cascade)
-  createdAt   DateTime   @default(now())
+  usuari       Usuari     @relation(fields: [usuariId], references: [id], onDelete: Cascade)
+  publicacio   Publicacio @relation(fields: [publicacioId], references: [id], onDelete: Cascade)
+  createdAt    DateTime   @default(now())
 
   @@id([usuariId, publicacioId])
   @@index([publicacioId])
@@ -226,14 +228,14 @@ model SavedPeak {
 // Ruta que l'usuari planifica, vinculada a un cim.
 model RutaPlanificada {
   // ID unic de la ruta
-  id            String      @id @default(cuid())
+  id String @id @default(cuid())
 
   // Relacions de propietari i cim objectiu
-  usuariId      String
-  cimId         String
+  usuariId String
+  cimId    String
 
   // Dades descriptives i tecniques de planificacio
-  nom           String
+  nom            String
   tipusActivitat String
   ritme         String
   tipusRecorregut String
@@ -245,18 +247,18 @@ model RutaPlanificada {
   altitudMinM   Int
 
   // Track i notes opcionals
-  trackUrl      String?
-  notes         String?
+  trackUrl String?
+  notes    String?
 
   // Relacions
-  usuari        Usuari      @relation(fields: [usuariId], references: [id], onDelete: Cascade)
-  cim           Cim         @relation(fields: [cimId], references: [id], onDelete: Cascade)
-  puntsRuta     PuntRuta[]
-  publicacions  Publicacio[]
+  usuari       Usuari       @relation(fields: [usuariId], references: [id], onDelete: Cascade)
+  cim          Cim          @relation(fields: [cimId], references: [id], onDelete: Cascade)
+  puntsRuta    PuntRuta[]
+  publicacions Publicacio[]
 
   // Timestamps
-  createdAt     DateTime    @default(now())
-  updatedAt     DateTime    @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   // Indexos per consultes
   @@index([usuariId])
@@ -286,20 +288,20 @@ model PuntRuta {
 // MODEL: Challenge, ChallengePeak, Badge, UserBadge
 // ------------------------------------------------------------
 model Challenge {
-  id             String          @id @default(cuid())
-  slug           String          @unique
-  name           String
-  description    String
-  type           String
-  targetValue    Int?
-  ruleKey        String?
-  ruleValue      Int?
-  active         Boolean         @default(true)
+  id          String  @id @default(cuid())
+  slug        String  @unique
+  name        String
+  description String
+  type        String
+  targetValue Int?
+  ruleKey     String?
+  ruleValue   Int?
+  active      Boolean @default(true)
 
   challengePeaks ChallengePeak[]
 
-  createdAt      DateTime        @default(now())
-  updatedAt      DateTime        @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@index([slug])
   @@index([active])
@@ -309,26 +311,26 @@ model ChallengePeak {
   challengeId String
   cimId       String
 
-  challenge   Challenge @relation(fields: [challengeId], references: [id], onDelete: Cascade)
-  cim         Cim       @relation(fields: [cimId], references: [id], onDelete: Cascade)
+  challenge Challenge @relation(fields: [challengeId], references: [id], onDelete: Cascade)
+  cim       Cim       @relation(fields: [cimId], references: [id], onDelete: Cascade)
 
   @@id([challengeId, cimId])
   @@index([cimId])
 }
 
 model Badge {
-  id          String      @id @default(cuid())
-  code        String      @unique
+  id          String  @id @default(cuid())
+  code        String  @unique
   name        String
   description String
   category    String
   iconUrl     String?
-  active      Boolean     @default(true)
+  active      Boolean @default(true)
 
-  userBadges  UserBadge[]
+  userBadges UserBadge[]
 
-  createdAt   DateTime    @default(now())
-  updatedAt   DateTime    @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@index([code])
   @@index([active])
@@ -340,10 +342,9 @@ model UserBadge {
   unlockedAt DateTime @default(now())
   source     String?
 
-  usuari     Usuari @relation(fields: [usuariId], references: [id], onDelete: Cascade)
-  badge      Badge  @relation(fields: [badgeId], references: [id], onDelete: Cascade)
+  usuari Usuari @relation(fields: [usuariId], references: [id], onDelete: Cascade)
+  badge  Badge  @relation(fields: [badgeId], references: [id], onDelete: Cascade)
 
   @@id([usuariId, badgeId])
   @@index([badgeId])
 }
-

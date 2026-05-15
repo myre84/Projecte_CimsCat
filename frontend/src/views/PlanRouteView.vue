@@ -438,7 +438,7 @@ onBeforeUnmount(() => {
 .plan-route-view {
   max-width: 1200px;
   margin: 0 auto;
-  padding: 2rem 1rem 3rem;
+  padding: 2rem 0 3rem;
 }
 
 .plan-route-header {
@@ -449,15 +449,31 @@ onBeforeUnmount(() => {
   margin-bottom: 1.75rem;
 }
 
-.plan-route-eyebrow {
-  margin: 0 0 0.35rem;
-  color: #8a9581;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  font-size: 0.82rem;
+.route-planner-hero {
+  border-radius: 22px;
+  padding: 1.4rem;
+  margin-bottom: 1rem;
 }
 
-.plan-route-title {
+.route-planner-hero__content {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 1.5rem;
+}
+
+.route-planner-eyebrow {
+  margin: 0 0 0.35rem;
+  color: #7f8977;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+.route-planner-hero h1,
+.route-sidebar h2,
+.route-elevation-copy h2 {
   margin: 0;
   font-size: clamp(2.1rem, 5vw, 3.3rem);
   line-height: 1.04;
