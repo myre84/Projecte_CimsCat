@@ -142,23 +142,33 @@
         </p>
       </section>
 
-      <section class="publication-map-placeholder">
-        <div>
-          <h2 class="publication-section-title">Mapa de la ruta</h2>
-          <p class="publication-map-placeholder__text">
-            Aquesta secció s’activarà quan estigui connectada la part de planificar ruta.
-          </p>
+      <section class="publication-map">
+        <div class="publication-map__header">
+          <div>
+            <h2 class="publication-section-title">Mapa de la ruta</h2>
+            <p class="publication-map__text">
+              Si la publicacio te una ruta planificada, la veureu dibuixada aqui mateix.
+            </p>
+          </div>
+
+          <a
+            v-if="publication.trackUrl"
+            class="publication-map__track"
+            :href="publication.trackUrl"
+            target="_blank"
+            rel="noreferrer"
+          >
+            Guardar track
+          </a>
         </div>
 
-        <a
-          v-if="publication.trackUrl"
-          class="publication-map-placeholder__track"
-          :href="publication.trackUrl"
-          target="_blank"
-          rel="noreferrer"
-        >
-          Guardar track
-        </a>
+        <div v-if="hasRouteMap" ref="routeMapContainer" class="publication-map__canvas"></div>
+        <p v-else-if="publication.route" class="publication-map__empty">
+          La ruta vinculada no te prou punts per mostrar el mapa.
+        </p>
+        <p v-else class="publication-map__empty">
+          Aquesta publicacio no te cap ruta planificada vinculada.
+        </p>
       </section>
 
       <section class="publication-comments">
@@ -221,7 +231,9 @@
 
 <script setup>
 // computed ens ajuda a construir derivades de la publicació, com la galeria o l'estat del like.
-import { computed, ref, watch } from 'vue'
+import { computed, nextTick, onBeforeUnmount, ref, watch } from 'vue'
+import L from 'leaflet'
+import 'leaflet/dist/leaflet.css'
 import { useRoute, useRouter } from 'vue-router'
 import api from '../api/axios'
 import { useUserStore } from '../stores/user'
@@ -239,6 +251,11 @@ const isUsingMockPublication = ref(false)
 const activeImageIndex = ref(0)
 const commentDraft = ref('')
 const commentNotice = ref('')
+const routeMapContainer = ref(null)
+
+let routeMap = null
+let routeMarkers = null
+let routeLine = null
 
 // Aquesta imatge és el fallback del perfil si l'autor o un comentarista no tenen foto.
 const fallbackAvatar =
@@ -286,6 +303,69 @@ const authorProfileLink = computed(() => {
 
   return userStore.user?.id === authorId ? `/perfil/${authorId}` : `/usuari/${authorId}`
 })
+
+const routeWaypoints = computed(() => {
+  const points = publication.value?.route?.waypoints || []
+  return [...points].sort((a, b) => (a.ordreIndex ?? 0) - (b.ordreIndex ?? 0))
+})
+
+const hasRouteMap = computed(() => routeWaypoints.value.length >= 2)
+
+function clearRouteMap() {
+  if (routeMap) {
+    routeMap.remove()
+    routeMap = null
+  }
+  routeMarkers = null
+  routeLine = null
+}
+
+async function renderRouteMap() {
+  if (!hasRouteMap.value) {
+    clearRouteMap()
+    return
+  }
+
+  await nextTick()
+
+  if (!routeMapContainer.value) return
+
+  if (!routeMap) {
+    routeMap = L.map(routeMapContainer.value)
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '&copy; OpenStreetMap contributors',
+    }).addTo(routeMap)
+  }
+
+  if (!routeMarkers) {
+    routeMarkers = L.layerGroup().addTo(routeMap)
+  } else {
+    routeMarkers.clearLayers()
+  }
+
+  if (routeLine) {
+    routeLine.remove()
+    routeLine = null
+  }
+
+  const latLngs = routeWaypoints.value.map((point, index) => {
+    const label = point.nomPunt || `Punt ${index + 1}`
+    L.marker([point.lat, point.lon])
+      .bindTooltip(label, { direction: 'top' })
+      .addTo(routeMarkers)
+    return [point.lat, point.lon]
+  })
+
+  if (latLngs.length >= 2) {
+    routeLine = L.polyline(latLngs, { color: '#2d6a4f', weight: 4 }).addTo(routeMap)
+    const bounds = L.latLngBounds(latLngs).pad(0.2)
+    routeMap.fitBounds(bounds)
+  }
+
+  setTimeout(() => {
+    routeMap?.invalidateSize()
+  }, 0)
+}
 
 function getApiErrorMessage(error) {
   return (
@@ -426,6 +506,18 @@ watch(
   },
   { immediate: true },
 )
+
+watch(
+  () => routeWaypoints.value,
+  () => {
+    renderRouteMap()
+  },
+  { deep: true, immediate: true },
+)
+
+onBeforeUnmount(() => {
+  clearRouteMap()
+})
 </script>
 
 <style scoped>
@@ -535,7 +627,7 @@ watch(
 .publication-like,
 .publication-peak-link,
 .publication-comments__button,
-.publication-map-placeholder__track {
+.publication-map__track {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -572,7 +664,7 @@ watch(
 
 .publication-peak-link,
 .publication-comments__button,
-.publication-map-placeholder__track {
+.publication-map__track {
   border: none;
   background: var(--color-button-primary);
   color: var(--color-button-primary-text);
@@ -598,7 +690,7 @@ watch(
 
 .publication-copy,
 .publication-gallery,
-.publication-map-placeholder,
+.publication-map,
 .publication-comments {
   margin-top: 2rem;
 }
@@ -632,7 +724,7 @@ watch(
 .publication-gallery__header,
 .publication-comments__header,
 .publication-comments__actions,
-.publication-map-placeholder {
+.publication-map__header {
   display: flex;
   justify-content: space-between;
   gap: 1rem;
@@ -641,10 +733,11 @@ watch(
 
 .publication-gallery__count,
 .publication-comments__count,
-.publication-map-placeholder__text,
+.publication-map__text,
 .publication-comments__notice,
 .publication-gallery__empty,
-.publication-comments__empty {
+.publication-comments__empty,
+.publication-map__empty {
   margin: 0;
   color: var(--color-text-soft);
 }
@@ -711,27 +804,28 @@ watch(
   border-color: #3f5d4f;
 }
 
-.publication-map-placeholder {
+.publication-map {
   padding: 1.35rem;
   border: 1px solid #d7d2df;
   border-radius: 18px;
-  background: linear-gradient(180deg, #eef4de 0%, #d8e2bd 100%);
-  min-height: 260px;
-  position: relative;
-  overflow: hidden;
+  background: #f6f4fb;
 }
 
-.publication-map-placeholder::after {
-  content: '';
-  position: absolute;
-  inset: auto 0 0 0;
-  height: 58%;
-  background:
-    linear-gradient(135deg, rgba(129, 160, 92, 0.28) 25%, transparent 25%) 0 0 / 26px 26px,
-    linear-gradient(225deg, rgba(129, 160, 92, 0.18) 25%, transparent 25%) 0 0 / 26px 26px,
-    linear-gradient(45deg, rgba(236, 142, 54, 0.88), rgba(227, 104, 41, 0.88));
-  clip-path: polygon(0 66%, 16% 57%, 34% 61%, 52% 46%, 67% 50%, 82% 33%, 100% 40%, 100% 100%, 0 100%);
-  opacity: 0.72;
+.publication-map__canvas {
+  margin-top: 1rem;
+  height: 320px;
+  border-radius: 16px;
+  overflow: hidden;
+  border: 1px solid #d7d2df;
+}
+
+.publication-map__track {
+  border: none;
+  background: var(--color-button-primary);
+  color: var(--color-button-primary-text);
+  border-radius: 12px;
+  padding: 0.8rem 1rem;
+  text-decoration: none;
 }
 
 .publication-comments__form {
@@ -795,7 +889,7 @@ watch(
 @media (max-width: 900px) {
   .publication-comments__header,
   .publication-comments__actions,
-  .publication-map-placeholder {
+  .publication-map__header {
     flex-direction: column;
     align-items: flex-start;
   }

@@ -236,6 +236,7 @@ model RutaPlanificada {
   nom           String
   tipusActivitat String
   ritme         String
+  tipusRecorregut String
   distanciaKm   Float
   desnivellPosM Int
   desnivellNegM Int

@@ -152,6 +152,7 @@ function mapPublicationDetail(publication) {
           nom: publication.rutaPlanificada.nom,
           tipusActivitat: publication.rutaPlanificada.tipusActivitat,
           ritme: publication.rutaPlanificada.ritme,
+          tipusRecorregut: publication.rutaPlanificada.tipusRecorregut,
           distanciaKm: publication.rutaPlanificada.distanciaKm,
           desnivellPosM: publication.rutaPlanificada.desnivellPosM,
           desnivellNegM: publication.rutaPlanificada.desnivellNegM,
@@ -159,7 +160,15 @@ function mapPublicationDetail(publication) {
           altitudMaxM: publication.rutaPlanificada.altitudMaxM,
           altitudMinM: publication.rutaPlanificada.altitudMinM,
           trackUrl: publication.rutaPlanificada.trackUrl,
-          notes: publication.rutaPlanificada.notes
+          notes: publication.rutaPlanificada.notes,
+          waypoints: publication.rutaPlanificada.puntsRuta.map((point) => ({
+            id: point.id,
+            etiqueta: point.etiqueta,
+            nomPunt: point.nomPunt,
+            lat: point.lat,
+            lon: point.lon,
+            ordreIndex: point.ordreIndex
+          }))
         }
       : null,
     images: publication.imatges.map(mapImage),
@@ -228,6 +237,7 @@ async function getPublicationByIdOrThrow(publicationId) {
           nom: true,
           tipusActivitat: true,
           ritme: true,
+          tipusRecorregut: true,
           distanciaKm: true,
           desnivellPosM: true,
           desnivellNegM: true,
@@ -235,7 +245,18 @@ async function getPublicationByIdOrThrow(publicationId) {
           altitudMaxM: true,
           altitudMinM: true,
           trackUrl: true,
-          notes: true
+          notes: true,
+          puntsRuta: {
+            orderBy: { ordreIndex: 'asc' },
+            select: {
+              id: true,
+              etiqueta: true,
+              nomPunt: true,
+              lat: true,
+              lon: true,
+              ordreIndex: true
+            }
+          }
         }
       },
       imatges: {

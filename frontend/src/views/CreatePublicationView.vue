@@ -57,6 +57,25 @@
             </label>
 
             <label class="create-publication-field">
+              <span>Ruta planificada vinculada</span>
+              <select
+                v-model="form.rutaPlanificadaId"
+                :disabled="!userStore.isAuthenticated || isLoadingRoutes"
+              >
+                <option value="">Sense ruta vinculada</option>
+                <option v-for="route in userRoutes" :key="route.id" :value="route.id">
+                  {{ formatRouteLabel(route) }}
+                </option>
+              </select>
+              <small v-if="!userStore.isAuthenticated" class="create-publication-route-note">
+                Inicia sessio per veure les teves rutes planificades.
+              </small>
+              <small v-else-if="routesError" class="create-publication-route-note create-publication-route-note--error">
+                {{ routesError }}
+              </small>
+            </label>
+
+            <label class="create-publication-field">
               <span>Dificultat</span>
               <input
                 v-model="form.dificultat"
@@ -216,7 +235,7 @@
 // - selecció d'imatges
 // - intent de creació real al backend
 // - fallback temporal quan backend falla
-import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
+import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import api from '../api/axios'
 import { useUserStore } from '../stores/user'
@@ -249,11 +268,15 @@ const validationErrors = ref([])
 const submitMessage = ref('')
 const selectedFiles = ref([])
 const imagePreviews = ref([])
+const userRoutes = ref([])
+const isLoadingRoutes = ref(false)
+const routesError = ref('')
 
 // form agrupa tot el que l'usuari escriu al formulari.
 const form = ref({
   titol: '',
   cimId: '',
+  rutaPlanificadaId: '',
   dificultat: '',
   dataActivitat: '',
   trackUrl: '',
@@ -281,6 +304,16 @@ function getApiErrorMessage(error, fallbackMessage) {
   )
 }
 
+function formatRouteLabel(route) {
+  const distance = Number(route.distanciaKm || 0)
+  const distanceLabel = distance.toLocaleString('ca-ES', {
+    minimumFractionDigits: Number.isInteger(distance) ? 0 : 1,
+    maximumFractionDigits: 1,
+  })
+  const peakName = route.peak?.nom || 'Cim'
+  return `${route.nom} · ${distanceLabel} km · ${peakName}`
+}
+
 async function fetchPeaks() {
   // Intentem carregar el catàleg real de cims.
   // Si falla, fem servir el fallback perquè la pantalla continuï sent usable.
@@ -302,6 +335,28 @@ async function fetchPeaks() {
     }
   } finally {
     isLoadingPeaks.value = false
+  }
+}
+
+async function fetchUserRoutes() {
+  const userId = userStore.user?.id
+  if (!userId) {
+    userRoutes.value = []
+    routesError.value = ''
+    return
+  }
+
+  isLoadingRoutes.value = true
+  routesError.value = ''
+
+  try {
+    const { data } = await api.get(`/users/${userId}/routes`)
+    userRoutes.value = data.routes || []
+  } catch (error) {
+    userRoutes.value = []
+    routesError.value = getApiErrorMessage(error, 'No hem pogut carregar les rutes planificades.')
+  } finally {
+    isLoadingRoutes.value = false
   }
 }
 
@@ -441,6 +496,10 @@ async function handleSubmit() {
       imageUrls,
     }
 
+    if (form.value.rutaPlanificadaId) {
+      payload.rutaPlanificadaId = form.value.rutaPlanificadaId
+    }
+
     if (form.value.trackUrl.trim()) {
       payload.trackUrl = form.value.trackUrl.trim()
     }
@@ -545,7 +604,15 @@ function readFileAsDataUrl(file) {
 
 onMounted(() => {
   fetchPeaks()
+  fetchUserRoutes()
 })
+
+watch(
+  () => userStore.user?.id,
+  () => {
+    fetchUserRoutes()
+  },
+)
 
 onBeforeUnmount(() => {
   clearImagePreviews()
@@ -693,6 +760,16 @@ onBeforeUnmount(() => {
   padding: 0.9rem 1rem;
   background: #fff;
   color: var(--color-text);
+}
+
+.create-publication-route-note {
+  margin-top: 0.35rem;
+  font-size: 0.86rem;
+  color: var(--color-text-soft);
+}
+
+.create-publication-route-note--error {
+  color: #915454;
 }
 
 .create-publication-upload__top {
