@@ -38,6 +38,7 @@ const usersRoutes = require('./modules/users/users.routes');
 const statsRoutes = require('./modules/stats/stats.routes');
 const challengesRoutes = require('./modules/challenges/challenges.routes');
 const badgesRoutes = require('./modules/badges/badges.routes');
+const routesRoutes = require('./modules/routes/routes.routes');
 
 // Creo la instancia principal de l'aplicacio Express.
 const app = express();
@@ -68,6 +69,9 @@ app.use('/publicacions', publicacionsRoutes);
 
 // Modul comments separat per endpoint global DELETE /comments/:id.
 app.use('/comments', commentsRoutes);
+
+// Modul de rutes planificades (public i protegit).
+app.use('/routes', routesRoutes);
 
 // Munto el modul users sota /users.
 // Dins del propi router ja s'aplica requireAuth nomes on toca.

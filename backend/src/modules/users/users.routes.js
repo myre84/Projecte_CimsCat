@@ -9,6 +9,7 @@ const { requireAuth } = require('../../common/middlewares/auth.middleware');
 // Importo el controller del modul users.
 // El controller conte la logica HTTP (validacio + resposta JSON).
 const usersController = require('./users.controller');
+const routesController = require('../routes/routes.controller');
 
 // Creo el router especific de users.
 const router = express.Router();
@@ -16,6 +17,10 @@ const router = express.Router();
 // GET /users/:id/publications
 // Ruta publica: qualsevol client pot consultar les publicacions d'un usuari.
 router.get('/:id/publications', usersController.getUserPublications);
+
+// GET /users/:id/routes
+// Ruta publica: qualsevol client pot consultar rutes planificades d'un usuari.
+router.get('/:id/routes', routesController.getUserRoutesController);
 
 // GET /users/:id/saved
 // Ruta protegida: nomes el propietari pot veure els seus cims guardats.

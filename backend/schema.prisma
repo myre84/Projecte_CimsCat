@@ -237,13 +237,14 @@ model RutaPlanificada {
   // Dades descriptives i tecniques de planificacio
   nom            String
   tipusActivitat String
-  ritme          String
-  distanciaKm    Float
-  desnivellPosM  Int
-  desnivellNegM  Int
-  tempsMin       Int
-  altitudMaxM    Int
-  altitudMinM    Int
+  ritme         String
+  tipusRecorregut String
+  distanciaKm   Float
+  desnivellPosM Int
+  desnivellNegM Int
+  tempsMin      Int
+  altitudMaxM   Int
+  altitudMinM   Int
 
   // Track i notes opcionals
   trackUrl String?
