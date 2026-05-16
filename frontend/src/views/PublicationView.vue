@@ -214,7 +214,17 @@
             <div class="publication-comment__body">
               <div class="publication-comment__top">
                 <strong>{{ formatAuthor(comment.author) }}</strong>
-                <span>{{ formatLongDate(comment.createdAt) }}</span>
+                <div class="publication-comment__meta">
+                  <span>{{ formatLongDate(comment.createdAt) }}</span>
+                  <button
+                    v-if="canDeleteComment(comment)"
+                    class="publication-comment__delete"
+                    type="button"
+                    @click="handleCommentDelete(comment)"
+                  >
+                    Eliminar
+                  </button>
+                </div>
               </div>
               <p>{{ comment.text }}</p>
             </div>
@@ -405,22 +415,28 @@ async function fetchPublication() {
 }
 
 function handleLikeClick() {
-  // De moment, si no hi ha login, enviem a login.
-  // Si hi ha login, deixem un avís perquè encara falta la part backend del toggle.
+  // Si no hi ha login, redirigim a login.
   if (!userStore.isAuthenticated) {
     router.push('/login')
     return
   }
 
-  commentNotice.value =
-    'El botó de like ja queda preparat al frontend, però encara falta l’endpoint de toggle al backend.'
+  if (!publication.value || isUsingMockPublication.value) {
+    commentNotice.value = 'Aquesta publicació local temporal no admet likes reals.'
+    return
+  }
+
+  toggleLike()
 }
 
-function handleCommentSubmit() {
-  // La lectura de comentaris ja existeix, però la creació no.
-  // Per això aquí només deixem el formulari preparat i informem del bloqueig real.
+async function handleCommentSubmit() {
   if (!userStore.isAuthenticated) {
     router.push('/login')
+    return
+  }
+
+  if (!publication.value || isUsingMockPublication.value) {
+    commentNotice.value = 'Aquesta publicació local temporal no admet comentaris reals.'
     return
   }
 
@@ -429,8 +445,104 @@ function handleCommentSubmit() {
     return
   }
 
-  commentNotice.value =
-    'La llista de comentaris ja es llegeix del backend, però falta l’endpoint de creació per publicar-ne de nous.'
+  try {
+    const payload = { text: commentDraft.value.trim() }
+    const { data } = await api.post(`/publicacions/${publication.value.id}/comments`, payload)
+
+    if (data?.comment) {
+      publication.value.comments = [data.comment, ...(publication.value.comments || [])]
+    }
+
+    if (typeof data?.commentsCount === 'number') {
+      publication.value.stats.commentsCount = data.commentsCount
+    } else {
+      publication.value.stats.commentsCount = (publication.value.comments || []).length
+    }
+
+    commentDraft.value = ''
+    commentNotice.value = ''
+  } catch (error) {
+    commentNotice.value =
+      error?.response?.data?.message ||
+      error?.response?.data?.error?.message ||
+      'No hem pogut publicar el comentari.'
+  }
+}
+
+function canDeleteComment(comment) {
+  if (!userStore.isAuthenticated || !comment?.id) return false
+
+  const currentUserId = userStore.user?.id
+  const currentUserRole = userStore.user?.rol
+
+  // El backend permet esborrar comentaris al propietari de la publicació o a admin.
+  return currentUserRole === 'admin' || currentUserId === publication.value?.author?.id
+}
+
+async function handleCommentDelete(comment) {
+  if (!publication.value || !comment?.id) return
+
+  const accepted = window.confirm('Vols eliminar aquest comentari? Aquesta acció no es pot desfer.')
+  if (!accepted) return
+
+  try {
+    const { data } = await api.delete(`/comments/${comment.id}`)
+    publication.value.comments = (publication.value.comments || []).filter((item) => item.id !== comment.id)
+
+    if (typeof data?.commentsCount === 'number') {
+      publication.value.stats.commentsCount = data.commentsCount
+    } else {
+      publication.value.stats.commentsCount = (publication.value.comments || []).length
+    }
+
+    commentNotice.value = ''
+  } catch (error) {
+    commentNotice.value =
+      error?.response?.data?.message ||
+      error?.response?.data?.error?.message ||
+      'No hem pogut eliminar el comentari.'
+  }
+}
+
+async function toggleLike() {
+  if (!publication.value) return
+
+  const endpoint = `/publicacions/${publication.value.id}/likes`
+  const currentlyLiked = isLiked.value
+
+  try {
+    const { data } = currentlyLiked ? await api.delete(endpoint) : await api.post(endpoint)
+
+    const currentUser = {
+      id: userStore.user?.id,
+      nomUsuari: userStore.user?.nomUsuari,
+      nom: userStore.user?.nom,
+      cognom: userStore.user?.cognom,
+      fotoPerfil: userStore.user?.fotoPerfil,
+    }
+
+    if (currentlyLiked) {
+      publication.value.likes = (publication.value.likes || []).filter((like) => like.user?.id !== currentUser.id)
+    } else {
+      publication.value.likes = [
+        ...(publication.value.likes || []),
+        { likedAt: new Date().toISOString(), user: currentUser },
+      ]
+    }
+
+    if (typeof data?.likesCount === 'number') {
+      publication.value.stats.likesCount = data.likesCount
+    } else {
+      publication.value.stats.likesCount = (publication.value.likes || []).length
+    }
+
+    commentNotice.value = ''
+  } catch (error) {
+    commentNotice.value =
+      error?.response?.data?.message ||
+      error?.response?.data?.error?.message ||
+      'No hem pogut actualitzar el like.'
+  }
 }
 
 function showPreviousImage() {
@@ -875,9 +987,29 @@ onBeforeUnmount(() => {
   align-items: baseline;
 }
 
+.publication-comment__meta {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.7rem;
+}
+
 .publication-comment__top span {
   color: var(--color-text-soft);
   font-size: 0.92rem;
+}
+
+.publication-comment__delete {
+  border: 1px solid #e3bcbc;
+  color: #a44444;
+  background: #fff8f8;
+  border-radius: 999px;
+  padding: 0.2rem 0.7rem;
+  font-size: 0.82rem;
+  cursor: pointer;
+}
+
+.publication-comment__delete:hover {
+  background: #fff0f0;
 }
 
 .publication-comment__body p {
