@@ -40,6 +40,19 @@
         queda pendent perque no hi ha endpoint `DELETE /peaks/:id`.
       </p>
 
+      <label class="admin-search">
+        <span>Cercar cims</span>
+        <input
+          v-model.trim="peakSearchQuery"
+          type="text"
+          placeholder="Nom, comarca o massis..."
+        />
+      </label>
+
+      <p class="admin-section__note admin-section__note--small">
+        Resultats: {{ filteredPeaks.length }} de {{ peaks.length }} cims
+      </p>
+
       <div class="admin-table-wrapper">
         <table class="admin-table">
           <thead>
@@ -52,7 +65,7 @@
             </tr>
           </thead>
           <tbody>
-            <tr v-for="peak in peaks" :key="peak.id">
+            <tr v-for="peak in filteredPeaks" :key="peak.id">
               <td>{{ peak.nom }}</td>
               <td>{{ peak.alcada }} m</td>
               <td>{{ peak.comarca }}</td>
@@ -64,6 +77,11 @@
                 <button class="admin-button admin-button--danger" disabled>Eliminar</button>
               </td>
             </tr>
+            <tr v-if="!filteredPeaks.length">
+              <td colspan="5" class="admin-table__empty">
+                No hi ha cims que coincideixin amb la cerca actual.
+              </td>
+            </tr>
           </tbody>
         </table>
       </div>
@@ -73,13 +91,31 @@
       <div class="admin-section__title-row">
         <div>
           <p class="admin-section__eyebrow">Moderacio</p>
-          <h2>Accions disponibles al frontend</h2>
+          <h2>Moderacio (preparat per backend)</h2>
         </div>
       </div>
 
+      <p class="admin-section__note">
+        Aquest cercador de moderacio ja deixa preparada la UX. Quan backend publiqui l endpoint
+        global, nomes caldra canviar la font de dades.
+      </p>
+
+      <label class="admin-search">
+        <span>Cerca global moderacio</span>
+        <input
+          v-model.trim="moderationSearchQuery"
+          type="text"
+          placeholder="Usuari, publicacio, comentari o paraula..."
+        />
+      </label>
+
+      <p class="admin-section__note admin-section__note--small">
+        Blocs visibles: {{ filteredModerationSections.length }} de {{ moderationSections.length }}
+      </p>
+
       <div class="moderation-grid">
         <article
-          v-for="section in moderationSections"
+          v-for="section in filteredModerationSections"
           :key="section.title"
           class="moderation-card"
         >
@@ -91,6 +127,10 @@
           <span class="moderation-card__status">{{ section.status }}</span>
         </article>
       </div>
+
+      <p v-if="!filteredModerationSections.length" class="admin-empty">
+        No hi ha blocs de moderacio que coincideixin amb aquesta cerca.
+      </p>
     </section>
 
     <AdminPeakModal
@@ -105,7 +145,7 @@
 </template>
 
 <script setup>
-import { onMounted, ref } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 import api from '../api/axios'
 import AdminPeakModal from '../components/AdminPeakModal.vue'
 import { useUserStore } from '../stores/user'
@@ -119,6 +159,8 @@ const isPeakModalOpen = ref(false)
 const peakModalMode = ref('create')
 const editingPeak = ref(null)
 const isSavingPeak = ref(false)
+const peakSearchQuery = ref('')
+const moderationSearchQuery = ref('')
 
 function getApiErrorMessage(error, fallbackMessage) {
   return error?.response?.data?.message || error?.response?.data?.error?.message || fallbackMessage
@@ -198,13 +240,13 @@ async function handlePeakSubmit({ form, file }) {
 const moderationSections = [
   {
     title: 'Publicacions',
-    description: 'El frontend encara no pot moderar publicacions com a admin: el DELETE actual es owner-only.',
+    description: 'La moderacio admin global de publicacions segueix pendent: el DELETE de publicacions es owner-only.',
     action: 'Eliminar publicacio',
     status: 'Pendent de backend admin',
   },
   {
     title: 'Comentaris',
-    description: 'Encara no existeix un endpoint real de moderacio admin per comentaris.',
+    description: 'L eliminacio de comentaris ja existeix per owner de la publicacio i admin, pero falta un endpoint admin de llistat global per moderar en bloc.',
     action: 'Eliminar comentari',
     status: 'Pendent de backend admin',
   },
@@ -215,6 +257,32 @@ const moderationSections = [
     status: 'Pendent de backend admin',
   },
 ]
+
+const filteredPeaks = computed(() => {
+  const query = peakSearchQuery.value.toLowerCase()
+  if (!query) return peaks.value
+
+  return peaks.value.filter((peak) => {
+    const name = String(peak.nom || '').toLowerCase()
+    const comarca = String(peak.comarca || '').toLowerCase()
+    const massis = String(peak.massis || '').toLowerCase()
+    return name.includes(query) || comarca.includes(query) || massis.includes(query)
+  })
+})
+
+const filteredModerationSections = computed(() => {
+  const query = moderationSearchQuery.value.toLowerCase()
+  if (!query) return moderationSections
+
+  return moderationSections.filter((section) => {
+    return (
+      section.title.toLowerCase().includes(query) ||
+      section.description.toLowerCase().includes(query) ||
+      section.action.toLowerCase().includes(query) ||
+      section.status.toLowerCase().includes(query)
+    )
+  })
+})
 
 onMounted(fetchPeaks)
 </script>
@@ -282,6 +350,11 @@ onMounted(fetchPeaks)
   line-height: 1.5;
 }
 
+.admin-section__note--small {
+  margin-top: 0.55rem;
+  font-size: 0.9rem;
+}
+
 .admin-dashboard__summary {
   display: flex;
   flex-wrap: wrap;
@@ -313,6 +386,26 @@ onMounted(fetchPeaks)
   overflow-x: auto;
 }
 
+.admin-search {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+  margin-top: 1rem;
+}
+
+.admin-search span {
+  color: var(--color-text-soft);
+  font-size: 0.9rem;
+}
+
+.admin-search input {
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+  padding: 0.65rem 0.8rem;
+  font-size: 0.98rem;
+  background: #fff;
+}
+
 .admin-table {
   width: 100%;
   border-collapse: collapse;
@@ -332,6 +425,11 @@ onMounted(fetchPeaks)
   text-transform: uppercase;
   letter-spacing: 0.05em;
   color: var(--color-text-soft);
+}
+
+.admin-table__empty {
+  color: var(--color-text-soft);
+  text-align: center;
 }
 
 .admin-table__actions {
@@ -381,6 +479,11 @@ onMounted(fetchPeaks)
   flex-direction: column;
   gap: 0.9rem;
   background: #faf9f5;
+}
+
+.admin-empty {
+  margin: 1rem 0 0;
+  color: var(--color-text-soft);
 }
 
 @media (max-width: 900px) {
