@@ -40,7 +40,7 @@ async function main() {
       cognom: 'Jordan',
       mail: 'dalia@cimscat.cat',
       contrasenyaHash: passwordHash,
-      rol: 'admin',
+      rol: 'usuari',
       fotoPerfil: '/uploads/usuaris/dalia.jpg'
     },
     {
@@ -60,7 +60,7 @@ async function main() {
       cognom: 'Moore',
       mail: 'dani@cimscat.cat',
       contrasenyaHash: passwordHash,
-      rol: 'guia',
+      rol: 'usuari',
       fotoPerfil: '/uploads/usuaris/dani.jpg'
     }
   ];

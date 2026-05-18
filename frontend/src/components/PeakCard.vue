@@ -30,6 +30,7 @@
           :aria-pressed="isSaved"
           :title="isSaved ? 'Treure de guardats' : 'Guardar cim'"
           :data-tooltip="isSaved ? 'Treure de guardats' : 'Guardar cim'"
+          :disabled="isSaving"
           @click="handleSave"
         >
           <svg viewBox="0 0 24 24" aria-hidden="true">
@@ -52,14 +53,14 @@
 </template>
 
 <script setup>
-// ref ens serveix per guardar l'estat local del guardat dins la targeta.
-import { ref } from 'vue'
+import { onMounted, ref, watch } from 'vue'
 
 // useRouter el fem servir per navegar per codi, per exemple quan volem enviar a registre.
 import { useRouter } from 'vue-router'
 
 // Accedim a la store global per saber si l'usuari està loguejat o no.
 import { useUserStore } from '../stores/user'
+import api from '../api/axios'
 
 // Aquesta card espera rebre una publicació sencera des del component pare.
 const props = defineProps({
@@ -72,29 +73,68 @@ const props = defineProps({
 const router = useRouter()
 const userStore = useUserStore()
 
-// props.publication arriba des del pare amb totes les dades que necessitem per omplir la targeta.
-// isSaved controla només l'estat visual actual del guardat dins aquesta card.
 const isSaved = ref(false)
-
-// Guardem també el recompte de guardats per mantenir el feedback visual coherent.
 const savedCount = ref(props.publication.savedCount)
+const isSaving = ref(false)
 
-function handleSave() {
-  // Aquesta acció encara no està connectada al backend real.
-  // Per això aquí fem un comportament visual/local per poder provar la UX.
-  // Si l'usuari no està autenticat, no pot guardar cims i l'enviem a registre.
+async function loadSavedStatus() {
+  if (!userStore.isAuthenticated || !props.publication.peakId) {
+    isSaved.value = false
+    return
+  }
+
+  try {
+    const { data } = await api.get(`/peaks/${props.publication.peakId}/saved`)
+    isSaved.value = Boolean(data.saved)
+  } catch {
+    isSaved.value = false
+  }
+}
+
+watch(
+  () => props.publication.savedCount,
+  (value) => {
+    savedCount.value = Number(value || 0)
+  },
+)
+
+watch(
+  () => [props.publication.peakId, userStore.isAuthenticated],
+  () => {
+    loadSavedStatus()
+  },
+)
+
+async function handleSave() {
   if (!userStore.isAuthenticated) {
     router.push('/registre')
     return
   }
 
-  // Si està autenticat, canviem l'estat local del guardat.
-  isSaved.value = !isSaved.value
+  if (isSaving.value) return
 
-  // També sumem o restem 1 al comptador local.
-  // Això de moment és només visual perquè encara no ho connectem a favorits reals de backend.
-  savedCount.value += isSaved.value ? 1 : -1
+  const nextSaved = !isSaved.value
+  isSaving.value = true
+
+  try {
+    const endpoint = `/peaks/${props.publication.peakId}/saved`
+    const { data } = nextSaved ? await api.post(endpoint) : await api.delete(endpoint)
+
+    isSaved.value = Boolean(data.saved)
+    savedCount.value += data.saved ? 1 : -1
+    if (savedCount.value < 0) savedCount.value = 0
+  } catch (error) {
+    window.alert(
+      error?.response?.data?.message ||
+        error?.response?.data?.error?.message ||
+        'No hem pogut actualitzar aquest cim guardat.',
+    )
+  } finally {
+    isSaving.value = false
+  }
 }
+
+onMounted(loadSavedStatus)
 </script>
 
 <style scoped>
@@ -172,6 +212,11 @@ function handleSave() {
   align-items: center;
   justify-content: center;
   transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+}
+
+.peak-card__save:disabled {
+  cursor: progress;
+  opacity: 0.65;
 }
 
 .peak-card__save svg {

@@ -39,6 +39,7 @@ const statsRoutes = require('./modules/stats/stats.routes');
 const challengesRoutes = require('./modules/challenges/challenges.routes');
 const badgesRoutes = require('./modules/badges/badges.routes');
 const routesRoutes = require('./modules/routes/routes.routes');
+const adminRoutes = require('./modules/admin/admin.routes');
 
 // Creo la instancia principal de l'aplicacio Express.
 const app = express();
@@ -80,6 +81,7 @@ app.use('/users', usersRoutes);
 app.use('/users', statsRoutes);
 app.use('/users', challengesRoutes);
 app.use('/users', badgesRoutes);
+app.use('/admin', adminRoutes);
 
 // Health es deixa a arrel per comprovacions rapides de vida del backend.
 app.use('/', healthRoutes);

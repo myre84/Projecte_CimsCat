@@ -12,10 +12,6 @@
       <div>
         <p class="admin-dashboard__eyebrow">Panell d'administracio</p>
         <h1>Gestio de plataforma</h1>
-        <p class="admin-dashboard__lead">
-          Des d'aqui pots revisar el cataleg real de cims i connectar la gestio admin que ja
-          existeix al backend.
-        </p>
       </div>
 
       <div class="admin-dashboard__summary">
@@ -34,11 +30,6 @@
           Crear nou cim
         </button>
       </div>
-
-      <p class="admin-section__note">
-        La part de cims ja es connecta a backend per llistar, crear i editar. L&apos;eliminacio encara
-        queda pendent perque no hi ha endpoint `DELETE /peaks/:id`.
-      </p>
 
       <label class="admin-search">
         <span>Cercar cims</span>
@@ -74,7 +65,13 @@
                 <button class="admin-button admin-button--clickable" type="button" @click="openEditModal(peak)">
                   Editar
                 </button>
-                <button class="admin-button admin-button--danger" disabled>Eliminar</button>
+                <button
+                  class="admin-button admin-button--danger admin-button--clickable"
+                  type="button"
+                  @click="handlePeakDelete(peak)"
+                >
+                  Eliminar
+                </button>
               </td>
             </tr>
             <tr v-if="!filteredPeaks.length">
@@ -91,14 +88,9 @@
       <div class="admin-section__title-row">
         <div>
           <p class="admin-section__eyebrow">Moderacio</p>
-          <h2>Moderacio (preparat per backend)</h2>
+          <h2>Moderacio</h2>
         </div>
       </div>
-
-      <p class="admin-section__note">
-        Aquest cercador de moderacio ja deixa preparada la UX. Quan backend publiqui l endpoint
-        global, nomes caldra canviar la font de dades.
-      </p>
 
       <label class="admin-search">
         <span>Cerca global moderacio</span>
@@ -110,27 +102,124 @@
       </label>
 
       <p class="admin-section__note admin-section__note--small">
-        Blocs visibles: {{ filteredModerationSections.length }} de {{ moderationSections.length }}
+        Comentaris: {{ adminComments.length }} · Publicacions: {{ adminPublicacions.length }} · Usuaris: {{ adminUsers.length }}
       </p>
 
-      <div class="moderation-grid">
-        <article
-          v-for="section in filteredModerationSections"
-          :key="section.title"
-          class="moderation-card"
-        >
-          <h3>{{ section.title }}</h3>
-          <p>{{ section.description }}</p>
-          <button class="admin-button admin-button--danger" disabled>
-            {{ section.action }}
-          </button>
-          <span class="moderation-card__status">{{ section.status }}</span>
-        </article>
+      <div v-if="isLoadingModeration" class="admin-feedback">Carregant moderacio...</div>
+      <div v-else-if="moderationError" class="admin-feedback admin-feedback--error">{{ moderationError }}</div>
+      <div v-else class="moderation-live">
+        <div class="moderation-live__block">
+          <h3>Comentaris</h3>
+          <div class="admin-table-wrapper">
+            <table class="admin-table">
+              <thead>
+                <tr>
+                  <th>Usuari</th>
+                  <th>Publicacio</th>
+                  <th>Text</th>
+                  <th>Accio</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr v-for="comment in adminComments" :key="comment.id">
+                  <td>{{ comment.author?.nomUsuari || '-' }}</td>
+                  <td>{{ comment.publication?.titol || '-' }}</td>
+                  <td>{{ comment.text }}</td>
+                  <td>
+                    <button
+                      class="admin-button admin-button--danger admin-button--clickable"
+                      type="button"
+                      @click="handleCommentDelete(comment)"
+                    >
+                      Eliminar
+                    </button>
+                  </td>
+                </tr>
+                <tr v-if="!adminComments.length">
+                  <td colspan="4" class="admin-table__empty">No hi ha comentaris per aquest filtre.</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="moderation-live__block">
+          <h3>Publicacions</h3>
+          <div class="admin-table-wrapper">
+            <table class="admin-table">
+              <thead>
+                <tr>
+                  <th>Titol</th>
+                  <th>Usuari</th>
+                  <th>Cim</th>
+                  <th>Accio</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr v-for="publication in adminPublicacions" :key="publication.id">
+                  <td>{{ publication.titol }}</td>
+                  <td>{{ publication.author?.nomUsuari || '-' }}</td>
+                  <td>{{ publication.peak?.nom || '-' }}</td>
+                  <td>
+                    <button
+                      class="admin-button admin-button--danger admin-button--clickable"
+                      type="button"
+                      @click="handlePublicationDelete(publication)"
+                    >
+                      Eliminar
+                    </button>
+                  </td>
+                </tr>
+                <tr v-if="!adminPublicacions.length">
+                  <td colspan="4" class="admin-table__empty">No hi ha publicacions per aquest filtre.</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="moderation-live__block">
+          <h3>Usuaris</h3>
+          <div class="admin-table-wrapper">
+            <table class="admin-table">
+              <thead>
+                <tr>
+                  <th>Usuari</th>
+                  <th>Mail</th>
+                  <th>Rol</th>
+                  <th>Accions</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr v-for="targetUser in adminUsers" :key="targetUser.id">
+                  <td>{{ targetUser.nomUsuari }}</td>
+                  <td>{{ targetUser.mail }}</td>
+                  <td>{{ targetUser.rol }}</td>
+                  <td class="admin-table__actions">
+                    <button
+                      class="admin-button admin-button--clickable"
+                      type="button"
+                      @click="toggleUserRole(targetUser)"
+                    >
+                      Rol {{ targetUser.rol === 'admin' ? 'usuari' : 'admin' }}
+                    </button>
+                    <button
+                      class="admin-button admin-button--danger admin-button--clickable"
+                      type="button"
+                      @click="handleUserDelete(targetUser)"
+                    >
+                      Eliminar
+                    </button>
+                  </td>
+                </tr>
+                <tr v-if="!adminUsers.length">
+                  <td colspan="4" class="admin-table__empty">No hi ha usuaris per aquest filtre.</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
       </div>
-
-      <p v-if="!filteredModerationSections.length" class="admin-empty">
-        No hi ha blocs de moderacio que coincideixin amb aquesta cerca.
-      </p>
     </section>
 
     <AdminPeakModal
@@ -145,7 +234,7 @@
 </template>
 
 <script setup>
-import { computed, onMounted, ref } from 'vue'
+import { computed, onMounted, ref, watch } from 'vue'
 import api from '../api/axios'
 import AdminPeakModal from '../components/AdminPeakModal.vue'
 import { useUserStore } from '../stores/user'
@@ -161,6 +250,11 @@ const editingPeak = ref(null)
 const isSavingPeak = ref(false)
 const peakSearchQuery = ref('')
 const moderationSearchQuery = ref('')
+const isLoadingModeration = ref(false)
+const moderationError = ref('')
+const adminComments = ref([])
+const adminPublicacions = ref([])
+const adminUsers = ref([])
 
 function getApiErrorMessage(error, fallbackMessage) {
   return error?.response?.data?.message || error?.response?.data?.error?.message || fallbackMessage
@@ -178,6 +272,31 @@ async function fetchPeaks() {
     errorMessage.value = getApiErrorMessage(error, 'No hem pogut carregar el cataleg de cims.')
   } finally {
     isLoading.value = false
+  }
+}
+
+async function fetchModerationData() {
+  isLoadingModeration.value = true
+  moderationError.value = ''
+
+  try {
+    const query = moderationSearchQuery.value
+    const [commentsRes, publicationsRes, usersRes] = await Promise.all([
+      api.get('/admin/comments', { params: { q: query || undefined } }),
+      api.get('/admin/publicacions', { params: { q: query || undefined } }),
+      api.get('/admin/users', { params: { q: query || undefined } }),
+    ])
+
+    adminComments.value = commentsRes.data.comments || []
+    adminPublicacions.value = publicationsRes.data.publicacions || []
+    adminUsers.value = usersRes.data.users || []
+  } catch (error) {
+    adminComments.value = []
+    adminPublicacions.value = []
+    adminUsers.value = []
+    moderationError.value = getApiErrorMessage(error, 'No hem pogut carregar la moderacio admin.')
+  } finally {
+    isLoadingModeration.value = false
   }
 }
 
@@ -237,26 +356,61 @@ async function handlePeakSubmit({ form, file }) {
   }
 }
 
-const moderationSections = [
-  {
-    title: 'Publicacions',
-    description: 'La moderacio admin global de publicacions segueix pendent: el DELETE de publicacions es owner-only.',
-    action: 'Eliminar publicacio',
-    status: 'Pendent de backend admin',
-  },
-  {
-    title: 'Comentaris',
-    description: 'L eliminacio de comentaris ja existeix per owner de la publicacio i admin, pero falta un endpoint admin de llistat global per moderar en bloc.',
-    action: 'Eliminar comentari',
-    status: 'Pendent de backend admin',
-  },
-  {
-    title: 'Usuaris',
-    description: 'La gestio administrativa d usuaris encara no te endpoint de moderacio o eliminacio.',
-    action: 'Eliminar perfil',
-    status: 'Pendent de backend admin',
-  },
-]
+async function handlePeakDelete(peak) {
+  if (!window.confirm(`Vols eliminar el cim "${peak.nom}"?`)) return
+
+  try {
+    await api.delete(`/peaks/${peak.id}`)
+    await fetchPeaks()
+  } catch (error) {
+    window.alert(getApiErrorMessage(error, 'No hem pogut eliminar el cim.'))
+  }
+}
+
+async function handleCommentDelete(comment) {
+  if (!window.confirm('Vols eliminar aquest comentari?')) return
+
+  try {
+    await api.delete(`/comments/${comment.id}`)
+    await fetchModerationData()
+  } catch (error) {
+    window.alert(getApiErrorMessage(error, 'No hem pogut eliminar el comentari.'))
+  }
+}
+
+async function handlePublicationDelete(publication) {
+  if (!window.confirm(`Vols eliminar la publicacio "${publication.titol}"?`)) return
+
+  try {
+    await api.delete(`/admin/publicacions/${publication.id}`)
+    await fetchModerationData()
+  } catch (error) {
+    window.alert(getApiErrorMessage(error, 'No hem pogut eliminar la publicacio.'))
+  }
+}
+
+async function toggleUserRole(targetUser) {
+  const nextRole = targetUser.rol === 'admin' ? 'usuari' : 'admin'
+  if (!window.confirm(`Vols canviar el rol de ${targetUser.nomUsuari} a ${nextRole}?`)) return
+
+  try {
+    await api.patch(`/admin/users/${targetUser.id}`, { rol: nextRole })
+    await fetchModerationData()
+  } catch (error) {
+    window.alert(getApiErrorMessage(error, 'No hem pogut canviar el rol.'))
+  }
+}
+
+async function handleUserDelete(targetUser) {
+  if (!window.confirm(`Vols eliminar l'usuari ${targetUser.nomUsuari}?`)) return
+
+  try {
+    await api.delete(`/admin/users/${targetUser.id}`)
+    await fetchModerationData()
+  } catch (error) {
+    window.alert(getApiErrorMessage(error, 'No hem pogut eliminar l usuari.'))
+  }
+}
 
 const filteredPeaks = computed(() => {
   const query = peakSearchQuery.value.toLowerCase()
@@ -270,21 +424,13 @@ const filteredPeaks = computed(() => {
   })
 })
 
-const filteredModerationSections = computed(() => {
-  const query = moderationSearchQuery.value.toLowerCase()
-  if (!query) return moderationSections
-
-  return moderationSections.filter((section) => {
-    return (
-      section.title.toLowerCase().includes(query) ||
-      section.description.toLowerCase().includes(query) ||
-      section.action.toLowerCase().includes(query) ||
-      section.status.toLowerCase().includes(query)
-    )
-  })
+watch(moderationSearchQuery, () => {
+  fetchModerationData()
 })
 
-onMounted(fetchPeaks)
+onMounted(async () => {
+  await Promise.all([fetchPeaks(), fetchModerationData()])
+})
 </script>
 
 <style scoped>
@@ -464,21 +610,23 @@ onMounted(fetchPeaks)
   border-color: #efc9c2;
 }
 
-.moderation-grid {
+.moderation-live {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: 1fr;
   gap: 1rem;
   margin-top: 1rem;
 }
 
-.moderation-card {
+.moderation-live__block {
   border: 1px solid var(--color-border);
   border-radius: 14px;
-  padding: 1.2rem;
-  display: flex;
-  flex-direction: column;
-  gap: 0.9rem;
+  padding: 1rem;
   background: #faf9f5;
+}
+
+.moderation-live__block h3 {
+  margin: 0 0 0.5rem;
+  color: var(--color-text);
 }
 
 .admin-empty {
@@ -497,8 +645,8 @@ onMounted(fetchPeaks)
     justify-content: flex-start;
   }
 
-  .moderation-grid {
-    grid-template-columns: 1fr;
+  .moderation-live__block {
+    padding: 0.8rem;
   }
 }
 </style>

@@ -96,6 +96,7 @@ async function updatePublicacio(req, res) {
     const publicationId = validatePublicationIdParam(req.params);
     // Extreiem usuari autenticat.
     const userId = req.auth && req.auth.userId;
+    const isAdmin = req.auth && req.auth.rol === 'admin';
     // Validem cos de canvis (camps editables + canvis d'imatges).
     const payload = validateUpdatePublicationBody(req.body);
 

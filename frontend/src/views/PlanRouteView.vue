@@ -4,21 +4,11 @@
       <div>
         <p class="plan-route-eyebrow">Planificador de rutes</p>
         <h1 class="plan-route-title">Planificar nova ruta</h1>
-        <p class="plan-route-text">
-          Afegeix punts al mapa, revisa els valors calculats i desa la ruta com a esborrany
-          planificat. Encara no hi ha motor real de camins, pero la ruta es guarda.
-        </p>
-        <p class="plan-route-warning">
-          Avís: la distancia i el temps son calculs provisionals del frontend.
-        </p>
       </div>
 
       <div class="plan-route-header__status">
         <p v-if="!userStore.isAuthenticated" class="plan-route-auth">
           Inicia sessio per guardar rutes planificades.
-        </p>
-        <p v-else class="plan-route-auth plan-route-auth--ok">
-          Sessio activa. Pots guardar la ruta.
         </p>
       </div>
     </header>
@@ -62,9 +52,6 @@
         </div>
 
         <div v-else class="plan-route-form">
-          <p v-if="isUsingMockPeaks" class="plan-route-mock">
-            S estan mostrant cims temporals mentre el cataleg real no esta disponible.
-          </p>
 
           <label class="plan-route-field">
             <span>Nom de la ruta</span>
@@ -598,15 +585,6 @@ onBeforeUnmount(() => {
   display: flex;
   flex-direction: column;
   gap: 1rem;
-}
-
-.plan-route-mock {
-  margin: 0;
-  padding: 0.75rem 0.9rem;
-  border-radius: 12px;
-  background: #f3f5ea;
-  border: 1px solid #d8dfc6;
-  color: #4d6146;
 }
 
 .plan-route-field {

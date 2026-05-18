@@ -477,6 +477,22 @@ async function updatePeakById(id, data) {
   }
 }
 
+// Servei de DELETE /peaks/:id.
+// Esborrat administratiu de cim.
+async function deletePeakById(id) {
+  try {
+    await prisma.cim.delete({
+      where: { id }
+    });
+  } catch (error) {
+    if (error && error.code === 'P2025') {
+      throw createAppError(404, 'PEAK_NOT_FOUND', "No s'ha trobat cap cim amb aquest id");
+    }
+
+    throw error;
+  }
+}
+
 // Exporto serveis per usar-los al controller.
 module.exports = {
   getPeaksList,
@@ -485,5 +501,6 @@ module.exports = {
   updatePeakById,
   savePeakForUser,
   unsavePeakForUser,
-  getSavedPeakStatus
+  getSavedPeakStatus,
+  deletePeakById
 };
