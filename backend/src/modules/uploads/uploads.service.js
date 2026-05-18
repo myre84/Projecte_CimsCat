@@ -10,6 +10,7 @@ const { UPLOADS_ROOT } = require('../../common/utils/upload-files');
 function ensureUploadsDirectories() {
   fs.mkdirSync(path.join(UPLOADS_ROOT, 'publicacions'), { recursive: true });
   fs.mkdirSync(path.join(UPLOADS_ROOT, 'peaks'), { recursive: true });
+  fs.mkdirSync(path.join(UPLOADS_ROOT, 'users'), { recursive: true });
 }
 
 // Retorna ruta absoluta de la carpeta on guardem imatges de publicacions.
@@ -20,6 +21,11 @@ function getUploadsPublicacionsDir() {
 // Retorna ruta absoluta de la carpeta on guardem imatges de peaks.
 function getUploadsPeaksDir() {
   return path.join(UPLOADS_ROOT, 'peaks');
+}
+
+// Retorna ruta absoluta de la carpeta on guardem imatges d'usuaris.
+function getUploadsUsersDir() {
+  return path.join(UPLOADS_ROOT, 'users');
 }
 
 // Crea nom de fitxer unic per minimitzar col.lisions.
@@ -51,12 +57,22 @@ function mapUploadedPeakFile(file) {
   };
 }
 
+// Mapeja un fitxer pujat d'usuari al format de resposta API.
+function mapUploadedUserFile(file) {
+  return {
+    filename: file.filename,
+    url: `/uploads/users/${file.filename}`
+  };
+}
+
 // Exporto helpers perque uploads.routes.js els pugui reutilitzar.
 module.exports = {
   ensureUploadsDirectories,
   getUploadsPublicacionsDir,
   getUploadsPeaksDir,
+  getUploadsUsersDir,
   buildUniqueFilename,
   mapUploadedPublicacionsFiles,
-  mapUploadedPeakFile
+  mapUploadedPeakFile,
+  mapUploadedUserFile
 };

@@ -7,6 +7,7 @@ const { sendError } = require('../../common/utils/http-error');
 const {
   validateUserIdParam,
   validateOwnerAccess,
+  validateOwnerOrAdminAccess,
   validateUpdateProfileBody
 } = require('./users.validators');
 
@@ -101,7 +102,7 @@ async function getUserSavedPeaks(req, res) {
     const userId = validateUserIdParam(req.params);
 
     // 2) Comprovo que qui consulta es el propietari.
-    validateOwnerAccess(req.auth, userId);
+    validateOwnerOrAdminAccess(req.auth, userId);
 
     // 3) Recupero cims guardats del servei (model SavedPeak).
     const saved = await getOwnSavedPeaksById(userId);

@@ -71,6 +71,7 @@ function validatePeaksQuery(query) {
   const comarca = normalizeString(safeQuery.comarca) || null;
   const massis = normalizeString(safeQuery.massis) || null;
   const dificultat = normalizeString(safeQuery.dificultat) || null;
+  const zonaProtegida = normalizeString(safeQuery.zonaProtegida) || null;
 
   // Parseig numeric dels rangs d'alcada.
   const minAlcada = parseOptionalQueryNumber(safeQuery.minAlcada);
@@ -104,6 +105,7 @@ function validatePeaksQuery(query) {
     comarca,
     massis,
     dificultat,
+    zonaProtegida,
     minAlcada,
     maxAlcada,
     sortBy,

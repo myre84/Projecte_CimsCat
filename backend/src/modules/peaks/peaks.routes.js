@@ -23,6 +23,18 @@ router.post('/', requireAuth, requireAdmin, peaksController.createPeak);
 // Endpoint public de detall ric d'un cim concret per id.
 router.get('/:id', peaksController.getPeakById);
 
+// POST /peaks/:id/saved
+// Endpoint protegit: l'usuari guarda el cim.
+router.post('/:id/saved', requireAuth, peaksController.savePeak);
+
+// DELETE /peaks/:id/saved
+// Endpoint protegit: l'usuari elimina el cim guardat.
+router.delete('/:id/saved', requireAuth, peaksController.unsavePeak);
+
+// GET /peaks/:id/saved
+// Endpoint protegit: comprova si l'usuari ha guardat el cim.
+router.get('/:id/saved', requireAuth, peaksController.getSavedPeak);
+
 // PUT /peaks/:id
 // Endpoint protegit admin only per actualitzar cims.
 router.put('/:id', requireAuth, requireAdmin, peaksController.updatePeak);

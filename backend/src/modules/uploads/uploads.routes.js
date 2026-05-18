@@ -21,6 +21,7 @@ const {
   ensureUploadsDirectories,
   getUploadsPublicacionsDir,
   getUploadsPeaksDir,
+  getUploadsUsersDir,
   buildUniqueFilename
 } = require('./uploads.service');
 
@@ -93,6 +94,32 @@ function runUpload(middleware) {
 const uploadPublicacions = createUploadMiddleware(getUploadsPublicacionsDir(), 'array');
 const uploadPeaks = createUploadMiddleware(getUploadsPeaksDir(), 'single');
 
+// Upload per usuaris: accepta qualsevol dels camps coneguts.
+function createUserUploadMiddleware(destinationDir) {
+  const storage = multer.diskStorage({
+    destination: (req, file, cb) => cb(null, destinationDir),
+    filename: (req, file, cb) => cb(null, buildUniqueFilename(file.originalname))
+  });
+
+  const upload = multer({
+    storage,
+    limits: {
+      fileSize: 10 * 1024 * 1024
+    },
+    fileFilter: (req, file, cb) => {
+      if (!isValidImageMimeType(file.mimetype)) {
+        return cb(createAppError(400, 'INVALID_FILE_TYPE', 'Nomes es permeten fitxers d imatge'));
+      }
+
+      return cb(null, true);
+    }
+  });
+
+  return upload.any();
+}
+
+const uploadUsers = createUserUploadMiddleware(getUploadsUsersDir());
+
 // POST /uploads/publicacions
 // Ruta protegida per usuari autenticat.
 // L'ordre de middlewares es important:
@@ -115,6 +142,15 @@ router.post(
   requireAdmin,
   runUpload(uploadPeaks),
   uploadsController.uploadPeakImage
+);
+
+// POST /uploads/users
+// Ruta protegida per pujar una imatge de perfil.
+router.post(
+  '/users',
+  requireAuth,
+  runUpload(uploadUsers),
+  uploadsController.uploadUserImage
 );
 
 // Exporto router per muntar-lo des de app.js sota /uploads.

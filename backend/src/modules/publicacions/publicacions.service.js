@@ -473,7 +473,7 @@ async function getPublicationDetailById(publicationId) {
 
 // Servei d'update (PUT /publicacions/:id).
 // Te la part mes sensible de negoci: permisos + consistencia d'imatges.
-async function updatePublication(publicationId, userId, payload) {
+async function updatePublication(publicationId, userId, payload, isAdmin) {
   // Carreguem l'estat actual minim necessari per validar permisos i imatges.
   const existingPublication = await prisma.publicacio.findUnique({
     where: { id: publicationId },
@@ -496,7 +496,7 @@ async function updatePublication(publicationId, userId, payload) {
   }
 
   // Regla de seguretat: nomes propietari pot editar.
-  if (existingPublication.usuariId !== userId) {
+  if (existingPublication.usuariId !== userId && !isAdmin) {
     throw createAppError(403, 'FORBIDDEN_NOT_OWNER', 'No tens permisos per modificar aquesta publicacio');
   }
 
@@ -593,7 +593,7 @@ async function updatePublication(publicationId, userId, payload) {
 
 // Servei d'esborrat (DELETE /publicacions/:id).
 // Elimina registre i neteja fitxers associats.
-async function deletePublication(publicationId, userId) {
+async function deletePublication(publicationId, userId, isAdmin) {
   // Carreguem dades minimes per validar permisos i saber quins fitxers esborrar.
   const existingPublication = await prisma.publicacio.findUnique({
     where: { id: publicationId },
@@ -614,7 +614,7 @@ async function deletePublication(publicationId, userId) {
   }
 
   // Mateixa regla de seguretat: nomes propietari.
-  if (existingPublication.usuariId !== userId) {
+  if (existingPublication.usuariId !== userId && !isAdmin) {
     throw createAppError(403, 'FORBIDDEN_NOT_OWNER', 'No tens permisos per eliminar aquesta publicacio');
   }
 

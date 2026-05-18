@@ -6,6 +6,21 @@ const prisma = require('../../lib/prisma');
 // Exemple: 404 PEAK_NOT_FOUND quan no existeix el cim.
 const { createAppError } = require('../../common/utils/http-error');
 
+// Missatge reaprofitat quan no existeix el cim.
+const PEAK_NOT_FOUND_MESSAGE = "No s'ha trobat cap cim amb aquest id";
+
+// Helper per comprovar que el cim existeix abans de crear guardats.
+async function ensurePeakExists(cimId) {
+  const peak = await prisma.cim.findUnique({
+    where: { id: cimId },
+    select: { id: true }
+  });
+
+  if (!peak) {
+    throw createAppError(404, 'PEAK_NOT_FOUND', PEAK_NOT_FOUND_MESSAGE);
+  }
+}
+
 // Construeix de forma dinamica el "where" de Prisma per GET /peaks.
 // La idea es:
 // - nomes afegir condicions que realment s'han enviat
@@ -23,7 +38,8 @@ function buildPeaksWhere(filters) {
       OR: [
         { nom: { contains: safeFilters.search, mode: 'insensitive' } },
         { comarca: { contains: safeFilters.search, mode: 'insensitive' } },
-        { massis: { contains: safeFilters.search, mode: 'insensitive' } }
+        { massis: { contains: safeFilters.search, mode: 'insensitive' } },
+        { descripcio: { contains: safeFilters.search, mode: 'insensitive' } }
       ]
     });
   }
@@ -53,6 +69,16 @@ function buildPeaksWhere(filters) {
     andConditions.push({
       dificultat: {
         equals: safeFilters.dificultat,
+        mode: 'insensitive'
+      }
+    });
+  }
+
+  // Filtre estricte de zona protegida (equals) case-insensitive.
+  if (safeFilters.zonaProtegida) {
+    andConditions.push({
+      zonaProtegida: {
+        equals: safeFilters.zonaProtegida,
         mode: 'insensitive'
       }
     });
@@ -246,7 +272,7 @@ async function getPeakDetailById(id) {
 
   // Si no existeix el cim, retornem error funcional 404 coherent amb requisit.
   if (!peak) {
-    throw createAppError(404, 'PEAK_NOT_FOUND', "No s'ha trobat cap cim amb aquest id");
+    throw createAppError(404, 'PEAK_NOT_FOUND', PEAK_NOT_FOUND_MESSAGE);
   }
 
   // Mapeig final de Prisma -> contracte API de detall.
@@ -328,6 +354,61 @@ async function getPeakDetailById(id) {
   };
 }
 
+// Crea guardat de cim per usuari (idempotent).
+async function savePeakForUser(userId, peakId) {
+  await ensurePeakExists(peakId);
+
+  const existing = await prisma.savedPeak.findUnique({
+    where: {
+      usuariId_cimId: {
+        usuariId: userId,
+        cimId: peakId
+      }
+    }
+  });
+
+  if (!existing) {
+    await prisma.savedPeak.create({
+      data: {
+        usuariId: userId,
+        cimId: peakId
+      }
+    });
+  }
+
+  return { saved: true, peakId, userId };
+}
+
+// Esborra guardat de cim per usuari (idempotent).
+async function unsavePeakForUser(userId, peakId) {
+  await ensurePeakExists(peakId);
+
+  await prisma.savedPeak.deleteMany({
+    where: {
+      usuariId: userId,
+      cimId: peakId
+    }
+  });
+
+  return { saved: false, peakId, userId };
+}
+
+// Comprova si un cim esta guardat per un usuari.
+async function getSavedPeakStatus(userId, peakId) {
+  await ensurePeakExists(peakId);
+
+  const existing = await prisma.savedPeak.findUnique({
+    where: {
+      usuariId_cimId: {
+        usuariId: userId,
+        cimId: peakId
+      }
+    }
+  });
+
+  return { saved: Boolean(existing) };
+}
+
 // Servei de POST /peaks.
 async function createPeak(data) {
   const created = await prisma.cim.create({
@@ -401,5 +482,8 @@ module.exports = {
   getPeaksList,
   getPeakDetailById,
   createPeak,
-  updatePeakById
+  updatePeakById,
+  savePeakForUser,
+  unsavePeakForUser,
+  getSavedPeakStatus
 };
