@@ -17,7 +17,10 @@ const {
   getPeaksList,
   getPeakDetailById,
   createPeak,
-  updatePeakById
+  updatePeakById,
+  savePeakForUser,
+  unsavePeakForUser,
+  getSavedPeakStatus
 } = require('./peaks.service');
 
 // Controller de GET /peaks.
@@ -105,10 +108,68 @@ async function updatePeakController(req, res) {
   }
 }
 
+// Controller de POST /peaks/:id/saved
+async function savePeak(req, res) {
+  try {
+    const peakId = validatePeakIdParam(req.params);
+    const userId = req.auth && req.auth.userId;
+    const result = await savePeakForUser(userId, peakId);
+
+    return res.status(200).json({
+      ok: true,
+      message: 'Cim guardat correctament',
+      saved: result.saved,
+      peakId: result.peakId,
+      userId: result.userId
+    });
+  } catch (error) {
+    return sendError(res, error);
+  }
+}
+
+// Controller de DELETE /peaks/:id/saved
+async function unsavePeak(req, res) {
+  try {
+    const peakId = validatePeakIdParam(req.params);
+    const userId = req.auth && req.auth.userId;
+    const result = await unsavePeakForUser(userId, peakId);
+
+    return res.status(200).json({
+      ok: true,
+      message: 'Cim desat eliminat correctament',
+      saved: result.saved,
+      peakId: result.peakId,
+      userId: result.userId
+    });
+  } catch (error) {
+    return sendError(res, error);
+  }
+}
+
+// Controller de GET /peaks/:id/saved
+async function getSavedPeak(req, res) {
+  try {
+    const peakId = validatePeakIdParam(req.params);
+    const userId = req.auth && req.auth.userId;
+    const result = await getSavedPeakStatus(userId, peakId);
+
+    return res.status(200).json({
+      ok: true,
+      message: 'Estat de guardat recuperat correctament',
+      saved: result.saved
+    });
+  } catch (error) {
+    return sendError(res, error);
+  }
+}
+
 // Exporto controllers per connectar-los a peaks.routes.js
 module.exports = {
   getPeaks,
   getPeakById,
   createPeak: createPeakController,
-  updatePeak: updatePeakController
+  updatePeak: updatePeakController,
+  savePeak,
+  unsavePeak,
+  getSavedPeak
 };

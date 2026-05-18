@@ -61,6 +61,18 @@ function validateOwnerAccess(auth, targetUserId) {
   }
 }
 
+// Validacio d'autoritzacio per owner o admin.
+function validateOwnerOrAdminAccess(auth, targetUserId) {
+  if (!auth || !auth.userId) {
+    throw createAppError(401, 'AUTH_TOKEN_INVALID', 'Token invalid o caducat');
+  }
+
+  const isAdmin = auth.rol === 'admin';
+  if (auth.userId !== targetUserId && !isAdmin) {
+    throw createAppError(403, 'FORBIDDEN_NOT_OWNER', 'No tens permisos per accedir a aquest recurs');
+  }
+}
+
 // Valido i normalitzo el body de PUT /users/:id.
 // Objectiu:
 // - acceptar nomes camps permesos
@@ -159,6 +171,10 @@ function validateUpdateProfileBody(body) {
     } else if (typeof body.fotoPerfil === 'string') {
       const trimmed = body.fotoPerfil.trim();
 
+      if (trimmed.toLowerCase().startsWith('data:')) {
+        throw createAppError(400, 'VALIDATION_ERROR', 'fotoPerfil ha de ser una URL o ruta valida');
+      }
+
       // String buit el convertim a null per evitar valors "sense contingut".
       updateData.fotoPerfil = trimmed ? trimmed : null;
 
@@ -176,5 +192,6 @@ function validateUpdateProfileBody(body) {
 module.exports = {
   validateUserIdParam,
   validateOwnerAccess,
+  validateOwnerOrAdminAccess,
   validateUpdateProfileBody
 };

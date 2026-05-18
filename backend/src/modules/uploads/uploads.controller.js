@@ -5,13 +5,16 @@ const { sendError } = require('../../common/utils/http-error');
 // Ens asseguren que realment ha arribat el fitxer/array de fitxers.
 const {
   validatePublicacionsUploadRequest,
-  validatePeaksUploadRequest
+  validatePeaksUploadRequest,
+  resolveUserUploadFile,
+  validateUsersUploadRequest
 } = require('./uploads.validators');
 
 // Mappers per convertir objectes de multer al contracte de resposta API.
 const {
   mapUploadedPublicacionsFiles,
-  mapUploadedPeakFile
+  mapUploadedPeakFile,
+  mapUploadedUserFile
 } = require('./uploads.service');
 
 // Controller de POST /uploads/publicacions.
@@ -59,8 +62,28 @@ async function uploadPeakImage(req, res) {
   }
 }
 
+// Controller de POST /uploads/users.
+// Rep un unic fitxer (admet camps image, file, fotoPerfil, avatar).
+async function uploadUserImage(req, res) {
+  try {
+    const file = resolveUserUploadFile(req.file, req.files);
+    validateUsersUploadRequest(file);
+
+    const mapped = mapUploadedUserFile(file);
+
+    return res.status(200).json({
+      ok: true,
+      message: 'Imatge de perfil pujada correctament',
+      file: mapped
+    });
+  } catch (error) {
+    return sendError(res, error);
+  }
+}
+
 // Exporto controllers per connectar-los al router del modul uploads.
 module.exports = {
   uploadPublicacionsImages,
-  uploadPeakImage
+  uploadPeakImage,
+  uploadUserImage
 };

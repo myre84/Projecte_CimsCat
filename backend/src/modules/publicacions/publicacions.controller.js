@@ -26,6 +26,7 @@ async function createPublicacio(req, res) {
   try {
     // userId ve del middleware requireAuth (payload JWT).
     const userId = req.auth && req.auth.userId;
+    const isAdmin = req.auth && req.auth.rol === 'admin';
 
     // Validem i normalitzem el body abans de tocar BD.
     const payload = validateCreatePublicationBody(req.body);
@@ -99,7 +100,7 @@ async function updatePublicacio(req, res) {
     const payload = validateUpdatePublicationBody(req.body);
 
     // Apliquem update al service, que te totes les regles de negoci.
-    const publication = await updatePublication(publicationId, userId, payload);
+    const publication = await updatePublication(publicationId, userId, payload, isAdmin);
 
     return res.status(200).json({
       ok: true,
@@ -119,9 +120,10 @@ async function deletePublicacio(req, res) {
     const publicationId = validatePublicationIdParam(req.params);
     // Usuari que intenta esborrar.
     const userId = req.auth && req.auth.userId;
+    const isAdmin = req.auth && req.auth.rol === 'admin';
 
     // La logica de permisos i esborrat real viu al service.
-    await deletePublication(publicationId, userId);
+    await deletePublication(publicationId, userId, isAdmin);
 
     return res.status(200).json({
       ok: true,
