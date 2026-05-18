@@ -20,7 +20,8 @@ const {
   updatePeakById,
   savePeakForUser,
   unsavePeakForUser,
-  getSavedPeakStatus
+  getSavedPeakStatus,
+  deletePeakById
 } = require('./peaks.service');
 
 // Controller de GET /peaks.
@@ -163,6 +164,21 @@ async function getSavedPeak(req, res) {
   }
 }
 
+// Controller de DELETE /peaks/:id.
+async function deletePeakController(req, res) {
+  try {
+    const id = validatePeakIdParam(req.params);
+    await deletePeakById(id);
+
+    return res.status(200).json({
+      ok: true,
+      message: 'Cim eliminat correctament'
+    });
+  } catch (error) {
+    return sendError(res, error);
+  }
+}
+
 // Exporto controllers per connectar-los a peaks.routes.js
 module.exports = {
   getPeaks,
@@ -171,5 +187,7 @@ module.exports = {
   updatePeak: updatePeakController,
   savePeak,
   unsavePeak,
-  getSavedPeak
+  getSavedPeak,
+  deletePeak: deletePeakController
 };
+

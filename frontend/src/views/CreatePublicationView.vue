@@ -10,14 +10,9 @@
         <div>
           <p class="create-publication-eyebrow">Nova publicació</p>
           <h1 class="create-publication-title">Comparteix la teva sortida</h1>
-          <p class="create-publication-subtitle">
-            Omple la fitxa, afegeix imatges i prepara la publicació perquè després es vegi com una
-            pàgina final de ruta.
-          </p>
         </div>
 
         <aside class="create-publication-summary">
-          <p class="create-publication-summary__label">Resum previ</p>
           <strong>{{ form.titol.trim() || 'Sense títol encara' }}</strong>
           <p>{{ selectedPeakSummary }}</p>
           <p>{{ imagePreviews.length }} imatges seleccionades</p>
@@ -33,10 +28,6 @@
       </div>
 
       <form v-else class="create-publication-form" @submit.prevent="handleSubmit">
-        <p v-if="isUsingMockPeaks" class="create-publication-mock-notice">
-          S&apos;estan mostrant cims temporals mentre el catàleg real de backend no està disponible.
-        </p>
-
         <section class="create-publication-section">
           <h2 class="create-publication-section__title">Informació principal</h2>
 
@@ -73,6 +64,26 @@
               <small v-else-if="routesError" class="create-publication-route-note create-publication-route-note--error">
                 {{ routesError }}
               </small>
+              <small
+                v-else-if="userStore.isAuthenticated && !isLoadingRoutes && !userRoutes.length"
+                class="create-publication-route-note"
+              >
+                No tens rutes disponibles. Desa una ruta al planificador i torna aquí.
+              </small>
+              <small
+                v-else-if="userStore.isAuthenticated && userRoutes.length"
+                class="create-publication-route-note"
+              >
+                {{ userRoutes.length }} rutes disponibles per vincular.
+              </small>
+              <button
+                v-if="userStore.isAuthenticated"
+                class="create-publication-route-refresh"
+                type="button"
+                @click="fetchUserRoutes"
+              >
+                Recarregar rutes
+              </button>
             </label>
 
             <label class="create-publication-field">
@@ -156,9 +167,6 @@
         <section class="create-publication-section">
           <div class="create-publication-upload__top">
             <h2 class="create-publication-section__title">Fotos</h2>
-            <p class="create-publication-upload__hint">
-              Primer es pujaran a <code>/uploads/publicacions</code> i després es guardarà la publicació.
-            </p>
           </div>
 
           <label class="create-publication-upload">
@@ -191,18 +199,19 @@
         <section class="create-publication-section">
           <div class="create-publication-upload__top">
             <h2 class="create-publication-section__title">Track i mapa</h2>
-            <p class="create-publication-upload__hint">
-              Aquesta part quedarà connectada del tot quan estigui implementat el planificador.
-            </p>
           </div>
 
           <div class="create-publication-track-placeholder">
             <div>
-              <strong>Mapa de la ruta pendent</strong>
+              <strong>{{ selectedRouteSummaryTitle }}</strong>
               <p>
-                Si informes una Track URL, la guardarem a la publicació. La visualització del mapa
-                arribarà quan la ruta planificada estigui integrada.
+                {{ selectedRouteSummaryText }}
               </p>
+              <p v-if="selectedRouteError" class="create-publication-route-note create-publication-route-note--error">
+                {{ selectedRouteError }}
+              </p>
+              <div v-if="hasSelectedRouteMap" ref="routePreviewMapContainer" class="create-publication-route-map" />
+              <p v-else class="create-publication-route-note">Selecciona una ruta per veure el mapa.</p>
             </div>
           </div>
         </section>
@@ -234,12 +243,12 @@
 // - validacions
 // - selecció d'imatges
 // - intent de creació real al backend
-// - fallback temporal quan backend falla
-import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
+import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
+import L from 'leaflet'
+import 'leaflet/dist/leaflet.css'
 import { useRouter } from 'vue-router'
 import api from '../api/axios'
 import { useUserStore } from '../stores/user'
-import { saveMockPublication } from '../utils/mockPublications'
 
 const router = useRouter()
 const userStore = useUserStore()
@@ -271,6 +280,12 @@ const imagePreviews = ref([])
 const userRoutes = ref([])
 const isLoadingRoutes = ref(false)
 const routesError = ref('')
+const selectedRouteDetail = ref(null)
+const selectedRouteError = ref('')
+const routePreviewMapContainer = ref(null)
+let routePreviewMap = null
+let routePreviewMarkers = null
+let routePreviewLine = null
 
 // form agrupa tot el que l'usuari escriu al formulari.
 const form = ref({
@@ -296,6 +311,38 @@ const selectedPeakSummary = computed(() => {
   return `${peak.nom} · ${peak.comarca} · ${peak.alcada} m`
 })
 
+const selectedRoute = computed(() =>
+  userRoutes.value.find((route) => route.id === form.value.rutaPlanificadaId) || null,
+)
+
+const selectedRouteSummaryTitle = computed(() =>
+  selectedRoute.value ? `Ruta vinculada: ${selectedRoute.value.nom}` : 'Cap ruta vinculada',
+)
+
+const selectedRouteSummaryText = computed(() => {
+  if (!selectedRoute.value) {
+    return 'Si vols vincular una ruta guardada, selecciona-la a la secció “Informació principal”.'
+  }
+
+  const distance = Number(selectedRoute.value.distanciaKm || 0).toLocaleString('ca-ES', {
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 1,
+  })
+
+  return `${distance} km · ${selectedRoute.value.waypointsCount || 0} punts · ${
+    selectedRoute.value.peak?.nom || 'Cim'
+  }`
+})
+
+const selectedRouteWaypoints = computed(() => {
+  const points = selectedRouteDetail.value?.waypoints || []
+  return [...points]
+    .filter((point) => Number.isFinite(point?.lat) && Number.isFinite(point?.lon))
+    .sort((a, b) => (a.ordreIndex ?? 0) - (b.ordreIndex ?? 0))
+})
+
+const hasSelectedRouteMap = computed(() => selectedRouteWaypoints.value.length >= 2)
+
 function getApiErrorMessage(error, fallbackMessage) {
   return (
     error?.response?.data?.message ||
@@ -311,7 +358,7 @@ function formatRouteLabel(route) {
     maximumFractionDigits: 1,
   })
   const peakName = route.peak?.nom || 'Cim'
-  return `${route.nom} · ${distanceLabel} km · ${peakName}`
+  return `${route.nom} · ${distanceLabel} km · ${peakName} · #${route.id.slice(-6)}`
 }
 
 async function fetchPeaks() {
@@ -358,6 +405,75 @@ async function fetchUserRoutes() {
   } finally {
     isLoadingRoutes.value = false
   }
+}
+
+async function fetchSelectedRouteDetail(routeId) {
+  if (!routeId) {
+    selectedRouteDetail.value = null
+    selectedRouteError.value = ''
+    return
+  }
+
+  selectedRouteError.value = ''
+
+  try {
+    const { data } = await api.get(`/routes/${routeId}`)
+    selectedRouteDetail.value = data.route || null
+  } catch (error) {
+    selectedRouteDetail.value = null
+    selectedRouteError.value = getApiErrorMessage(error, 'No hem pogut carregar el mapa de la ruta vinculada.')
+  }
+}
+
+function clearRoutePreviewMap() {
+  if (routePreviewMap) {
+    routePreviewMap.remove()
+    routePreviewMap = null
+  }
+  routePreviewMarkers = null
+  routePreviewLine = null
+}
+
+async function renderRoutePreviewMap() {
+  if (!hasSelectedRouteMap.value) {
+    clearRoutePreviewMap()
+    return
+  }
+
+  await nextTick()
+
+  if (!routePreviewMapContainer.value) return
+
+  if (!routePreviewMap) {
+    routePreviewMap = L.map(routePreviewMapContainer.value)
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '&copy; OpenStreetMap contributors',
+    }).addTo(routePreviewMap)
+  }
+
+  if (!routePreviewMarkers) {
+    routePreviewMarkers = L.layerGroup().addTo(routePreviewMap)
+  } else {
+    routePreviewMarkers.clearLayers()
+  }
+
+  if (routePreviewLine) {
+    routePreviewLine.remove()
+    routePreviewLine = null
+  }
+
+  const latLngs = selectedRouteWaypoints.value.map((point, index) => {
+    const label = point.nomPunt || point.etiqueta || `Punt ${index + 1}`
+    L.marker([point.lat, point.lon]).bindTooltip(label, { direction: 'top' }).addTo(routePreviewMarkers)
+    return [point.lat, point.lon]
+  })
+
+  routePreviewLine = L.polyline(latLngs, { color: '#2d6a4f', weight: 4 }).addTo(routePreviewMap)
+  routePreviewMap.fitBounds(L.latLngBounds(latLngs).pad(0.15))
+
+  setTimeout(() => {
+    routePreviewMap?.invalidateSize()
+  }, 0)
 }
 
 function handleFilesChange(event) {
@@ -470,7 +586,7 @@ async function handleSubmit() {
   // 1) validar
   // 2) pujar imatges
   // 3) intentar crear publicació real
-  // 4) si falla, crear una versió temporal al frontend
+  // 4) si falla, mostrar l'error retornat pel backend
   submitMessage.value = ''
 
   if (!validateForm()) return
@@ -507,11 +623,10 @@ async function handleSubmit() {
     const { data } = await api.post('/publicacions', payload)
     router.push(`/publicacio/${data.publication.id}`)
   } catch (error) {
-    // Si backend falla per schema/BD o qualsevol altre motiu,
-    // no volem tallar el treball de maquetació. Per això generem una publicació temporal.
-    const mockPublication = await buildMockPublication()
-    saveMockPublication(mockPublication)
-    router.push(`/publicacio/${mockPublication.id}`)
+    submitMessage.value = getApiErrorMessage(
+      error,
+      'No hem pogut publicar la sortida. Revisa les dades i torna-ho a provar.',
+    )
   } finally {
     isSubmitting.value = false
   }
@@ -541,67 +656,6 @@ function parseTimeToMinutes(value) {
   return hours * 60 + minutes + Math.ceil(seconds / 60)
 }
 
-async function buildMockPublication() {
-  // Aquí construïm una publicació temporal que s'assembli al contracte real del backend.
-  // Això fa possible veure la PublicationView encara que la BD local estigui trencada.
-  const selectedPeak = peaks.value.find((item) => item.id === form.value.cimId) || null
-  const images = await Promise.all(
-    selectedFiles.value.map(async (file, index) => ({
-      id: `mock-image-${Date.now()}-${index}`,
-      imageUrl: await readFileAsDataUrl(file),
-    })),
-  )
-
-  return {
-    id: `mock-publicacio-${Date.now()}`,
-    titol: form.value.titol.trim(),
-    descripcio: form.value.descripcio.trim(),
-    dataActivitat: new Date(form.value.dataActivitat).toISOString(),
-    dificultat: form.value.dificultat.trim().toLowerCase(),
-    distanciaKm: Number(form.value.distanciaKm),
-    desnivellPosM: Number(form.value.desnivellPosM),
-    desnivellNegM: Number(form.value.desnivellNegM),
-    tempsMin: parseTimeToMinutes(form.value.tempsEstimathhmm),
-    altitudMaxM: Number(form.value.altitudMaxM),
-    altitudMinM: Number(form.value.altitudMinM),
-    trackUrl: form.value.trackUrl.trim() || null,
-    portadaUrl: images[0]?.imageUrl || null,
-    peak: selectedPeak
-      ? {
-          id: selectedPeak.id,
-          nom: selectedPeak.nom,
-          comarca: selectedPeak.comarca,
-          alcada: selectedPeak.alcada,
-        }
-      : null,
-    images,
-    likes: [],
-    comments: [],
-    stats: {
-      likesCount: 0,
-      commentsCount: 0,
-      imagesCount: images.length,
-    },
-    author: userStore.user || {
-      id: 'mock-user',
-      nomUsuari: 'usuari',
-      nom: 'Usuari',
-      cognom: 'Temporal',
-      fotoPerfil: null,
-    },
-  }
-}
-
-function readFileAsDataUrl(file) {
-  // Convertim el fitxer a data URL perquè el navegador el pugui mostrar sense haver-lo pujat de debò al servidor.
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader()
-    reader.onload = () => resolve(reader.result)
-    reader.onerror = () => reject(new Error('No s’ha pogut llegir la imatge.'))
-    reader.readAsDataURL(file)
-  })
-}
-
 onMounted(() => {
   fetchPeaks()
   fetchUserRoutes()
@@ -614,8 +668,24 @@ watch(
   },
 )
 
+watch(
+  () => form.value.rutaPlanificadaId,
+  (routeId) => {
+    fetchSelectedRouteDetail(routeId || '')
+  },
+)
+
+watch(
+  () => selectedRouteWaypoints.value,
+  () => {
+    renderRoutePreviewMap()
+  },
+  { deep: true },
+)
+
 onBeforeUnmount(() => {
   clearImagePreviews()
+  clearRoutePreviewMap()
 })
 </script>
 
@@ -772,6 +842,19 @@ onBeforeUnmount(() => {
   color: #915454;
 }
 
+.create-publication-route-refresh {
+  margin-top: 0.5rem;
+  align-self: flex-start;
+  border: 1px solid var(--color-border);
+  border-radius: 10px;
+  background: #fff;
+  color: var(--color-text);
+  padding: 0.42rem 0.72rem;
+  cursor: pointer;
+  font: inherit;
+  font-size: 0.9rem;
+}
+
 .create-publication-upload__top {
   display: flex;
   justify-content: space-between;
@@ -809,6 +892,14 @@ onBeforeUnmount(() => {
   color: var(--color-text-soft);
   line-height: 1.7;
   max-width: 58ch;
+}
+
+.create-publication-route-map {
+  margin-top: 0.9rem;
+  height: 250px;
+  border-radius: 12px;
+  border: 1px solid #d8d2e1;
+  overflow: hidden;
 }
 
 .create-publication-upload input {

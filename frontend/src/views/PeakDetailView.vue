@@ -25,10 +25,6 @@
 
       <div class="peak-detail-layout">
         <section class="peak-detail-main">
-          <p v-if="isUsingMockData" class="peak-detail-notice">
-            S&apos;estan mostrant dades temporals mentre el backend del detall del cim no està disponible.
-          </p>
-
           <header class="peak-detail-header">
             <h1 class="peak-detail-title">{{ peak.nom }}</h1>
             <p class="peak-detail-elevation">{{ formatMeters(peak.alcada) }}</p>

@@ -88,7 +88,7 @@
             </div>
 
             <button class="register-browse" type="button" disabled>Navega...</button>
-            <p class="register-side__note">La foto quedara pendent fins connectar aquesta part al backend.</p>
+            <p class="register-side__note">La foto de perfil es podra afegir des de l&apos;edició del perfil.</p>
           </div>
 
           <p v-if="serverError" class="auth-error register-feedback">{{ serverError }}</p>

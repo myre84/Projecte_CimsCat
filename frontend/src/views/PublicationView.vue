@@ -19,10 +19,6 @@
     </div>
 
     <article v-else-if="publication" class="publication-card">
-      <p v-if="isUsingMockPublication" class="publication-mock-notice">
-        S&apos;està mostrant una publicació local temporal perquè la càrrega del detall ha fallat en aquest moment.
-      </p>
-
       <header class="publication-header">
         <div class="publication-header__top">
           <div class="publication-header__main">

@@ -8,7 +8,7 @@
        - publicacions pròpies
        - publicacions amb like (visualment "guardades")
        - cims guardats
-    4) deixar preparades seccions futures com Awards i Rutes planificades
+    4) mostrar rutes planificades i awards amb dades del backend
   -->
   <section class="profile-view">
     <!-- Si encara estem esperant la resposta del backend, mostrem aquest estat simple -->
@@ -80,14 +80,30 @@
         </template>
       </HorizontalCarousel>
 
-      <!-- Placeholder conscient: aquesta part encara no té backend ni lògica real d'usuari -->
-      <section class="profile-section profile-section--placeholder">
-        <h2 class="profile-section__title">Rutes planificades</h2>
-        <p class="profile-section__text">
-          Aquesta part quedarà disponible quan s’implementi la funcionalitat de planificar rutes i
-          la seva relació amb el perfil de l’usuari.
-        </p>
-      </section>
+      <HorizontalCarousel
+        title="Rutes planificades"
+        :description="plannedRoutesDescription"
+        :items="plannedRoutes"
+        empty-text="Encara no tens cap ruta planificada guardada."
+      >
+        <template #item="{ item }">
+          <article class="profile-route-card">
+            <h3 class="profile-route-card__title">{{ item.nom || 'Ruta sense nom' }}</h3>
+            <p class="profile-route-card__meta">
+              {{ item.tipusActivitat || 'senderisme' }} · {{ item.ritme || 'moderat' }} ·
+              {{ item.tipusRecorregut || 'anada' }}
+            </p>
+            <p class="profile-route-card__stats">
+              {{ formatDistance(item.distanciaKm) }} · {{ formatTime(item.tempsMin) }} ·
+              {{ item.waypointsCount || 0 }} punts
+            </p>
+            <p class="profile-route-card__peak">
+              {{ item.peak?.nom || 'Cim no disponible' }} · {{ item.peak?.comarca || 'Comarca' }}
+            </p>
+            <p class="profile-route-card__date">Guardada {{ formatDate(item.createdAt) }}</p>
+          </article>
+        </template>
+      </HorizontalCarousel>
 
       <section class="profile-section profile-section--awards">
         <h2 class="profile-section__title">Awards</h2>
@@ -162,6 +178,7 @@ const profile = ref(null)
 const ownPublications = ref([])
 const likedPublications = ref([])
 const savedPeaks = ref([])
+const plannedRoutes = ref([])
 const isLoading = ref(true)
 const errorMessage = ref('')
 const isEditModalOpen = ref(false)
@@ -193,6 +210,11 @@ const editForm = computed(() => ({
   nomUsuari: profile.value?.nomUsuari || '',
   fotoPerfil: profile.value?.fotoPerfil || '',
 }))
+const plannedRoutesDescription = computed(() =>
+  plannedRoutes.value.length
+    ? 'Aquestes són les rutes que has guardat des del planificador.'
+    : '',
+)
 
 function getApiErrorMessage(error, fallbackMessage) {
   // Intentem recuperar el missatge més concret que ens hagi tornat el backend.
@@ -244,11 +266,12 @@ async function fetchOwnProfile() {
 
   try {
     // Fem totes les peticions en paral·lel perquè la pàgina carregui més ràpid.
-    const [profileResponse, publicationsResponse, likesResponse, savedResponse] = await Promise.all([
+    const [profileResponse, publicationsResponse, likesResponse, savedResponse, routesResponse] = await Promise.all([
       api.get(`/users/${currentUserId}`),
       api.get(`/users/${currentUserId}/publications`),
       api.get(`/users/${currentUserId}/likes`),
       api.get(`/users/${currentUserId}/saved`),
+      api.get(`/users/${currentUserId}/routes`),
     ])
 
     // Guardem cada bloc de dades a l'estat reactiu corresponent.
@@ -256,16 +279,45 @@ async function fetchOwnProfile() {
     ownPublications.value = publicationsResponse.data.publications || []
     likedPublications.value = normalizeLikedPublications(likesResponse.data.likes)
     savedPeaks.value = normalizeSavedPeaks(savedResponse.data.saved)
+    plannedRoutes.value = routesResponse.data.routes || []
   } catch (error) {
     // Si alguna crida falla, netegem la vista perquè no quedin dades a mig estat.
     profile.value = null
     ownPublications.value = []
     likedPublications.value = []
     savedPeaks.value = []
+    plannedRoutes.value = []
     errorMessage.value = getApiErrorMessage(error, 'No hem pogut carregar el teu perfil.')
   } finally {
     isLoading.value = false
   }
+}
+
+function formatDistance(value) {
+  const number = Number(value || 0)
+  return `${number.toLocaleString('ca-ES', {
+    minimumFractionDigits: Number.isInteger(number) ? 0 : 1,
+    maximumFractionDigits: 1,
+  })} km`
+}
+
+function formatTime(minutesValue) {
+  const minutes = Number(minutesValue || 0)
+  if (!Number.isFinite(minutes) || minutes <= 0) return '0 min'
+  const hours = Math.floor(minutes / 60)
+  const rest = minutes % 60
+  if (hours === 0) return `${rest} min`
+  return `${hours} h ${rest.toString().padStart(2, '0')} min`
+}
+
+function formatDate(value) {
+  const date = new Date(value)
+  if (Number.isNaN(date.getTime())) return 'data no disponible'
+  return date.toLocaleDateString('ca-ES', {
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric',
+  })
 }
 
 async function handleProfileUpdate(payload) {
@@ -274,7 +326,26 @@ async function handleProfileUpdate(payload) {
 
   try {
     const currentUserId = userStore.user?.id
-    const { data } = await api.put(`/users/${currentUserId}`, payload)
+    let fotoPerfil = payload.fotoPerfil
+
+    if (payload.fotoPerfilFile) {
+      const formData = new FormData()
+      formData.append('image', payload.fotoPerfilFile)
+
+      const uploadResponse = await api.post('/uploads/users', formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      })
+
+      fotoPerfil = uploadResponse.data.file.url
+    }
+
+    const { fotoPerfilFile, ...profilePayload } = payload
+    const { data } = await api.put(`/users/${currentUserId}`, {
+      ...profilePayload,
+      fotoPerfil,
+    })
 
     // Actualitzem el perfil de la vista amb la resposta nova.
     profile.value = data.user
@@ -431,6 +502,37 @@ watch(
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 1rem;
+}
+
+.profile-route-card {
+  min-height: 210px;
+  padding: 1rem;
+  border: 1px solid var(--color-border);
+  border-radius: 14px;
+  background: #faf8f2;
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+}
+
+.profile-route-card__title {
+  margin: 0;
+  color: var(--color-text);
+  font-size: 1.2rem;
+}
+
+.profile-route-card__meta,
+.profile-route-card__stats,
+.profile-route-card__peak,
+.profile-route-card__date {
+  margin: 0;
+  color: var(--color-text-soft);
+  line-height: 1.45;
+}
+
+.profile-route-card__date {
+  margin-top: auto;
+  font-size: 0.92rem;
 }
 
 @media (max-width: 900px) {

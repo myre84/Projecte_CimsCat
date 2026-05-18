@@ -46,17 +46,22 @@
           <span>Foto de perfil</span>
           <input type="file" accept="image/*" @change="handleImageSelection" />
           <small class="edit-profile-modal__hint">
-            Pots triar una imatge del teu ordinador o escriure una ruta/manualment si ja tens una URL.
+            Pots triar una imatge del teu ordinador o escriure una ruta si ja tens una URL.
           </small>
         </label>
 
         <label class="edit-profile-modal__field">
           <span>Foto de perfil (URL o path)</span>
-          <input v-model="localForm.fotoPerfil" type="text" placeholder="/uploads/usuaris/..." />
+          <input
+            v-model="localForm.fotoPerfil"
+            type="text"
+            placeholder="/uploads/users/..."
+            @input="handleManualPhotoInput"
+          />
         </label>
 
-        <div v-if="localForm.fotoPerfil" class="edit-profile-modal__preview">
-          <img :src="localForm.fotoPerfil" alt="Previsualitzacio de la foto de perfil" />
+        <div v-if="previewImage" class="edit-profile-modal__preview">
+          <img :src="previewImage" alt="Previsualitzacio de la foto de perfil" />
         </div>
 
         <!-- Si tenim errors de validació, els ensenyem aquí -->
@@ -81,8 +86,8 @@
 </template>
 
 <script setup>
-// ref guarda l'estat local del formulari i watch ens ajuda a sincronitzar-lo amb el pare.
-import { ref, watch } from 'vue'
+import { computed, onBeforeUnmount, ref, watch } from 'vue'
+import { resolveMediaUrl } from '../utils/media'
 
 // Rebrem des del perfil el formulari inicial i si l'acció de guardar està carregant.
 const props = defineProps({
@@ -108,6 +113,18 @@ const localForm = ref({
 })
 
 const errors = ref([])
+const selectedFile = ref(null)
+const selectedPreviewUrl = ref('')
+
+const previewImage = computed(() => selectedPreviewUrl.value || resolveMediaUrl(localForm.value.fotoPerfil))
+
+function clearSelectedPreview() {
+  if (selectedPreviewUrl.value) {
+    URL.revokeObjectURL(selectedPreviewUrl.value)
+  }
+
+  selectedPreviewUrl.value = ''
+}
 
 watch(
   () => props.initialForm,
@@ -120,6 +137,8 @@ watch(
       nomUsuari: value.nomUsuari || '',
       fotoPerfil: value.fotoPerfil || '',
     }
+    selectedFile.value = null
+    clearSelectedPreview()
     errors.value = []
   },
   { immediate: true, deep: true },
@@ -144,26 +163,30 @@ function handleSubmit() {
     cognom: localForm.value.cognom.trim(),
     nomUsuari: localForm.value.nomUsuari.trim().toLowerCase(),
     fotoPerfil: localForm.value.fotoPerfil.trim() || null,
+    fotoPerfilFile: selectedFile.value,
   })
 }
 
 function handleImageSelection(event) {
-  // Aquí agafem el fitxer del selector del navegador.
-  // Com que backend no té encara un endpoint específic d'uploads d'usuari,
-  // el convertim a data URL per poder-lo desar dins del camp fotoPerfil.
   const [file] = event.target.files || []
   if (!file) return
 
-  const reader = new FileReader()
-
-  reader.onload = () => {
-    if (typeof reader.result === 'string') {
-      localForm.value.fotoPerfil = reader.result
-    }
-  }
-
-  reader.readAsDataURL(file)
+  selectedFile.value = file
+  localForm.value.fotoPerfil = ''
+  clearSelectedPreview()
+  selectedPreviewUrl.value = URL.createObjectURL(file)
 }
+
+function handleManualPhotoInput() {
+  if (!selectedFile.value) return
+
+  selectedFile.value = null
+  clearSelectedPreview()
+}
+
+onBeforeUnmount(() => {
+  clearSelectedPreview()
+})
 </script>
 
 <style scoped>

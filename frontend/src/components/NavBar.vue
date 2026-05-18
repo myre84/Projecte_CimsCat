@@ -173,6 +173,7 @@ import { useRouter } from 'vue-router'
 import { useUserStore } from '../stores/user'
 import { usePeakSearch } from '../composables/usePeakSearch'
 import { resolveMediaUrl } from '../utils/media'
+import api from '../api/axios'
 
 const router = useRouter()
 const userStore = useUserStore()
@@ -207,11 +208,17 @@ const profileImage = computed(() =>
   userStore.user?.fotoPerfil ? resolveMediaUrl(userStore.user.fotoPerfil) : ''
 )
 
-function handleLogout() {
+async function handleLogout() {
   // Abans de tancar la sessió, demanem confirmació per no fer logout accidentalment.
   const confirmed = window.confirm('Vols tancar sessio?')
 
   if (!confirmed) return
+
+  try {
+    await api.post('/auth/logout')
+  } catch {
+    // El backend fa logout stateless; si la crida falla, igualment tanquem la sessió local.
+  }
 
   userStore.logout()
   closeMobilePanels()
