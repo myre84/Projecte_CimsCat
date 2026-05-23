@@ -31,7 +31,7 @@
           :title="isSaved ? 'Treure de guardats' : 'Guardar cim'"
           :data-tooltip="isSaved ? 'Treure de guardats' : 'Guardar cim'"
           :disabled="isSaving"
-          @click="handleSave"
+          @click.stop="handleSave"
         >
           <svg viewBox="0 0 24 24" aria-hidden="true">
             <path
@@ -45,8 +45,8 @@
       <p class="peak-card__excerpt">{{ publication.excerpt }}</p>
 
       <!-- Enllaç cap a la fitxa del cim. -->
-      <RouterLink :to="`/cim/${publication.peakId}`" class="peak-card__link">
-        Veure pagina del cim
+      <RouterLink :to="`/cim/${publication.peakId}`" class="peak-card__link" @click.stop>
+        Veure pàgina del cim
       </RouterLink>
     </div>
   </article>

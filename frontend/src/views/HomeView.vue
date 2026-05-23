@@ -14,14 +14,14 @@
           currentSlide ens diu quina imatge del llistat heroImages s'ha de mostrar.
           Amb :src fem que la imatge vagi canviant dinàmicament.
         -->
-        <img :src="heroImages[currentSlide]" alt="Paisatge de muntanya" class="hero__image" />
+        <img :src="heroSlides[currentSlide].image" alt="Paisatge de muntanya" class="hero__image" />
 
         <!--
           Aquesta capa fosca a sobre de la foto fa que el text es pugui llegir millor.
           Visualment actua com a overlay del hero.
         -->
         <div class="hero__overlay">
-          <p class="hero__subtitle">Explora cims, descobreix rutes i guarda les millors sortides.</p>
+          <p class="hero__subtitle">{{ heroSlides[currentSlide].text }}</p>
         </div>
       </div>
 
@@ -32,7 +32,7 @@
       <div class="hero__dots">
         <!-- Si l'usuari clica un punt, saltem directament a aquella imatge. -->
         <button
-          v-for="(image, index) in heroImages"
+          v-for="(slide, index) in heroSlides"
           :key="index"
           class="hero__dot"
           :class="{ 'hero__dot--active': index === currentSlide }"
@@ -43,6 +43,9 @@
       <!-- Títol principal de la home. -->
       <div class="hero__text-block">
         <h1 class="hero__title">CimsCat</h1>
+        <p class="hero__intro">
+          Una plataforma per descobrir cims, preparar sortides i compartir experiències de muntanya.
+        </p>
       </div>
     </section>
 
@@ -63,7 +66,7 @@
           Columna esquerra: cards destacades.
           Fem un v-for per reutilitzar el component PeakCard per cada publicació.
         -->
-        <div class="featured-section__cards">
+        <div ref="cardsContainer" class="featured-section__cards">
           <p v-if="isLoadingPeaks" class="featured-section__status">
             Carregant cims destacats...
           </p>
@@ -83,6 +86,10 @@
             v-for="publication in displayedPublications"
             :key="publication.id"
             :publication="publication"
+            class="featured-section__card"
+            :class="{ 'featured-section__card--selected': selectedPeakId === publication.peakId }"
+            :ref="(el) => setPeakCardRef(publication.peakId, el)"
+            @click="handleCardSelect(publication)"
           />
         </div>
 
@@ -115,26 +122,39 @@ import { resolveMediaUrl } from '../utils/media'
 
 // Aquest és un marcador personalitzat perquè el punt del mapa sigui més coherent amb l'estètica del projecte.
 // En lloc d'usar el marcador blau per defecte de Leaflet, construïm un petit "pin" verd.
-const peakIcon = L.divIcon({
-  className: '',
-  html: `<div style="
-    width: 32px; height: 32px;
-    background: #2d6a4f;
-    border: 3px solid #fff;
+function createPeakIcon(isSelected = false) {
+  const size = isSelected ? 42 : 32
+  const background = isSelected ? '#184f39' : '#2d6a4f'
+  const borderWidth = isSelected ? 4 : 3
+
+  return L.divIcon({
+    className: '',
+    html: `<div style="
+    width: ${size}px; height: ${size}px;
+    background: ${background};
+    border: ${borderWidth}px solid #fff;
     border-radius: 50% 50% 50% 0;
     transform: rotate(-45deg);
-    box-shadow: 0 2px 8px rgba(0,0,0,0.35);
+    box-shadow: 0 2px 12px rgba(0,0,0,0.42);
   "></div>`,
-  iconSize: [32, 32],
-  iconAnchor: [16, 32],
-  popupAnchor: [0, -34],
-})
+    iconSize: [size, size],
+    iconAnchor: [size / 2, size],
+    popupAnchor: [0, -size],
+  })
+}
+
+const peakIcon = createPeakIcon(false)
+const selectedPeakIcon = createPeakIcon(true)
 
 // Aquí preparem els cims destacats que volem mostrar a la home.
 // Les ordenem de més guardats a menys guardats perquè la home ha d'ensenyar els favorits.
 const peaks = ref([])
 const isLoadingPeaks = ref(true)
 const peaksError = ref('')
+const selectedPeakId = ref(null)
+const cardsContainer = ref(null)
+const peakCardRefs = new Map()
+const markerByPeakId = new Map()
 
 function mapPeakToCard(peak) {
   return {
@@ -167,10 +187,19 @@ const displayedPublications = computed(() => {
 
 // Llista d'imatges del carrusel.
 // Ara mateix també són imatges externes temporals per avançar en el frontend.
-const heroImages = [
-  "https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=1400&q=80",
-  "https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?auto=format&fit=crop&w=1400&q=80",
-  "https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=1400&q=80",
+const heroSlides = [
+  {
+    image: "https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=1400&q=80",
+    text: 'Explora cims i descobreix nous racons de muntanya.',
+  },
+  {
+    image: "https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?auto=format&fit=crop&w=1400&q=80",
+    text: 'Crea la teva ruta i prepara cada sortida amb calma.',
+  },
+  {
+    image: "https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=1400&q=80",
+    text: 'Publica la teva sortida i comparteix-la amb la comunitat.',
+  },
 ]
 
 // currentSlide controla quina imatge del hero s'està mostrant.
@@ -200,6 +229,68 @@ function getApiErrorMessage(error) {
   return message
 }
 
+function setPeakCardRef(peakId, el) {
+  if (!el) {
+    peakCardRefs.delete(peakId)
+    return
+  }
+
+  peakCardRefs.set(peakId, el.$el || el)
+}
+
+function scrollToPeakCard(peakId) {
+  const container = cardsContainer.value
+  const card = peakCardRefs.get(peakId)
+
+  if (!container || !card) return
+
+  const containerRect = container.getBoundingClientRect()
+  const cardRect = card.getBoundingClientRect()
+  const currentScroll = container.scrollTop
+  const cardTopInsideContainer = cardRect.top - containerRect.top + currentScroll
+  const centeredTop = cardTopInsideContainer - (container.clientHeight / 2) + (card.clientHeight / 2)
+
+  container.scrollTo({
+    top: Math.max(0, centeredTop),
+    behavior: 'smooth',
+  })
+}
+
+function updateMarkerIcons() {
+  markerByPeakId.forEach((marker, peakId) => {
+    marker.setIcon(peakId === selectedPeakId.value ? selectedPeakIcon : peakIcon)
+  })
+}
+
+function selectPeak(publication, options = {}) {
+  selectedPeakId.value = publication.peakId
+  updateMarkerIcons()
+
+  if (options.scrollCard) {
+    scrollToPeakCard(publication.peakId)
+  }
+
+  const marker = markerByPeakId.get(publication.peakId)
+  if (marker && options.openPopup) {
+    marker.openPopup()
+  }
+
+  const lat = Number(publication.lat)
+  const lng = Number(publication.lng)
+
+  if (map && Number.isFinite(lat) && Number.isFinite(lng) && options.centerMap) {
+    const targetZoom = Math.max(map.getZoom(), 10)
+    map.flyTo([lat, lng], targetZoom, { duration: 0.55 })
+  }
+}
+
+function handleCardSelect(publication) {
+  selectPeak(publication, {
+    centerMap: true,
+    openPopup: true,
+  })
+}
+
 async function renderMarkers() {
   // Aquesta funció pinta al mapa un marcador per cada cim destacat que tingui coordenades.
   if (!map) return
@@ -212,6 +303,7 @@ async function renderMarkers() {
     markerLayer = L.layerGroup().addTo(map)
   }
 
+  markerByPeakId.clear()
   const markers = []
 
   displayedPublications.value.forEach((publication) => {
@@ -224,7 +316,14 @@ async function renderMarkers() {
         ${publication.region}
       `)
 
+    marker.on('click', () => {
+      selectPeak(publication, {
+        scrollCard: true,
+      })
+    })
+
     markerLayer.addLayer(marker)
+    markerByPeakId.set(publication.peakId, marker)
     markers.push(marker)
   })
 
@@ -261,7 +360,7 @@ async function fetchPeaks() {
 onMounted(() => {
   // Quan la vista es carrega, fem que el carrusel canviï d'imatge cada 3.5 segons.
   slideInterval = setInterval(() => {
-    currentSlide.value = (currentSlide.value + 1) % heroImages.length
+    currentSlide.value = (currentSlide.value + 1) % heroSlides.length
   }, 3500)
 
   // Si encara no tenim el contenidor del mapa, parem aquí per evitar errors.
@@ -345,7 +444,7 @@ onBeforeUnmount(() => {
 /* Zona del text principal que hi ha sota la imatge. */
 .hero__text-block {
   text-align: center;
-  padding: 1.2rem 1rem 0.2rem;
+  padding: 1.2rem 1rem 0.35rem;
 }
 
 /* Títol principal "CimsCat". */
@@ -360,10 +459,18 @@ onBeforeUnmount(() => {
   letter-spacing: -0.02em;
 }
 
+.hero__intro {
+  max-width: 620px;
+  margin: 0.7rem auto 0;
+  color: var(--color-text-soft);
+  font-size: 1.08rem;
+  line-height: 1.5;
+}
+
 /* Subtítol que apareix a sobre de la imatge. */
 .hero__subtitle {
   margin: 0;
-  max-width: 52ch;
+  max-width: 58ch;
   color: rgba(255,255,255,0.92);
   line-height: 1.5;
   font-size: 1.5rem;
@@ -471,6 +578,18 @@ onBeforeUnmount(() => {
   background: #f4f2fb;
   color: #625a86;
   border: 1px solid #dcd6f3;
+}
+
+.featured-section__card {
+  cursor: pointer;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease, transform 0.2s ease;
+}
+
+.featured-section__card--selected {
+  border-color: #2d6a4f;
+  background: #f7fbf8;
+  box-shadow: 0 0 0 3px rgba(45, 106, 79, 0.16);
+  transform: translateY(-1px);
 }
 
 /* Personalitzem una mica l'scrollbar per semblar-nos més al wireframe. */

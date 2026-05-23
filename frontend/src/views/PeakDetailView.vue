@@ -29,6 +29,7 @@
             <h1 class="peak-detail-title">{{ peak.nom }}</h1>
             <p class="peak-detail-elevation">{{ formatMeters(peak.alcada) }}</p>
             <p v-if="peak.comarca" class="peak-detail-comarca">{{ peak.comarca }}</p>
+            <p v-if="peak.descripcio" class="peak-detail-description">{{ peak.descripcio }}</p>
           </header>
 
           <section class="peak-detail-section">
@@ -116,7 +117,6 @@
 import { computed, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import api from '../api/axios'
-import { peakDetailsMock } from '../mocks/peakDetails'
 import { resolveMediaUrl } from '../utils/media'
 
 const route = useRoute()
@@ -124,7 +124,6 @@ const route = useRoute()
 const peak = ref(null)
 const isLoading = ref(true)
 const errorMessage = ref('')
-const isUsingMockData = ref(false)
 
 // Si el cim no té imatge o la ruta és incorrecta, fem servir una foto de suport.
 const fallbackImage =
@@ -134,15 +133,12 @@ const fallbackImage =
 const resolvedPeakImage = computed(() => resolveMediaUrl(peak.value?.imatgeUrl) || fallbackImage)
 
 const locationItems = computed(() => {
-  // Aquesta secció intenta aprofitar primer la forma "rica" del mock.
-  // Si no hi és, reconstruïm la localització amb els camps bàsics del backend.
+  // Reconstruïm la localització només amb els camps reals que retorna el backend.
   if (!peak.value) return []
-  if (peak.value.detailSections?.location) return peak.value.detailSections.location
 
   const items = []
 
   if (peak.value.massis) items.push({ label: 'Massís', value: peak.value.massis })
-  if (peak.value.comarca) items.push({ label: 'Comarca', value: peak.value.comarca })
   if (peak.value.lat && peak.value.lon) {
     items.push({
       label: 'Coordenades',
@@ -155,10 +151,9 @@ const locationItems = computed(() => {
 })
 
 const accessItems = computed(() => {
-  // Igual que a localització, aquí usem detailSections.access si existeix.
-  // Si no, intentem reconstruir la informació a partir de la ruta principal del cim.
+  // Si hi ha una ruta vinculada al cim, la fem servir com a accés principal.
+  // Si no n'hi ha, la secció queda buida.
   if (!peak.value) return []
-  if (peak.value.detailSections?.access) return peak.value.detailSections.access
 
   const primaryRoute = peak.value.routes?.[0]
   if (!primaryRoute) return []
@@ -179,18 +174,23 @@ const accessItems = computed(() => {
 })
 
 const technicalItems = computed(() => {
-  // Aquest bloc agrupa la part més "numèrica" o resum tècnic del cim.
+  // Aquest bloc mostra només característiques pròpies del cim o de la ruta principal.
+  // No hi posem estadístiques internes com guardats, publicacions o rutes vinculades.
   if (!peak.value) return []
-  if (peak.value.detailSections?.technical) return peak.value.detailSections.technical
 
   const primaryRoute = peak.value.routes?.[0]
   const items = [
     { label: 'Alçada', value: formatMeters(peak.value.alcada) },
-    { label: 'Cims guardats', value: String(peak.value.stats.savedCount) },
-    { label: 'Publicacions relacionades', value: String(peak.value.stats.publicacionsCount) },
-    { label: 'Rutes vinculades', value: String(peak.value.stats.rutesCount) },
   ]
 
+  if (peak.value.dificultat) items.push({ label: 'Dificultat', value: peak.value.dificultat })
+  if (primaryRoute?.distanciaKm) items.push({ label: 'Distància', value: formatDistance(primaryRoute.distanciaKm) })
+  if (primaryRoute?.desnivellPosM || primaryRoute?.desnivellPosM === 0) {
+    items.push({ label: 'Desnivell positiu', value: formatMeters(primaryRoute.desnivellPosM) })
+  }
+  if (primaryRoute?.tempsMin || primaryRoute?.tempsMin === 0) {
+    items.push({ label: 'Temps estimat', value: formatTime(primaryRoute.tempsMin) })
+  }
   if (primaryRoute?.altitudMaxM || primaryRoute?.altitudMaxM === 0) {
     items.push({ label: 'Altitud màxima', value: formatMeters(primaryRoute.altitudMaxM) })
   }
@@ -203,15 +203,10 @@ const technicalItems = computed(() => {
 })
 
 const refugeItems = computed(() => {
-  // Aquesta part l'omplim amb els refugis del mock o, si no n'hi ha,
-  // amb punts de la primera ruta vinculada al cim.
+  // El backend actual no té camps específics de refugis o punts d'interès.
+  // Mantenim la secció a la fitxa, però no hi inventem contingut.
   if (!peak.value) return []
-  if (peak.value.detailSections?.refuges) return peak.value.detailSections.refuges
-
-  return peak.value.routes?.[0]?.points?.map((point) => ({
-    label: point.nomPunt || point.etiqueta || 'Punt',
-    value: `${Number(point.lat).toFixed(4)}, ${Number(point.lon).toFixed(4)}`,
-  })) || []
+  return []
 })
 
 function resolvePublicationImage(publication) {
@@ -229,26 +224,16 @@ function getApiErrorMessage(error) {
 }
 
 async function fetchPeakDetail() {
-  // Primer intentem carregar el cim real des de backend.
-  // Si el backend falla i tenim mock per aquell id, el mostrem igualment.
+  // Carreguem sempre la fitxa real del backend.
   isLoading.value = true
   errorMessage.value = ''
-  isUsingMockData.value = false
 
   try {
     const { data } = await api.get(`/peaks/${route.params.id}`)
     peak.value = data.peak
   } catch (error) {
-    const fallbackPeak = peakDetailsMock[String(route.params.id)]
-
-    if (fallbackPeak) {
-      peak.value = fallbackPeak
-      isUsingMockData.value = true
-      errorMessage.value = ''
-    } else {
-      peak.value = null
-      errorMessage.value = getApiErrorMessage(error)
-    }
+    peak.value = null
+    errorMessage.value = getApiErrorMessage(error)
   } finally {
     isLoading.value = false
   }
@@ -287,25 +272,28 @@ watch(
 
 <style scoped>
 .peak-detail-view {
-  padding: 1.5rem;
+  padding: 1.35rem 1.5rem 2rem;
 }
 
 .peak-detail-card {
   background: var(--color-surface);
+  max-width: 1180px;
+  margin: 0 auto;
 }
 
 .peak-detail-eyebrow {
-  margin: 0 0 0.9rem;
-  font-size: 0.95rem;
-  color: #b3b3b0;
+  margin: 0 0 1rem;
+  font-size: 1.05rem;
+  color: #a5a5a0;
 }
 
 .peak-detail-layout {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 280px;
-  gap: 1.5rem;
-  padding: 1.2rem;
-  border: 1px solid var(--color-border);
+  grid-template-columns: minmax(0, 1fr) minmax(300px, 390px);
+  gap: 2.1rem;
+  align-items: start;
+  padding: 1.6rem 1.8rem;
+  border: 1px solid #c8c8c2;
 }
 
 .peak-detail-notice {
@@ -320,18 +308,20 @@ watch(
 }
 
 .peak-detail-header {
-  margin-bottom: 1rem;
+  margin-bottom: 1.35rem;
 }
 
 .peak-detail-title {
   margin: 0;
-  font-size: 2.1rem;
+  font-size: clamp(2.2rem, 4vw, 3.6rem);
   line-height: 1.05;
   color: var(--color-text);
+  letter-spacing: 0;
 }
 
 .peak-detail-elevation {
   margin: 0.45rem 0 0;
+  font-size: 1.18rem;
   font-weight: 700;
   color: #6f6f6a;
 }
@@ -342,14 +332,23 @@ watch(
   color: #6f6f6a;
 }
 
+.peak-detail-description {
+  max-width: 620px;
+  margin: 0.5rem 0 0;
+  color: #77776f;
+  font-size: 1.02rem;
+  line-height: 1.5;
+}
+
 .peak-detail-section + .peak-detail-section {
-  margin-top: 1.4rem;
+  margin-top: 1.65rem;
 }
 
 .peak-detail-section__title,
 .peak-detail-sidebar__title {
   margin: 0 0 0.55rem;
-  font-size: 1.15rem;
+  font-size: 1.34rem;
+  line-height: 1.2;
   color: #6d6d68;
 }
 
@@ -357,7 +356,9 @@ watch(
   margin: 0;
   padding-left: 1.2rem;
   color: #66665f;
-  line-height: 1.45;
+  font-size: 1rem;
+  line-height: 1.5;
+  min-height: 0.25rem;
 }
 
 .peak-detail-list li + li {
@@ -371,27 +372,30 @@ watch(
 .peak-detail-sidebar {
   display: flex;
   flex-direction: column;
-  gap: 1rem;
+  gap: 1.35rem;
 }
 
 .peak-detail-image {
   width: 100%;
-  height: 345px;
+  aspect-ratio: 1 / 1.18;
+  height: auto;
   object-fit: cover;
-  border: 1px solid var(--color-border);
+  border: 1px solid #b9b9b4;
+  background: #f4f4f1;
 }
 
 .publication-list {
   display: grid;
-  gap: 0.7rem;
+  gap: 0.55rem;
 }
 
 .publication-card {
   display: grid;
-  grid-template-columns: 74px minmax(0, 1fr);
-  gap: 0.65rem;
-  border: 1px solid var(--color-border);
-  padding: 0.45rem;
+  grid-template-columns: 88px minmax(0, 1fr);
+  gap: 0.75rem;
+  border: 1px solid #d7d7d2;
+  border-radius: 4px;
+  padding: 0.55rem;
   text-decoration: none;
   color: inherit;
   background: #fff;
@@ -399,13 +403,13 @@ watch(
 
 .publication-card__image {
   width: 100%;
-  height: 74px;
+  height: 82px;
   object-fit: cover;
 }
 
 .publication-card__title {
   margin: 0;
-  font-size: 0.9rem;
+  font-size: 0.92rem;
   line-height: 1.3;
   color: var(--color-text);
 }

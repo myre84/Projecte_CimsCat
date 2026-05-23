@@ -1,7 +1,7 @@
 <template>
   <section class="admin-dashboard">
     <div v-if="isLoading" class="admin-feedback">
-      Carregant dades reals del panell d&apos;administracio...
+      Carregant dades reals del panell d&apos;administració...
     </div>
 
     <div v-else-if="errorMessage" class="admin-feedback admin-feedback--error">
@@ -10,7 +10,7 @@
 
     <header class="admin-dashboard__header">
       <div>
-        <p class="admin-dashboard__eyebrow">Panell d'administracio</p>
+        <p class="admin-dashboard__eyebrow">Panell d'administració</p>
         <h1>Gestio de plataforma</h1>
       </div>
 
@@ -93,11 +93,11 @@
       </div>
 
       <label class="admin-search">
-        <span>Cerca global moderacio</span>
+        <span>Cerca global de moderació</span>
         <input
           v-model.trim="moderationSearchQuery"
           type="text"
-          placeholder="Usuari, publicacio, comentari o paraula..."
+          placeholder="Usuari, publicació, comentari o paraula..."
         />
       </label>
 
@@ -105,7 +105,7 @@
         Comentaris: {{ adminComments.length }} · Publicacions: {{ adminPublicacions.length }} · Usuaris: {{ adminUsers.length }}
       </p>
 
-      <div v-if="isLoadingModeration" class="admin-feedback">Carregant moderacio...</div>
+      <div v-if="isLoadingModeration" class="admin-feedback">Carregant moderació...</div>
       <div v-else-if="moderationError" class="admin-feedback admin-feedback--error">{{ moderationError }}</div>
       <div v-else class="moderation-live">
         <div class="moderation-live__block">
@@ -269,7 +269,7 @@ async function fetchPeaks() {
     peaks.value = data.peaks || []
   } catch (error) {
     peaks.value = []
-    errorMessage.value = getApiErrorMessage(error, 'No hem pogut carregar el cataleg de cims.')
+    errorMessage.value = getApiErrorMessage(error, 'No hem pogut carregar el catàleg de cims.')
   } finally {
     isLoading.value = false
   }
@@ -294,7 +294,7 @@ async function fetchModerationData() {
     adminComments.value = []
     adminPublicacions.value = []
     adminUsers.value = []
-    moderationError.value = getApiErrorMessage(error, 'No hem pogut carregar la moderacio admin.')
+    moderationError.value = getApiErrorMessage(error, 'No hem pogut carregar la moderació del panell.')
   } finally {
     isLoadingModeration.value = false
   }
@@ -379,13 +379,13 @@ async function handleCommentDelete(comment) {
 }
 
 async function handlePublicationDelete(publication) {
-  if (!window.confirm(`Vols eliminar la publicacio "${publication.titol}"?`)) return
+  if (!window.confirm(`Vols eliminar la publicació "${publication.titol}"?`)) return
 
   try {
     await api.delete(`/admin/publicacions/${publication.id}`)
     await fetchModerationData()
   } catch (error) {
-    window.alert(getApiErrorMessage(error, 'No hem pogut eliminar la publicacio.'))
+    window.alert(getApiErrorMessage(error, 'No hem pogut eliminar la publicació.'))
   }
 }
 
