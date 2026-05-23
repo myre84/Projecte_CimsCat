@@ -143,7 +143,7 @@
           <div>
             <h2 class="publication-section-title">Mapa de la ruta</h2>
             <p class="publication-map__text">
-              Si la publicacio te una ruta planificada, la veureu dibuixada aqui mateix.
+              Si la publicació té una ruta planificada, la veureu dibuixada aquí mateix.
             </p>
           </div>
 
@@ -160,10 +160,10 @@
 
         <div v-if="hasRouteMap" ref="routeMapContainer" class="publication-map__canvas"></div>
         <p v-else-if="publication.route" class="publication-map__empty">
-          La ruta vinculada no te prou punts per mostrar el mapa.
+          La ruta vinculada no té prou punts per mostrar el mapa.
         </p>
         <p v-else class="publication-map__empty">
-          Aquesta publicacio no te cap ruta planificada vinculada.
+          Aquesta publicació no té cap ruta planificada vinculada.
         </p>
       </section>
 

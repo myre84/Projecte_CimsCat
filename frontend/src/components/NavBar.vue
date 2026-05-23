@@ -81,23 +81,20 @@
 
     <div class="navbar-right">
       <!-- Aquest botó canvia de ruta segons si l'usuari està loguejat o no. -->
-      <RouterLink :to="planRouteLink" class="btn-plan">Planificar nova ruta</RouterLink>
+      <RouterLink v-if="!userStore.isAdmin" :to="planRouteLink" class="btn-plan">Planificar nova ruta</RouterLink>
 
       <!-- Si l'usuari està autenticat, mostrem el seu nom i un botó d'icona. -->
       <template v-if="userStore.isAuthenticated">
-        <RouterLink to="/crear-publicacio" class="btn-create-publication">
+        <RouterLink v-if="!userStore.isAdmin" to="/crear-publicacio" class="btn-create-publication">
           Crear publicació
         </RouterLink>
         <RouterLink v-if="userStore.isAdmin" to="/admin" class="btn-admin">
-          Admin
+          Panell
         </RouterLink>
         <button class="btn-logout" type="button" @click="handleLogout">
-          Tancar sessio
+          Tancar sessió
         </button>
-        <RouterLink :to="`/perfil/${userStore.user?.id}`" class="btn-profile__name-link">
-          <span class="btn-profile__name">{{ userStore.user?.nomUsuari }}</span>
-        </RouterLink>
-        <RouterLink :to="`/perfil/${userStore.user?.id}`" class="btn-profile">
+        <RouterLink v-if="!userStore.isAdmin" :to="`/perfil/${userStore.user?.id}`" class="btn-profile">
           <img
             v-if="profileImage"
             :src="profileImage"
@@ -148,14 +145,22 @@
     </div>
 
     <div v-if="userStore.isAuthenticated && isMobileMenuOpen" class="navbar-mobile-menu">
-      <RouterLink :to="planRouteLink" class="navbar-mobile-menu__link" @click="closeMobilePanels">
+      <RouterLink
+        v-if="userStore.isAdmin"
+        to="/admin"
+        class="navbar-mobile-menu__link"
+        @click="closeMobilePanels"
+      >
+        Panell
+      </RouterLink>
+      <RouterLink v-if="!userStore.isAdmin" :to="planRouteLink" class="navbar-mobile-menu__link" @click="closeMobilePanels">
         Planificar nova ruta
       </RouterLink>
-      <RouterLink to="/crear-publicacio" class="navbar-mobile-menu__link" @click="closeMobilePanels">
+      <RouterLink v-if="!userStore.isAdmin" to="/crear-publicacio" class="navbar-mobile-menu__link" @click="closeMobilePanels">
         Crear publicació
       </RouterLink>
       <button class="navbar-mobile-menu__link navbar-mobile-menu__link--button" type="button" @click="handleLogout">
-        Tancar sessio
+        Tancar sessió
       </button>
     </div>
   </nav>
@@ -210,7 +215,7 @@ const profileImage = computed(() =>
 
 async function handleLogout() {
   // Abans de tancar la sessió, demanem confirmació per no fer logout accidentalment.
-  const confirmed = window.confirm('Vols tancar sessio?')
+  const confirmed = window.confirm('Vols tancar sessió?')
 
   if (!confirmed) return
 

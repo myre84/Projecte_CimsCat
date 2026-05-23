@@ -1,135 +1,176 @@
 <template>
   <section class="plan-route-view">
     <header class="plan-route-header">
-      <div>
-        <p class="plan-route-eyebrow">Planificador de rutes</p>
-        <h1 class="plan-route-title">Planificar nova ruta</h1>
-      </div>
-
-      <div class="plan-route-header__status">
-        <p v-if="!userStore.isAuthenticated" class="plan-route-auth">
-          Inicia sessio per guardar rutes planificades.
-        </p>
-      </div>
+      <h1 class="plan-route-title">Planificar Ruta</h1>
+      <label class="plan-route-search">
+        <span>Buscar cim, comarca o ruta</span>
+        <input type="search" placeholder="Buscar cim, comarca o ruta..." />
+      </label>
     </header>
 
-    <div class="plan-route-grid">
-      <section class="plan-route-map">
-        <div class="plan-route-map__frame">
-          <div ref="mapContainer" class="plan-route-map__canvas"></div>
-          <div class="plan-route-map__overlay">
-            Fes clic al mapa per afegir punts. Pots editar el nom de cada punt a la dreta.
-          </div>
-        </div>
+    <section class="plan-route-map-card">
+      <div class="plan-route-map__frame">
+        <div ref="mapContainer" class="plan-route-map__canvas"></div>
 
-        <div class="plan-route-stats">
-          <article class="plan-route-stat">
-            <span>Distancia</span>
-            <strong>{{ formattedDistance }}</strong>
-          </article>
-          <article class="plan-route-stat">
-            <span>Temps estimat</span>
-            <strong>{{ formattedTime }}</strong>
-          </article>
-          <article class="plan-route-stat">
-            <span>Desnivell +</span>
-            <strong>{{ positiveElevation }} m</strong>
-          </article>
-          <article class="plan-route-stat">
-            <span>Desnivell -</span>
-            <strong>{{ negativeElevation }} m</strong>
-          </article>
-        </div>
-      </section>
+        <aside class="route-panel">
+          <h2>La teva ruta</h2>
 
-      <aside class="plan-route-panel">
-        <div v-if="isLoadingPeaks" class="plan-route-state">
-          Carregant cataleg de cims...
-        </div>
-
-        <div v-else-if="peaksError && !isUsingMockPeaks" class="plan-route-state plan-route-state--error">
-          {{ peaksError }}
-        </div>
-
-        <div v-else class="plan-route-form">
-
-          <label class="plan-route-field">
-            <span>Nom de la ruta</span>
-            <input v-model="form.nom" type="text" placeholder="Ex. Ruta circular a La Mola" />
-          </label>
-
-          <label class="plan-route-field">
-            <span>Cim principal</span>
-            <select v-model="form.cimId">
-              <option value="">Selecciona un cim</option>
-              <option v-for="peak in peaks" :key="peak.id" :value="peak.id">
-                {{ peak.nom }} · {{ peak.comarca }}
-              </option>
-            </select>
-          </label>
-
-          <div class="plan-route-grid-mini">
-            <label class="plan-route-field">
-              <span>Tipus activitat</span>
-              <input v-model="form.tipusActivitat" type="text" placeholder="senderisme" />
-            </label>
-            <label class="plan-route-field">
-              <span>Ritme</span>
-              <input v-model="form.ritme" type="text" placeholder="moderat" />
-            </label>
+          <div v-if="isLoadingPeaks" class="plan-route-state">
+            Carregant catàleg de cims...
           </div>
 
-          <label class="plan-route-field">
-            <span>Tipus de recorregut</span>
-            <select v-model="form.tipusRecorregut">
-              <option value="one-way">one-way</option>
-              <option value="round-trip">round-trip</option>
-              <option value="circular">circular</option>
-            </select>
-          </label>
+          <div v-else-if="peaksError && !isUsingMockPeaks" class="plan-route-state plan-route-state--error">
+            {{ peaksError }}
+          </div>
 
-          <section class="plan-route-waypoints">
-            <div class="plan-route-waypoints__header">
-              <h2>Punts de ruta</h2>
-              <span>{{ waypoints.length }} punts</span>
+          <div v-else class="plan-route-form">
+            <label class="plan-route-field">
+              <span>Cim principal</span>
+              <select v-model="form.cimId">
+                <option value="">Selecciona un cim</option>
+                <option v-for="peak in peaks" :key="peak.id" :value="peak.id">
+                  {{ peak.nom }} · {{ peak.comarca }}
+                </option>
+              </select>
+            </label>
+
+            <label class="plan-route-field">
+              <span>Nom de la ruta</span>
+              <input v-model="form.nom" type="text" placeholder="Ex. Ruta circular al Pedraforca" />
+            </label>
+
+            <div class="route-panel__row">
+              <span>Esport</span>
+              <select v-model="form.tipusActivitat">
+                <option value="senderisme">Senderisme</option>
+                <option value="trail">Trail running</option>
+                <option value="alpinisme">Alpinisme</option>
+                <option value="btt">BTT</option>
+              </select>
             </div>
 
-            <p v-if="!waypoints.length" class="plan-route-waypoints__empty">
-              Encara no hi ha punts. Fes clic al mapa per afegir-los.
-            </p>
+            <div class="route-panel__row">
+              <span>Ritme</span>
+              <select v-model="form.ritme">
+                <option value="relaxat">Relaxat</option>
+                <option value="moderat">Moderat</option>
+                <option value="rapid">Ràpid</option>
+              </select>
+            </div>
 
-            <article v-for="(point, index) in waypoints" :key="point.id" class="plan-route-waypoint">
-              <div class="plan-route-waypoint__row">
-                <strong>Punt {{ index + 1 }}</strong>
-                <span>{{ formatCoords(point.lat, point.lng) }}</span>
+            <div class="route-panel__row">
+              <span>Tipus</span>
+              <select v-model="form.tipusRecorregut">
+                <option value="one-way">Anada</option>
+                <option value="round-trip">Anada i tornada</option>
+                <option value="circular">Circular</option>
+              </select>
+            </div>
+
+            <section class="plan-route-waypoints">
+              <div class="plan-route-waypoints__header">
+                <h3>Punts de pas</h3>
+                <span>{{ waypoints.length }} punts</span>
               </div>
-              <label>
-                Nom punt
-                <input v-model="point.nomPunt" type="text" placeholder="Punt A" />
-              </label>
-              <label>
-                Etiqueta
-                <input v-model="point.etiqueta" type="text" placeholder="sortida, cim, pas..." />
-              </label>
-              <button class="plan-route-waypoint__remove" type="button" @click="removeWaypoint(point.id)">
-                Treure punt
-              </button>
+
+              <p v-if="!waypoints.length" class="plan-route-waypoints__empty">
+                Fes clic al mapa per afegir punts.
+              </p>
+
+              <article v-for="(point, index) in waypoints" :key="point.id" class="plan-route-waypoint">
+                <div class="plan-route-waypoint__row">
+                  <strong>{{ index === 0 ? 'A' : index + 1 }}</strong>
+                  <span>{{ formatCoords(point.lat, point.lng) }}</span>
+                </div>
+                <input v-model="point.nomPunt" type="text" :placeholder="`Punt de pas ${index + 1}`" />
+                <button class="plan-route-waypoint__remove" type="button" @click="removeWaypoint(point.id)">
+                  Treure
+                </button>
+              </article>
+            </section>
+
+            <div v-if="saveError" class="plan-route-message plan-route-message--error">
+              {{ saveError }}
+            </div>
+            <div v-else-if="saveSuccess" class="plan-route-message">
+              {{ saveSuccess }}
+            </div>
+          </div>
+        </aside>
+
+        <button class="plan-route-save" type="button" :disabled="!canSave" @click="handleSave">
+          {{ isSaving ? 'Guardant...' : saveButtonLabel }}
+        </button>
+      </div>
+    </section>
+
+    <section class="route-technical">
+      <h2>Fitxa tècnica ruta</h2>
+
+      <div class="route-technical__grid">
+        <article class="route-card">
+          <h3>Tipus de camins i superfícies</h3>
+
+          <div class="route-bars">
+            <h4>Tipus de camí</h4>
+            <div class="route-bar">
+              <span style="width: 44%"></span>
+              <span style="width: 31%"></span>
+              <span style="width: 25%"></span>
+            </div>
+            <p><strong>Sender de muntanya:</strong> {{ formattedDistance }}</p>
+            <p><strong>Pista forestal:</strong> pendent de dades reals</p>
+            <p><strong>Sender tècnic:</strong> pendent de dades reals</p>
+          </div>
+
+          <div class="route-bars">
+            <h4>Superfícies</h4>
+            <div class="route-bar route-bar--surface">
+              <span style="width: 52%"></span>
+              <span style="width: 28%"></span>
+              <span style="width: 20%"></span>
+            </div>
+            <p><strong>Camí natural:</strong> estimació visual</p>
+            <p><strong>Grava o pista:</strong> pendent de dades reals</p>
+            <p><strong>Desconegut:</strong> pendent de classificació</p>
+          </div>
+        </article>
+
+        <article class="route-card route-card--details">
+          <h3>Detalls de la ruta</h3>
+
+          <div class="route-summary-grid">
+            <article>
+              <span>Distància</span>
+              <strong>{{ formattedDistance }}</strong>
             </article>
-          </section>
-
-          <div v-if="saveError" class="plan-route-message plan-route-message--error">
-            {{ saveError }}
+            <article>
+              <span>Temps estimat</span>
+              <strong>{{ formattedTime }}</strong>
+            </article>
+            <article>
+              <span>Desnivell +</span>
+              <strong>{{ positiveElevation }} m</strong>
+            </article>
+            <article>
+              <span>Desnivell -</span>
+              <strong>{{ negativeElevation }} m</strong>
+            </article>
           </div>
-          <div v-else-if="saveSuccess" class="plan-route-message">
-            {{ saveSuccess }}
+
+          <div class="route-elevation">
+            <div class="route-elevation__line"></div>
+            <span class="route-elevation__point route-elevation__point--one">A</span>
+            <span class="route-elevation__point route-elevation__point--two">!</span>
+            <span class="route-elevation__point route-elevation__point--three">!</span>
           </div>
 
-          <button class="plan-route-submit" type="button" :disabled="!canSave" @click="handleSave">
-            {{ isSaving ? 'Guardant...' : saveButtonLabel }}
-          </button>
-        </div>
-      </aside>
-    </div>
+          <p class="route-note">
+            La informació tècnica avançada del relleu, les superfícies i els trams exposats queda preparada com a millora futura.
+          </p>
+        </article>
+      </div>
+    </section>
   </section>
 </template>
 
@@ -137,10 +178,12 @@
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import L from 'leaflet'
 import 'leaflet/dist/leaflet.css'
+import { useRoute } from 'vue-router'
 import api from '../api/axios'
 import { useUserStore } from '../stores/user'
 
 const userStore = useUserStore()
+const route = useRoute()
 
 const fallbackPeaks = [
   { id: 'cim_la_mola', nom: 'La Mola', comarca: 'Valles Occidental', alcada: 1104 },
@@ -178,6 +221,7 @@ const isSaving = ref(false)
 const saveError = ref('')
 const saveSuccess = ref('')
 const savedRoute = ref(null)
+const editingRouteId = ref('')
 
 const canSave = computed(() => {
   return (
@@ -188,7 +232,11 @@ const canSave = computed(() => {
   )
 })
 
-const saveButtonLabel = computed(() => (savedRoute.value ? 'Ruta guardada' : 'Guardar ruta'))
+const saveButtonLabel = computed(() => {
+  if (isSaving.value) return editingRouteId.value ? 'Guardant canvis...' : 'Guardant...'
+  if (editingRouteId.value) return 'Guardar canvis'
+  return savedRoute.value ? 'Ruta guardada' : 'Guardar ruta'
+})
 
 function getApiErrorMessage(error, fallbackMessage) {
   return (
@@ -217,6 +265,43 @@ async function fetchPeaks() {
     }
   } finally {
     isLoadingPeaks.value = false
+  }
+}
+
+async function loadRouteForEditing(routeId) {
+  if (!routeId) return
+
+  saveError.value = ''
+  saveSuccess.value = ''
+
+  try {
+    const { data } = await api.get(`/routes/${routeId}`)
+    const routeDetail = data.route
+    if (!routeDetail) return
+
+    editingRouteId.value = routeDetail.id
+    savedRoute.value = routeDetail
+    form.value = {
+      nom: routeDetail.nom || '',
+      cimId: routeDetail.cimId || '',
+      tipusActivitat: routeDetail.tipusActivitat || 'senderisme',
+      ritme: routeDetail.ritme || 'moderat',
+      tipusRecorregut: routeDetail.tipusRecorregut || 'circular',
+    }
+    waypoints.value = [...(routeDetail.waypoints || [])]
+      .sort((a, b) => (a.ordreIndex ?? 0) - (b.ordreIndex ?? 0))
+      .map((point, index) => ({
+        id: point.id || `wp-loaded-${index}`,
+        lat: Number(point.lat),
+        lng: Number(point.lon),
+        nomPunt: point.nomPunt || '',
+        etiqueta: point.etiqueta || '',
+      }))
+      .filter((point) => Number.isFinite(point.lat) && Number.isFinite(point.lng))
+
+    await renderWaypoints()
+  } catch (error) {
+    saveError.value = getApiErrorMessage(error, 'No hem pogut carregar aquesta ruta.')
   }
 }
 
@@ -331,7 +416,7 @@ async function handleSave() {
   saveSuccess.value = ''
 
   if (!userStore.isAuthenticated) {
-    saveError.value = 'Cal iniciar sessio per guardar la ruta.'
+    saveError.value = 'Cal iniciar sessió per guardar la ruta.'
     return
   }
 
@@ -341,7 +426,7 @@ async function handleSave() {
   }
 
   if (!form.value.nom.trim()) {
-    saveError.value = 'El nom de la ruta es obligatori.'
+    saveError.value = 'El nom de la ruta és obligatori.'
     return
   }
 
@@ -377,9 +462,13 @@ async function handleSave() {
       })),
     }
 
-    const { data } = await api.post('/routes', payload)
+    const wasEditing = Boolean(editingRouteId.value)
+    const { data } = wasEditing
+      ? await api.put(`/routes/${editingRouteId.value}`, payload)
+      : await api.post('/routes', payload)
     savedRoute.value = data.route
-    saveSuccess.value = 'Ruta guardada correctament.'
+    if (data.route?.id) editingRouteId.value = data.route.id
+    saveSuccess.value = wasEditing ? 'Ruta actualitzada correctament.' : 'Ruta guardada correctament.'
   } catch (error) {
     saveError.value = getApiErrorMessage(error, 'No hem pogut guardar la ruta.')
   } finally {
@@ -391,8 +480,23 @@ watch(waypoints, () => {
   renderWaypoints()
 }, { deep: true })
 
-onMounted(() => {
-  fetchPeaks()
+watch(
+  () => form.value.cimId,
+  (cimId) => {
+    if (!map || !cimId) return
+
+    const peak = peaks.value.find((item) => item.id === cimId)
+    const lat = Number(peak?.lat)
+    const lon = Number(peak?.lon)
+
+    if (!Number.isFinite(lat) || !Number.isFinite(lon)) return
+
+    map.flyTo([lat, lon], 13, { duration: 0.7 })
+  },
+)
+
+onMounted(async () => {
+  await fetchPeaks()
 
   if (!mapContainer.value) return
 
@@ -406,9 +510,19 @@ onMounted(() => {
     addWaypoint(event.latlng)
   })
 
+  requestAnimationFrame(() => {
+    map?.invalidateSize()
+  })
+
   setTimeout(() => {
     map?.invalidateSize()
-  }, 0)
+  }, 250)
+
+  setTimeout(() => {
+    map?.invalidateSize()
+  }, 750)
+
+  await loadRouteForEditing(String(route.query.routeId || ''))
 })
 
 onBeforeUnmount(() => {
@@ -425,152 +539,100 @@ onBeforeUnmount(() => {
 .plan-route-view {
   max-width: 1200px;
   margin: 0 auto;
-  padding: 2rem 0 3rem;
+  padding: 1.4rem 1rem 3rem;
+  background: #fff;
 }
 
 .plan-route-header {
   display: flex;
   justify-content: space-between;
-  gap: 2rem;
-  align-items: flex-start;
-  margin-bottom: 1.75rem;
-}
-
-.route-planner-hero {
-  border-radius: 22px;
-  padding: 1.4rem;
-  margin-bottom: 1rem;
-}
-
-.route-planner-hero__content {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-end;
   gap: 1.5rem;
+  align-items: center;
+  margin-bottom: 1.2rem;
 }
 
-.route-planner-eyebrow {
-  margin: 0 0 0.35rem;
-  color: #7f8977;
-  text-transform: uppercase;
-  letter-spacing: 0.12em;
-  font-size: 0.78rem;
-  font-weight: 700;
-}
-
-.route-planner-hero h1,
-.route-sidebar h2,
-.route-elevation-copy h2 {
+.plan-route-title {
   margin: 0;
-  font-size: clamp(2.1rem, 5vw, 3.3rem);
-  line-height: 1.04;
+  font-family: 'Inter', sans-serif;
+  font-size: clamp(2rem, 4vw, 3rem);
+  line-height: 1.05;
   color: var(--color-text);
 }
 
-.plan-route-text {
-  margin: 0.8rem 0 0;
+.plan-route-search {
+  min-width: min(390px, 100%);
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
   color: var(--color-text-soft);
-  max-width: 68ch;
-  line-height: 1.7;
+  font-size: 0.85rem;
 }
 
-.plan-route-warning {
-  margin: 0.8rem 0 0;
-  color: #7b6a45;
-  background: #fff7e1;
-  border: 1px solid #e7d9b2;
-  padding: 0.7rem 0.9rem;
-  border-radius: 12px;
-  max-width: 58ch;
+.plan-route-search input {
+  border: 1px solid var(--color-border);
+  border-radius: 999px;
+  padding: 0.75rem 1rem;
+  background: #f1edf3;
+  color: var(--color-text);
+  min-height: 42px;
 }
 
-.plan-route-header__status {
-  min-width: 220px;
-}
-
-.plan-route-auth {
-  margin: 0;
-  padding: 0.9rem 1rem;
-  border-radius: 12px;
-  background: #fff2f4;
-  border: 1px solid #ead1d8;
-  color: #8b3c4a;
-}
-
-.plan-route-auth--ok {
-  background: #f2f8f1;
-  border-color: #d4e2cd;
-  color: #2d6a4f;
-}
-
-.plan-route-grid {
-  display: grid;
-  grid-template-columns: minmax(0, 2fr) minmax(0, 1fr);
-  gap: 1.6rem;
+.plan-route-map-card {
+  margin-bottom: 1.25rem;
 }
 
 .plan-route-map__frame {
   position: relative;
-  border-radius: 18px;
+  border-radius: 0;
   overflow: hidden;
   border: 1px solid var(--color-border);
   background: #f4f1f8;
-  min-height: 420px;
+  min-height: 470px;
 }
 
 .plan-route-map__canvas {
-  height: 420px;
+  height: 470px;
   width: 100%;
+  min-height: 470px;
+  background: #f4f1f8;
+  z-index: 1;
 }
 
-.plan-route-map__overlay {
+.route-panel {
   position: absolute;
-  bottom: 1rem;
+  top: 1rem;
   left: 1rem;
-  background: rgba(15, 24, 21, 0.75);
-  color: #fff;
-  padding: 0.6rem 0.9rem;
+  z-index: 500;
+  width: min(330px, calc(100% - 2rem));
+  max-height: calc(100% - 2rem);
+  overflow-y: auto;
+  background: rgba(255, 255, 255, 0.96);
   border-radius: 12px;
-  font-size: 0.9rem;
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.18);
+  padding: 0.85rem;
 }
 
-.plan-route-stats {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 0.75rem;
-  margin-top: 1rem;
-}
-
-.plan-route-stat {
-  background: #f3f5ea;
-  border: 1px solid #d8dfc6;
-  border-radius: 12px;
-  padding: 0.8rem 0.9rem;
-  display: flex;
-  flex-direction: column;
-  gap: 0.25rem;
-}
-
-.plan-route-stat span {
-  color: var(--color-text-soft);
-  font-size: 0.9rem;
-}
-
-.plan-route-stat strong {
-  font-size: 1.1rem;
+.route-panel h2 {
+  margin: 0 0 0.75rem;
+  font-size: 1rem;
   color: var(--color-text);
 }
 
-.plan-route-panel {
-  background: var(--color-surface);
-  border: 1px solid var(--color-border);
-  border-radius: 18px;
-  padding: 1.5rem;
+.route-panel__row {
+  display: grid;
+  grid-template-columns: 85px 1fr;
+  align-items: center;
+  gap: 0.7rem;
+  border-top: 1px solid #eee9e3;
+  padding: 0.65rem 0;
+  font-size: 0.9rem;
+  color: var(--color-text);
 }
 
 .plan-route-state {
-  padding: 1rem;
-  border-radius: 12px;
+  padding: 0.8rem;
+  border-radius: 8px;
   background: #f6f6f1;
   color: var(--color-text-soft);
 }
@@ -584,40 +646,35 @@ onBeforeUnmount(() => {
 .plan-route-form {
   display: flex;
   flex-direction: column;
-  gap: 1rem;
+  gap: 0.75rem;
 }
 
 .plan-route-field {
   display: flex;
   flex-direction: column;
-  gap: 0.4rem;
+  gap: 0.35rem;
   font-weight: 600;
   color: var(--color-text);
+  font-size: 0.9rem;
 }
 
 .plan-route-field input,
-.plan-route-field select {
+.plan-route-field select,
+.route-panel__row select {
   border: 1px solid var(--color-border);
-  border-radius: 12px;
-  padding: 0.8rem 0.9rem;
+  border-radius: 8px;
+  padding: 0.6rem 0.7rem;
   background: #fff;
   color: var(--color-text);
-}
-
-.plan-route-grid-mini {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 0.75rem;
+  min-width: 0;
 }
 
 .plan-route-waypoints {
-  border: 1px solid #e0dbe8;
-  border-radius: 14px;
-  padding: 0.9rem;
-  background: #faf8fd;
+  border-top: 1px solid #eee9e3;
+  padding-top: 0.7rem;
   display: flex;
   flex-direction: column;
-  gap: 0.9rem;
+  gap: 0.55rem;
 }
 
 .plan-route-waypoints__header {
@@ -626,46 +683,38 @@ onBeforeUnmount(() => {
   align-items: baseline;
 }
 
-.plan-route-waypoints__header h2 {
+.plan-route-waypoints__header h3 {
   margin: 0;
-  font-size: 1.1rem;
+  font-size: 0.95rem;
 }
 
 .plan-route-waypoints__empty {
   margin: 0;
   color: var(--color-text-soft);
+  font-size: 0.88rem;
 }
 
 .plan-route-waypoint {
   border: 1px solid var(--color-border);
-  border-radius: 12px;
-  padding: 0.8rem;
+  border-radius: 10px;
+  padding: 0.55rem;
   background: #fff;
-  display: flex;
-  flex-direction: column;
-  gap: 0.6rem;
+  display: grid;
+  gap: 0.45rem;
 }
 
 .plan-route-waypoint__row {
   display: flex;
   justify-content: space-between;
   gap: 1rem;
-  font-size: 0.92rem;
+  font-size: 0.82rem;
   color: var(--color-text-soft);
-}
-
-.plan-route-waypoint label {
-  display: flex;
-  flex-direction: column;
-  gap: 0.35rem;
-  font-size: 0.9rem;
-  color: var(--color-text);
 }
 
 .plan-route-waypoint input {
   border: 1px solid var(--color-border);
-  border-radius: 10px;
-  padding: 0.6rem 0.75rem;
+  border-radius: 999px;
+  padding: 0.55rem 0.75rem;
 }
 
 .plan-route-waypoint__remove {
@@ -679,11 +728,12 @@ onBeforeUnmount(() => {
 }
 
 .plan-route-message {
-  padding: 0.8rem 0.9rem;
-  border-radius: 12px;
+  padding: 0.7rem 0.8rem;
+  border-radius: 8px;
   background: #f2f8f1;
   color: #2d6a4f;
   border: 1px solid #d4e2cd;
+  font-size: 0.9rem;
 }
 
 .plan-route-message--error {
@@ -692,18 +742,196 @@ onBeforeUnmount(() => {
   border-color: #e3c8c8;
 }
 
-.plan-route-submit {
+.plan-route-save {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  z-index: 500;
   border: none;
-  border-radius: 12px;
-  padding: 0.95rem 1rem;
+  border-radius: 8px;
+  padding: 0.7rem 1rem;
   background: var(--color-button-primary);
   color: var(--color-button-primary-text);
   cursor: pointer;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.18);
 }
 
-.plan-route-submit:disabled {
+.plan-route-save:disabled {
   opacity: 0.6;
   cursor: not-allowed;
+}
+
+.route-technical {
+  margin-top: 1rem;
+}
+
+.route-technical h2 {
+  margin: 0 0 0.9rem;
+  font-size: clamp(1.8rem, 3vw, 2.4rem);
+  color: var(--color-text);
+}
+
+.route-technical__grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 1.25rem;
+}
+
+.route-card {
+  background: #f4f1ec;
+  padding: 1rem;
+  border: 1px solid #e5dfd4;
+}
+
+.route-card h3 {
+  margin: 0 0 1rem;
+  font-size: 1.35rem;
+  color: var(--color-text);
+}
+
+.route-bars {
+  background: #fff;
+  border-radius: 10px;
+  padding: 1rem;
+  margin-bottom: 1rem;
+}
+
+.route-bars h4 {
+  margin: 0 0 0.75rem;
+  font-size: 0.95rem;
+}
+
+.route-bars p {
+  margin: 0.45rem 0 0;
+  color: var(--color-text-soft);
+  font-size: 0.9rem;
+}
+
+.route-bar {
+  display: flex;
+  height: 18px;
+  overflow: hidden;
+  border-radius: 4px;
+  background: #e6e0d5;
+  margin-bottom: 0.7rem;
+}
+
+.route-bar span:nth-child(1) {
+  background: #aeb998;
+}
+
+.route-bar span:nth-child(2) {
+  background: #c8c0ad;
+}
+
+.route-bar span:nth-child(3) {
+  background: #9d8564;
+}
+
+.route-bar--surface span:nth-child(1) {
+  background: #bcc9a6;
+}
+
+.route-bar--surface span:nth-child(2) {
+  background: #d2c8b9;
+}
+
+.route-bar--surface span:nth-child(3) {
+  background: #856a48;
+}
+
+.route-summary-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+}
+
+.route-summary-grid article {
+  background: #fff;
+  border-radius: 10px;
+  padding: 0.8rem;
+}
+
+.route-summary-grid span {
+  display: block;
+  color: var(--color-text-soft);
+  font-size: 0.85rem;
+}
+
+.route-summary-grid strong {
+  display: block;
+  margin-top: 0.25rem;
+  color: var(--color-text);
+  font-size: 1.1rem;
+}
+
+.route-elevation {
+  position: relative;
+  height: 170px;
+  background: #fff;
+  border-radius: 10px;
+  overflow: hidden;
+  margin-bottom: 1rem;
+}
+
+.route-elevation::before {
+  content: "";
+  position: absolute;
+  inset: 20px;
+  background:
+    linear-gradient(to right, rgba(0, 0, 0, 0.08) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(0, 0, 0, 0.08) 1px, transparent 1px);
+  background-size: 70px 44px;
+}
+
+.route-elevation__line {
+  position: absolute;
+  left: 8%;
+  right: 8%;
+  bottom: 42%;
+  height: 65px;
+  border-top: 4px solid #7c1d1d;
+  border-radius: 55% 45% 0 0;
+  transform: skewY(-7deg);
+}
+
+.route-elevation__point {
+  position: absolute;
+  width: 20px;
+  height: 20px;
+  border-radius: 5px;
+  background: #f2a400;
+  color: #fff;
+  font-size: 0.75rem;
+  display: grid;
+  place-items: center;
+  font-weight: 700;
+}
+
+.route-elevation__point--one {
+  left: 16%;
+  top: 45%;
+  background: #6c8f47;
+}
+
+.route-elevation__point--two {
+  left: 48%;
+  top: 34%;
+}
+
+.route-elevation__point--three {
+  right: 18%;
+  top: 29%;
+}
+
+.route-note {
+  margin: 0;
+  padding: 1rem;
+  border-radius: 10px;
+  background: #eee7d8;
+  color: #5f574a;
+  line-height: 1.5;
 }
 
 .plan-route-marker__dot {
@@ -721,12 +949,23 @@ onBeforeUnmount(() => {
 }
 
 @media (max-width: 980px) {
-  .plan-route-grid {
+  .plan-route-header {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .route-technical__grid {
     grid-template-columns: 1fr;
   }
 
-  .plan-route-header {
-    flex-direction: column;
+  .route-panel {
+    position: relative;
+    top: auto;
+    left: auto;
+    width: auto;
+    max-height: none;
+    margin: 0;
+    border-radius: 0;
   }
 }
 
@@ -735,12 +974,12 @@ onBeforeUnmount(() => {
     padding: 1rem 0.5rem 2rem;
   }
 
-  .plan-route-grid-mini {
+  .route-summary-grid {
     grid-template-columns: 1fr;
   }
 
-  .plan-route-stats {
-    grid-template-columns: 1fr;
+  .plan-route-map__canvas {
+    height: 360px;
   }
 }
 </style>

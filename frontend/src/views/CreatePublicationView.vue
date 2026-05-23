@@ -48,45 +48,6 @@
             </label>
 
             <label class="create-publication-field">
-              <span>Ruta planificada vinculada</span>
-              <select
-                v-model="form.rutaPlanificadaId"
-                :disabled="!userStore.isAuthenticated || isLoadingRoutes"
-              >
-                <option value="">Sense ruta vinculada</option>
-                <option v-for="route in userRoutes" :key="route.id" :value="route.id">
-                  {{ formatRouteLabel(route) }}
-                </option>
-              </select>
-              <small v-if="!userStore.isAuthenticated" class="create-publication-route-note">
-                Inicia sessio per veure les teves rutes planificades.
-              </small>
-              <small v-else-if="routesError" class="create-publication-route-note create-publication-route-note--error">
-                {{ routesError }}
-              </small>
-              <small
-                v-else-if="userStore.isAuthenticated && !isLoadingRoutes && !userRoutes.length"
-                class="create-publication-route-note"
-              >
-                No tens rutes disponibles. Desa una ruta al planificador i torna aquí.
-              </small>
-              <small
-                v-else-if="userStore.isAuthenticated && userRoutes.length"
-                class="create-publication-route-note"
-              >
-                {{ userRoutes.length }} rutes disponibles per vincular.
-              </small>
-              <button
-                v-if="userStore.isAuthenticated"
-                class="create-publication-route-refresh"
-                type="button"
-                @click="fetchUserRoutes"
-              >
-                Recarregar rutes
-              </button>
-            </label>
-
-            <label class="create-publication-field">
               <span>Dificultat</span>
               <input
                 v-model="form.dificultat"
@@ -100,14 +61,6 @@
               <input v-model="form.dataActivitat" type="date" />
             </label>
 
-            <label class="create-publication-field">
-              <span>Track URL</span>
-              <input
-                v-model="form.trackUrl"
-                type="url"
-                placeholder="https://..."
-              />
-            </label>
           </div>
         </section>
 
@@ -131,12 +84,12 @@
             </label>
 
             <label class="create-publication-field">
-              <span>Temps estimat</span>
+              <span>Temps estimat (h:mm)</span>
               <input
                 v-model="form.tempsEstimathhmm"
                 type="text"
                 inputmode="numeric"
-                placeholder="Ex. 02:00 o 02:00:00"
+                placeholder="Ex. 02:30"
               />
             </label>
 
@@ -194,6 +147,35 @@
               </button>
             </article>
           </div>
+        </section>
+
+        <section class="create-publication-section">
+          <h2 class="create-publication-section__title">Rutes guardades</h2>
+
+          <label class="create-publication-field">
+            <span>Ruta guardada</span>
+            <select
+              v-model="form.rutaPlanificadaId"
+              :disabled="!userStore.isAuthenticated || isLoadingRoutes"
+            >
+              <option value="">Sense ruta guardada</option>
+              <option v-for="route in userRoutes" :key="route.id" :value="route.id">
+                {{ formatRouteLabel(route) }}
+              </option>
+            </select>
+            <small v-if="!userStore.isAuthenticated" class="create-publication-route-note">
+              Inicia sessió per veure les teves rutes guardades.
+            </small>
+            <small v-else-if="routesError" class="create-publication-route-note create-publication-route-note--error">
+              {{ routesError }}
+            </small>
+            <small
+              v-else-if="userStore.isAuthenticated && !isLoadingRoutes && !userRoutes.length"
+              class="create-publication-route-note"
+            >
+              Encara no tens cap ruta guardada. Desa’n una al planificador i torna aquí.
+            </small>
+          </label>
         </section>
 
         <section class="create-publication-section">
@@ -316,12 +298,12 @@ const selectedRoute = computed(() =>
 )
 
 const selectedRouteSummaryTitle = computed(() =>
-  selectedRoute.value ? `Ruta vinculada: ${selectedRoute.value.nom}` : 'Cap ruta vinculada',
+  selectedRoute.value ? `Ruta guardada: ${selectedRoute.value.nom}` : 'Cap ruta guardada seleccionada',
 )
 
 const selectedRouteSummaryText = computed(() => {
   if (!selectedRoute.value) {
-    return 'Si vols vincular una ruta guardada, selecciona-la a la secció “Informació principal”.'
+    return 'Selecciona una ruta guardada per previsualitzar-la al mapa.'
   }
 
   const distance = Number(selectedRoute.value.distanciaKm || 0).toLocaleString('ca-ES', {
@@ -421,7 +403,7 @@ async function fetchSelectedRouteDetail(routeId) {
     selectedRouteDetail.value = data.route || null
   } catch (error) {
     selectedRouteDetail.value = null
-    selectedRouteError.value = getApiErrorMessage(error, 'No hem pogut carregar el mapa de la ruta vinculada.')
+    selectedRouteError.value = getApiErrorMessage(error, 'No hem pogut carregar el mapa de la ruta guardada.')
   }
 }
 
@@ -545,7 +527,7 @@ function validateForm() {
   })
 
   if (parsedTime === null || parsedTime <= 0) {
-    errors.push('El temps estimat ha de tenir format hh:mm o hh:mm:ss.')
+    errors.push('El temps estimat ha de tenir el format hh:mm, per exemple 02:30.')
   }
 
   if (
@@ -557,7 +539,7 @@ function validateForm() {
   }
 
   if (payload.trackUrl && !/^https?:\/\//i.test(payload.trackUrl.trim())) {
-    errors.push('Si informes Track URL, ha de començar per http:// o https://')
+    errors.push("Si informes l'enllaç del track, ha de començar per http:// o https://.")
   }
 
   validationErrors.value = errors
@@ -639,21 +621,20 @@ function formatFileSize(size) {
 }
 
 function parseTimeToMinutes(value) {
-  // L'usuari escriu el temps en format humà (hh:mm o hh:mm:ss),
+  // L'usuari escriu el temps en format humà (hh:mm),
   // però backend vol minuts. Aquesta funció fa la conversió.
   const normalized = value.trim()
   if (!normalized) return null
 
-  const match = normalized.match(/^(\d{1,2}):(\d{2})(?::(\d{2}))?$/)
+  const match = normalized.match(/^(\d{1,2}):(\d{2})$/)
   if (!match) return null
 
   const hours = Number(match[1])
   const minutes = Number(match[2])
-  const seconds = Number(match[3] || 0)
 
-  if (minutes > 59 || seconds > 59) return null
+  if (minutes > 59) return null
 
-  return hours * 60 + minutes + Math.ceil(seconds / 60)
+  return hours * 60 + minutes
 }
 
 onMounted(() => {

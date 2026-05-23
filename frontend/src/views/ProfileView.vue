@@ -60,7 +60,6 @@
       -->
       <HorizontalCarousel
         title="Publicacions guardades"
-        description="Aquesta secció mostra les publicacions a les quals has donat like."
         :items="likedPublications"
         empty-text="Encara no has donat like a cap publicació."
       >
@@ -82,7 +81,6 @@
 
       <HorizontalCarousel
         title="Rutes planificades"
-        :description="plannedRoutesDescription"
         :items="plannedRoutes"
         empty-text="Encara no tens cap ruta planificada guardada."
       >
@@ -91,7 +89,7 @@
             <h3 class="profile-route-card__title">{{ item.nom || 'Ruta sense nom' }}</h3>
             <p class="profile-route-card__meta">
               {{ item.tipusActivitat || 'senderisme' }} · {{ item.ritme || 'moderat' }} ·
-              {{ item.tipusRecorregut || 'anada' }}
+              {{ formatRouteType(item.tipusRecorregut) }}
             </p>
             <p class="profile-route-card__stats">
               {{ formatDistance(item.distanciaKm) }} · {{ formatTime(item.tempsMin) }} ·
@@ -101,6 +99,9 @@
               {{ item.peak?.nom || 'Cim no disponible' }} · {{ item.peak?.comarca || 'Comarca' }}
             </p>
             <p class="profile-route-card__date">Guardada {{ formatDate(item.createdAt) }}</p>
+            <RouterLink :to="`/planificar?routeId=${item.id}`" class="profile-route-card__link">
+              Veure ruta
+            </RouterLink>
           </article>
         </template>
       </HorizontalCarousel>
@@ -210,12 +211,6 @@ const editForm = computed(() => ({
   nomUsuari: profile.value?.nomUsuari || '',
   fotoPerfil: profile.value?.fotoPerfil || '',
 }))
-const plannedRoutesDescription = computed(() =>
-  plannedRoutes.value.length
-    ? 'Aquestes són les rutes que has guardat des del planificador.'
-    : '',
-)
-
 function getApiErrorMessage(error, fallbackMessage) {
   // Intentem recuperar el missatge més concret que ens hagi tornat el backend.
   // Si no hi ha cap text útil, fem servir el missatge genèric que ens arriba per paràmetre.
@@ -318,6 +313,16 @@ function formatDate(value) {
     month: 'long',
     year: 'numeric',
   })
+}
+
+function formatRouteType(value) {
+  const labels = {
+    'one-way': 'anada',
+    'round-trip': 'anada i tornada',
+    circular: 'circular',
+  }
+
+  return labels[value] || value || 'anada'
 }
 
 async function handleProfileUpdate(payload) {
@@ -505,11 +510,13 @@ watch(
 }
 
 .profile-route-card {
-  min-height: 210px;
+  width: 260px;
+  min-width: 260px;
+  min-height: 260px;
   padding: 1rem;
   border: 1px solid var(--color-border);
   border-radius: 14px;
-  background: #faf8f2;
+  background: var(--color-surface);
   display: flex;
   flex-direction: column;
   gap: 0.55rem;
@@ -531,8 +538,18 @@ watch(
 }
 
 .profile-route-card__date {
-  margin-top: auto;
   font-size: 0.92rem;
+}
+
+.profile-route-card__link {
+  width: fit-content;
+  text-decoration: none;
+  color: var(--color-text);
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  padding: 0.45rem 0.8rem;
+  background: #fff;
+  margin-top: 0.25rem;
 }
 
 @media (max-width: 900px) {
