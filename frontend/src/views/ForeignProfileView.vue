@@ -167,9 +167,8 @@ watch(
   padding: 2rem 1rem 3rem;
 }
 
-/* Aparença bàsica dels estats i de la targeta principal */
-.foreign-profile-state,
-.foreign-profile-card {
+/* Aparença bàsica dels estats de càrrega i error */
+.foreign-profile-state {
   background: var(--color-surface);
   border: 1px solid var(--color-border);
   border-radius: 18px;
@@ -219,6 +218,7 @@ watch(
   display: flex;
   flex-direction: column;
   gap: 2rem;
+  padding: 1.5rem;
 }
 
 /* Caixa d'awards pública del perfil aliè */

@@ -119,6 +119,7 @@ import PeakCard from '../components/PeakCard.vue'
 import NavBar from '../components/NavBar.vue'
 import api from '../api/axios'
 import { resolveMediaUrl } from '../utils/media'
+import { getLocalPeakImage } from '../utils/peakImages'
 
 // Aquest és un marcador personalitzat perquè el punt del mapa sigui més coherent amb l'estètica del projecte.
 // En lloc d'usar el marcador blau per defecte de Leaflet, construïm un petit "pin" verd.
@@ -173,6 +174,7 @@ function mapPeakToCard(peak) {
       'Consulta la fitxa del cim per veure’n més informació.',
     imageUrl:
       resolveMediaUrl(peak.imatgeUrl) ||
+      getLocalPeakImage(peak) ||
       'https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?auto=format&fit=crop&w=900&q=80',
     lat: peak.lat,
     lng: peak.lon,
@@ -238,7 +240,9 @@ function setPeakCardRef(peakId, el) {
   peakCardRefs.set(peakId, el.$el || el)
 }
 
-function scrollToPeakCard(peakId) {
+async function scrollToPeakCard(peakId) {
+  await nextTick()
+
   const container = cardsContainer.value
   const card = peakCardRefs.get(peakId)
 
@@ -246,14 +250,16 @@ function scrollToPeakCard(peakId) {
 
   const containerRect = container.getBoundingClientRect()
   const cardRect = card.getBoundingClientRect()
-  const currentScroll = container.scrollTop
-  const cardTopInsideContainer = cardRect.top - containerRect.top + currentScroll
-  const centeredTop = cardTopInsideContainer - (container.clientHeight / 2) + (card.clientHeight / 2)
+  const targetTop = container.scrollTop + cardRect.top - containerRect.top - 8
 
   container.scrollTo({
-    top: Math.max(0, centeredTop),
+    top: Math.max(0, targetTop),
     behavior: 'smooth',
   })
+
+  setTimeout(() => {
+    container.scrollTop = Math.max(0, targetTop)
+  }, 180)
 }
 
 function updateMarkerIcons() {

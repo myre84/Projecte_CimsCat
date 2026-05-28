@@ -118,6 +118,7 @@ import { computed, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import api from '../api/axios'
 import { resolveMediaUrl } from '../utils/media'
+import { getLocalPeakImage } from '../utils/peakImages'
 
 const route = useRoute()
 
@@ -130,7 +131,9 @@ const fallbackImage =
   'https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?auto=format&fit=crop&w=900&q=80'
 
 // Aquesta computed construeix la URL final de la imatge del cim.
-const resolvedPeakImage = computed(() => resolveMediaUrl(peak.value?.imatgeUrl) || fallbackImage)
+const resolvedPeakImage = computed(
+  () => resolveMediaUrl(peak.value?.imatgeUrl) || getLocalPeakImage(peak.value) || fallbackImage,
+)
 
 const locationItems = computed(() => {
   // Reconstruïm la localització només amb els camps reals que retorna el backend.

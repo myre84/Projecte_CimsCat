@@ -392,9 +392,8 @@ watch(
   padding: 2rem 1rem 3rem;
 }
 
-/* Estil bàsic compartit per als estats de loading/error i la targeta principal */
-.profile-state,
-.profile-card {
+/* Estil bàsic per als estats de loading/error */
+.profile-state {
   background: var(--color-surface);
   border: 1px solid var(--color-border);
   border-radius: 18px;
@@ -412,6 +411,7 @@ watch(
   display: flex;
   flex-direction: column;
   gap: 2rem;
+  padding: 1.5rem;
 }
 
 /* Header principal del perfil: identitat textual a l'esquerra i foto/edició a la dreta */

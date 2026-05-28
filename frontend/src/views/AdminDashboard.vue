@@ -8,23 +8,10 @@
       {{ errorMessage }}
     </div>
 
-    <header class="admin-dashboard__header">
-      <div>
-        <p class="admin-dashboard__eyebrow">Panell d'administració</p>
-        <h1>Gestio de plataforma</h1>
-      </div>
-
-      <div class="admin-dashboard__summary">
-        <span class="admin-dashboard__badge">Rol actual: {{ userStore.user?.rol || 'usuari' }}</span>
-        <span class="admin-dashboard__badge">Cims visibles: {{ peaks.length }}</span>
-      </div>
-    </header>
-
     <section class="admin-section">
       <div class="admin-section__title-row">
         <div>
-          <p class="admin-section__eyebrow">Gestio de cims</p>
-          <h2>Llistat actual</h2>
+          <h2>Gestió de cims</h2>
         </div>
         <button class="admin-button admin-button--primary admin-button--clickable" type="button" @click="openCreateModal">
           Crear nou cim
@@ -41,7 +28,7 @@
       </label>
 
       <p class="admin-section__note admin-section__note--small">
-        Resultats: {{ filteredPeaks.length }} de {{ peaks.length }} cims
+        Cims visibles: {{ filteredPeaks.length }} de {{ peaks.length }}
       </p>
 
       <div class="admin-table-wrapper">
@@ -87,8 +74,7 @@
     <section class="admin-section">
       <div class="admin-section__title-row">
         <div>
-          <p class="admin-section__eyebrow">Moderacio</p>
-          <h2>Moderacio</h2>
+          <h2>Moderació</h2>
         </div>
       </div>
 

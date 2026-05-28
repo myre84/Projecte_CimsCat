@@ -153,12 +153,12 @@
           <h2 class="create-publication-section__title">Rutes guardades</h2>
 
           <label class="create-publication-field">
-            <span>Ruta guardada</span>
+            <span>Ruta</span>
             <select
               v-model="form.rutaPlanificadaId"
               :disabled="!userStore.isAuthenticated || isLoadingRoutes"
             >
-              <option value="">Sense ruta guardada</option>
+              <option :value="NO_ROUTE_VALUE">Sense ruta</option>
               <option v-for="route in userRoutes" :key="route.id" :value="route.id">
                 {{ formatRouteLabel(route) }}
               </option>
@@ -193,7 +193,6 @@
                 {{ selectedRouteError }}
               </p>
               <div v-if="hasSelectedRouteMap" ref="routePreviewMapContainer" class="create-publication-route-map" />
-              <p v-else class="create-publication-route-note">Selecciona una ruta per veure el mapa.</p>
             </div>
           </div>
         </section>
@@ -268,12 +267,13 @@ const routePreviewMapContainer = ref(null)
 let routePreviewMap = null
 let routePreviewMarkers = null
 let routePreviewLine = null
+const NO_ROUTE_VALUE = '__sense_ruta__'
 
 // form agrupa tot el que l'usuari escriu al formulari.
 const form = ref({
   titol: '',
   cimId: '',
-  rutaPlanificadaId: '',
+  rutaPlanificadaId: NO_ROUTE_VALUE,
   dificultat: '',
   dataActivitat: '',
   trackUrl: '',
@@ -294,16 +294,18 @@ const selectedPeakSummary = computed(() => {
 })
 
 const selectedRoute = computed(() =>
-  userRoutes.value.find((route) => route.id === form.value.rutaPlanificadaId) || null,
+  form.value.rutaPlanificadaId === NO_ROUTE_VALUE
+    ? null
+    : userRoutes.value.find((route) => route.id === form.value.rutaPlanificadaId) || null,
 )
 
 const selectedRouteSummaryTitle = computed(() =>
-  selectedRoute.value ? `Ruta guardada: ${selectedRoute.value.nom}` : 'Cap ruta guardada seleccionada',
+  selectedRoute.value ? `Ruta: ${selectedRoute.value.nom}` : 'Cap ruta seleccionada',
 )
 
 const selectedRouteSummaryText = computed(() => {
   if (!selectedRoute.value) {
-    return 'Selecciona una ruta guardada per previsualitzar-la al mapa.'
+    return 'Selecciona una ruta si vols afegir un track.'
   }
 
   const distance = Number(selectedRoute.value.distanciaKm || 0).toLocaleString('ca-ES', {
@@ -594,7 +596,7 @@ async function handleSubmit() {
       imageUrls,
     }
 
-    if (form.value.rutaPlanificadaId) {
+    if (form.value.rutaPlanificadaId && form.value.rutaPlanificadaId !== NO_ROUTE_VALUE) {
       payload.rutaPlanificadaId = form.value.rutaPlanificadaId
     }
 
@@ -652,7 +654,7 @@ watch(
 watch(
   () => form.value.rutaPlanificadaId,
   (routeId) => {
-    fetchSelectedRouteDetail(routeId || '')
+    fetchSelectedRouteDetail(routeId && routeId !== NO_ROUTE_VALUE ? routeId : '')
   },
 )
 
