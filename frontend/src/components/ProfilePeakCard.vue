@@ -25,6 +25,7 @@
 // computed ens ajuda a preparar la imatge final del cim.
 import { computed } from 'vue'
 import { resolveMediaUrl } from '../utils/media'
+import { getLocalPeakImage } from '../utils/peakImages'
 
 // Esperem rebre un objecte cim ja preparat per pintar.
 const props = defineProps({
@@ -39,6 +40,7 @@ const peakImage = computed(
     // Si el cim té imatge pròpia, la resolem.
     // Si no, fem servir una imatge fallback per no deixar la targeta buida.
     resolveMediaUrl(props.peak.imatgeUrl) ||
+    getLocalPeakImage(props.peak) ||
     'https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=900&q=80',
 )
 </script>
