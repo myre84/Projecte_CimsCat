@@ -41,7 +41,7 @@ async function main() {
       mail: 'dalia@cimscat.cat',
       contrasenyaHash: passwordHash,
       rol: 'usuari',
-      fotoPerfil: '/uploads/usuaris/dalia.jpg'
+      fotoPerfil: '/uploads/users/dalia.jpg'
     },
     {
       id: 'usr_mireiagibert',
@@ -51,7 +51,7 @@ async function main() {
       mail: 'mireia@cimscat.cat',
       contrasenyaHash: passwordHash,
       rol: 'usuari',
-      fotoPerfil: '/uploads/usuaris/mireia.jpg'
+      fotoPerfil: '/uploads/users/mireia.jpg'
     },
     {
       id: 'usr_danimoore',
@@ -61,7 +61,7 @@ async function main() {
       mail: 'dani@cimscat.cat',
       contrasenyaHash: passwordHash,
       rol: 'usuari',
-      fotoPerfil: '/uploads/usuaris/dani.jpg'
+      fotoPerfil: '/uploads/users/dani.jpg'
     }
   ];
 
@@ -79,7 +79,7 @@ async function main() {
       lon: 2.0178,
       dificultat: 'moderada',
       descripcio: 'Cim emblematic de Sant Llorenc del Munt amb monestir historic al capdamunt.',
-      imatgeUrl: '/uploads/cims/la-mola.jpg',
+      imatgeUrl: '/uploads/peaks/la-mola.jpg',
       massis: 'Sant Llorenc del Munt i l Obac',
       zonaProtegida: 'Parc Natural de Sant Llorenc del Munt i l Obac'
     },
@@ -92,7 +92,7 @@ async function main() {
       lon: 1.7031,
       dificultat: 'alta',
       descripcio: 'Muntanya iconica amb perfil inconfusible i trams exigents a la tartera.',
-      imatgeUrl: '/uploads/cims/pedraforca.jpg',
+      imatgeUrl: '/uploads/peaks/pedraforca.jpg',
       massis: 'Serra del Cadi',
       zonaProtegida: 'Parc Natural del Cadi Moixero'
     },
@@ -105,7 +105,7 @@ async function main() {
       lon: 2.1217,
       dificultat: 'alta',
       descripcio: 'Sostre del Ripolles amb vistes obertes cap a la Cerdanya i el Pirineu oriental.',
-      imatgeUrl: '/uploads/cims/puigmal.jpg',
+      imatgeUrl: '/uploads/peaks/puigmal.jpg',
       massis: 'Pirineu Oriental',
       zonaProtegida: 'Parc Natural de les Capcaleres del Ter i del Freser'
     },
@@ -118,7 +118,7 @@ async function main() {
       lon: 2.3815,
       dificultat: 'moderada',
       descripcio: 'Un dels grans classics del Montseny, ideal per travesses en mitja muntanya.',
-      imatgeUrl: '/uploads/cims/matagalls.jpg',
+      imatgeUrl: '/uploads/peaks/matagalls.jpg',
       massis: 'Montseny',
       zonaProtegida: 'Parc Natural del Montseny'
     },
@@ -131,7 +131,7 @@ async function main() {
       lon: 2.4566,
       dificultat: 'alta',
       descripcio: 'Cim mitic del Pirineu catala nord, amb llarga aproximacio i ambient d alta muntanya.',
-      imatgeUrl: '/uploads/cims/canigo.jpg',
+      imatgeUrl: '/uploads/peaks/canigo.jpg',
       massis: 'Massis del Canigo',
       zonaProtegida: 'Reserva Natural de Prats de Mollo'
     },
@@ -144,7 +144,7 @@ async function main() {
       lon: 2.4558,
       dificultat: 'moderada',
       descripcio: 'Cim principal del Montseny amb ascensio variada i opcions de ruta circular.',
-      imatgeUrl: '/uploads/cims/turo-home.jpg',
+      imatgeUrl: '/uploads/peaks/turo-home.jpg',
       massis: 'Montseny',
       zonaProtegida: 'Parc Natural del Montseny'
     },
@@ -157,7 +157,7 @@ async function main() {
       lon: 2.2144,
       dificultat: 'alta',
       descripcio: 'Gran balcon sobre la vall de Nuria i el circ d Ulldeter, molt apreciat a l hivern.',
-      imatgeUrl: '/uploads/cims/bastiments.jpg',
+      imatgeUrl: '/uploads/peaks/bastiments.jpg',
       massis: 'Pirineu Oriental',
       zonaProtegida: 'Parc Natural de les Capcaleres del Ter i del Freser'
     },
@@ -170,7 +170,7 @@ async function main() {
       lon: 1.7866,
       dificultat: 'alta',
       descripcio: 'Cim fronterer molt panoramic amb recorregut llarg i pedregos.',
-      imatgeUrl: '/uploads/cims/puigpedros.jpg',
+      imatgeUrl: '/uploads/peaks/puigpedros.jpg',
       massis: 'Pirineu Axial',
       zonaProtegida: 'Espai d Interes Natural de la Tossa Plana'
     },
@@ -183,7 +183,7 @@ async function main() {
       lon: 1.7019,
       dificultat: 'alta',
       descripcio: 'Cim destacat de la Serra del Cadi amb cresta amplia i vistes cap al Pedraforca.',
-      imatgeUrl: '/uploads/cims/comabona.jpg',
+      imatgeUrl: '/uploads/peaks/comabona.jpg',
       massis: 'Serra del Cadi',
       zonaProtegida: 'Parc Natural del Cadi Moixero'
     },
@@ -196,12 +196,25 @@ async function main() {
       lon: 1.9398,
       dificultat: 'alta',
       descripcio: 'Sostre de la Cerdanya amb paisatge lacustre i tram final de blocs granitics.',
-      imatgeUrl: '/uploads/cims/carlit.jpg',
+      imatgeUrl: '/uploads/peaks/carlit.jpg',
       massis: 'Massis del Carlit',
       zonaProtegida: 'Parc Natural Regional dels Pirineus Catalans'
+    },
+    {
+      id: 'cim_pica_d_estats',
+      nom: 'Pica d Estats',
+      alcada: 3143,
+      comarca: 'Alta Ribagorca',
+      lat: 42.6592,
+      lon: 1.3975,
+      dificultat: 'alta',
+      descripcio: 'Pic mes alt de Catalunya amb itinerari rocós i panorames.',
+      imatgeUrl: '/uploads/peaks/pica-d-estats.jpg',
+      massis: 'Montcalm-Pica d Estats',
+      zonaProtegida: 'Parc Natural de l Alt Pirineu'
     }
-    ,
-    // Afegim alguns cims de 3000m dels Pirineus per provar el repte 3000s
+  ];
+    /* Afegim alguns cims de 3000m dels Pirineus per provar el repte 3000s
     {
       id: 'cim_aneto',
       nom: 'Aneto',
@@ -211,7 +224,7 @@ async function main() {
       lon: 0.6590,
       dificultat: 'alta',
       descripcio: 'Sostre dels Pirineus; glaci i aproximacio llarga.',
-      imatgeUrl: '/uploads/cims/aneto.jpg',
+      imatgeUrl: '/uploads/peaks/aneto.jpg',
       massis: 'Posets-Aneto',
       zonaProtegida: 'Parc Natural Posets-Maladeta'
     },
@@ -224,7 +237,7 @@ async function main() {
       lon: 0.4590,
       dificultat: 'alta',
       descripcio: 'Segon mes alt dels Pirineus, amb circ glacial i vistes.',
-      imatgeUrl: '/uploads/cims/posets.jpg',
+      imatgeUrl: '/uploads/peaks/posets.jpg',
       massis: 'Posets-Aneto',
       zonaProtegida: 'Parc Natural Posets-Maladeta'
     },
@@ -237,7 +250,7 @@ async function main() {
       lon: -0.0450,
       dificultat: 'alta',
       descripcio: 'Cims del Parc Nacional d Ordesa amb corriols espectaculars.',
-      imatgeUrl: '/uploads/cims/monte-perdido.jpg',
+      imatgeUrl: '/uploads/peaks/monte-perdido.jpg',
       massis: 'Monte Perdido',
       zonaProtegida: 'Parc Nacional d Ordesa i Monte Perdido'
     },
@@ -250,24 +263,12 @@ async function main() {
       lon: -0.1206,
       dificultat: 'alta',
       descripcio: 'Cim fronterer amb glaci i caracters alpins.',
-      imatgeUrl: '/uploads/cims/vignemale.jpg',
+      imatgeUrl: '/uploads/peaks/vignemale.jpg',
       massis: 'Vignemale',
       zonaProtegida: 'Parc National des Pyrenees'
     },
-    {
-      id: 'cim_pica_d_estats',
-      nom: 'Pica d Estats',
-      alcada: 3143,
-      comarca: 'Alta Ribagorca',
-      lat: 42.6592,
-      lon: 1.3975,
-      dificultat: 'alta',
-      descripcio: 'Pic mes alt de Catalunya amb itinerari rocós i panorames.',
-      imatgeUrl: '/uploads/cims/pica-d-estats.jpg',
-      massis: 'Montcalm-Pica d Estats',
-      zonaProtegida: 'Parc Natural de l Alt Pirineu'
-    }
-  ];
+    */
+    
 
   // ------------------------------------------------------------
   // 4) RUTES PLANIFICADES
