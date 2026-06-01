@@ -266,6 +266,19 @@ async function getPeakDetailById(id) {
             }
           }
         }
+      },
+      puntsInteres: {
+        orderBy: [{ tipus: 'asc' }, { nom: 'asc' }],
+        select: {
+          id: true,
+          tipus: true,
+          nom: true,
+          descripcio: true,
+          lat: true,
+          lon: true,
+          altitud: true,
+          createdAt: true
+        }
       }
     }
   });
@@ -350,6 +363,16 @@ async function getPeakDetailById(id) {
         commentsCount: publication._count.comentaris,
         imagesCount: publication._count.imatges
       }
+    })),
+    pointsOfInterest: peak.puntsInteres.map((item) => ({
+      id: item.id,
+      tipus: item.tipus,
+      nom: item.nom,
+      descripcio: item.descripcio,
+      lat: item.lat,
+      lon: item.lon,
+      altitud: item.altitud,
+      createdAt: item.createdAt
     }))
   };
 }
