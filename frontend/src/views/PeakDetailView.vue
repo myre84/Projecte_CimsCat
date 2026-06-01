@@ -206,10 +206,30 @@ const technicalItems = computed(() => {
 })
 
 const refugeItems = computed(() => {
-  // El backend actual no té camps específics de refugis o punts d'interès.
-  // Mantenim la secció a la fitxa, però no hi inventem contingut.
+  // Mostrem refugis i punts d'interes reals del backend quan existeixen.
   if (!peak.value) return []
-  return []
+
+  const items = peak.value.pointsOfInterest || []
+  if (!items.length) return []
+
+  return items.map((item) => {
+    const label = item.tipus === 'refugi' ? 'Refugi' : "Punt d'interes"
+    const parts = [item.nom]
+
+    if (Number.isFinite(Number(item.altitud))) {
+      parts.push(formatMeters(item.altitud))
+    }
+
+    if (item.descripcio) {
+      parts.push(item.descripcio)
+    }
+
+    if (Number.isFinite(item.lat) && Number.isFinite(item.lon)) {
+      parts.push(`${Number(item.lat).toFixed(4)}, ${Number(item.lon).toFixed(4)}`)
+    }
+
+    return { label, value: parts.join(' · ') }
+  })
 })
 
 function resolvePublicationImage(publication) {

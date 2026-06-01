@@ -91,6 +91,7 @@ model Cim {
   savedByUsers      SavedPeak[]
   rutesPlanificades RutaPlanificada[]
   challengePeaks    ChallengePeak[]
+  puntsInteres      PuntInteresCim[]
 
   // Timestamps
   createdAt DateTime @default(now())
@@ -100,6 +101,29 @@ model Cim {
   @@index([nom])
   @@index([comarca])
   @@index([massis])
+}
+
+// ------------------------------------------------------------
+// MODEL: PuntInteresCim
+// ------------------------------------------------------------
+// Refugis i punts d'interes associats a un cim.
+model PuntInteresCim {
+  id         String   @id @default(cuid())
+  cimId      String
+  tipus      String
+  nom        String
+  descripcio String?
+  lat        Float?
+  lon        Float?
+  altitud    Int?
+
+  cim Cim @relation(fields: [cimId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([cimId])
+  @@index([tipus])
 }
 
 // ------------------------------------------------------------
