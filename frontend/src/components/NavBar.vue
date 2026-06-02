@@ -5,11 +5,10 @@
   -->
   <nav class="navbar">
     <div class="navbar-left">
-      <!-- Logo i nom del projecte. Clicant aquí tornem a la home. -->
+      <!-- Logo del projecte. Clicant aquí tornem a la home. -->
       <RouterLink to="/" class="navbar-brand" @click="closeMobilePanels">
         <img src="/logo.svg" alt="CimsCat" class="navbar-logo" 
              onerror="this.style.display='none'" />
-        <span class="navbar-name">CimsCat</span>
       </RouterLink>
 
       <button
@@ -309,13 +308,6 @@ function closeMobilePanels() {
   object-fit: contain;
 }
 
-/* Text "CimsCat" al costat del logo. */
-.navbar-name {
-  font-size: 0.75rem;
-  color: var(--color-text);
-  font-weight: 500;
-}
-
 /* Contenidor del cercador. */
 .navbar-search {
   position: relative;
@@ -566,7 +558,6 @@ function closeMobilePanels() {
     min-width: 0;
   }
 
-  .navbar-name,
   .navbar-right {
     display: none;
   }

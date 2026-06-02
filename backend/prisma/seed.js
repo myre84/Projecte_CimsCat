@@ -214,6 +214,185 @@ async function main() {
       zonaProtegida: 'Parc Natural de l Alt Pirineu'
     }
   ];
+
+  const fitxesTecnniquesCims = {
+    cim_la_mola: {
+      situacioAdministrativa: 'Valles Occidental, dins el terme de Matadepera i Sant Llorenc Savall',
+      accesPrincipal: 'Can Robert i Coll d Estenalles son els accessos mes habituals',
+      puntPartida: 'Can Robert o Coll d Estenalles',
+      rutaHabitual: 'Can Robert -> Can Pobla -> Monestir de Sant Llorenc del Munt -> La Mola',
+      distanciaHabitualKm: 11.8,
+      desnivellHabitualM: 640,
+      tempsHabitual: '4 - 5 hores',
+      orientacio: 'Vessants sud i nord segons l acces escollit',
+      tipusTerreny: 'Camins de conglomerat, corriols pedregosos i pista forestal',
+      puntClau: 'Arribada al monestir de Sant Llorenc del Munt',
+      grauExposicio: 'Baix, amb trams pedregosos puntuals'
+    },
+    cim_pedraforca: {
+      situacioAdministrativa: 'Bergueda, dins els termes de Saldes i Gosol',
+      accesPrincipal: 'Mirador de Gresolet i refugi Lluis Estasen',
+      puntPartida: 'Refugi Lluis Estasen',
+      rutaHabitual: 'Refugi Lluis Estasen -> Canal del Verdet -> Pollego Superior -> Enforcadura -> Tartera',
+      distanciaHabitualKm: 9.7,
+      desnivellHabitualM: 1120,
+      tempsHabitual: '6 - 7 hores',
+      orientacio: 'Nord pel Verdet i sud-est per la tartera',
+      tipusTerreny: 'Alta muntanya calcaria, grimpada i tartera',
+      puntClau: 'Canal del Verdet i baixada per l Enforcadura',
+      grauExposicio: 'Alt en el tram de grimpada del Verdet'
+    },
+    cim_puigmal: {
+      situacioAdministrativa: 'Ripolles i Cerdanya, prop de la frontera amb la Catalunya Nord',
+      accesPrincipal: 'Fontalba i vall de Nuria',
+      puntPartida: 'Collada de Fontalba o santuari de Nuria',
+      rutaHabitual: 'Fontalba -> Puigmal -> retorn pel mateix itinerari',
+      distanciaHabitualKm: 12.4,
+      desnivellHabitualM: 940,
+      tempsHabitual: '5 - 6 hores',
+      orientacio: 'Vessant sud des de Fontalba',
+      tipusTerreny: 'Prats alpins, lloms oberts i terreny exposat al vent',
+      puntClau: 'Tram final del llom fins al cim',
+      grauExposicio: 'Mitja per meteorologia i vent'
+    },
+    cim_matagalls: {
+      situacioAdministrativa: 'Osona i Valles Oriental, dins el Parc Natural del Montseny',
+      accesPrincipal: 'Coll Formic i Sant Marcal',
+      puntPartida: 'Coll Formic',
+      rutaHabitual: 'Coll Formic -> Pla de la Barraca -> Matagalls',
+      distanciaHabitualKm: 8.5,
+      desnivellHabitualM: 600,
+      tempsHabitual: '3 - 4 hores',
+      orientacio: 'Vessant oest des de Coll Formic',
+      tipusTerreny: 'Prats, fagedes i corriols de mitja muntanya',
+      puntClau: 'Creu del Matagalls',
+      grauExposicio: 'Baix, amb exposicio al vent a la carena'
+    },
+    cim_canigo: {
+      situacioAdministrativa: 'Conflent i Vallespir, a la Catalunya Nord',
+      accesPrincipal: 'Refugi de Cortalets',
+      puntPartida: 'Refugi de Cortalets',
+      rutaHabitual: 'Cortalets -> Pic Jofre -> Canigo',
+      distanciaHabitualKm: 8.6,
+      desnivellHabitualM: 650,
+      tempsHabitual: '4 - 5 hores',
+      orientacio: 'Vessant nord des de Cortalets',
+      tipusTerreny: 'Alta muntanya pirinenca amb pedres i carena final',
+      puntClau: 'Carena final fins al cim',
+      grauExposicio: 'Mitja, condicionada per neu o boira'
+    },
+    cim_turo_home: {
+      situacioAdministrativa: 'Valles Oriental, dins el Parc Natural del Montseny',
+      accesPrincipal: 'Santa Fe del Montseny i Plana Amagada',
+      puntPartida: 'Santa Fe del Montseny',
+      rutaHabitual: 'Santa Fe -> Avetosa -> Turo de l Home -> Les Agudes',
+      distanciaHabitualKm: 8.9,
+      desnivellHabitualM: 640,
+      tempsHabitual: '3 - 4 hores',
+      orientacio: 'Vessant est i sud-est',
+      tipusTerreny: 'Fagedes, corriols i trams de carena',
+      puntClau: 'Carena entre Turo de l Home i Les Agudes',
+      grauExposicio: 'Baix a mitja segons condicions meteorologiques'
+    },
+    cim_bastiments: {
+      situacioAdministrativa: 'Ripolles, dins el Parc Natural de les Capcaleres del Ter i del Freser',
+      accesPrincipal: 'Vallter 2000 i refugi d Ulldeter',
+      puntPartida: 'Aparcament superior de Vallter 2000',
+      rutaHabitual: 'Vallter -> Refugi d Ulldeter -> Coll de la Marrana -> Bastiments',
+      distanciaHabitualKm: 8.2,
+      desnivellHabitualM: 820,
+      tempsHabitual: '4 - 5 hores',
+      orientacio: 'Vessant sud des d Ulldeter',
+      tipusTerreny: 'Alta muntanya, tartera i lloms oberts',
+      puntClau: 'Coll de la Marrana',
+      grauExposicio: 'Mitja, especialment amb neu o vent'
+    },
+    cim_puigpedros: {
+      situacioAdministrativa: 'Cerdanya, al Pirineu axial',
+      accesPrincipal: 'Refugi de Malniu',
+      puntPartida: 'Refugi de Malniu',
+      rutaHabitual: 'Refugi de Malniu -> Estany de Malniu -> Puigpedros',
+      distanciaHabitualKm: 12.0,
+      desnivellHabitualM: 850,
+      tempsHabitual: '5 - 6 hores',
+      orientacio: 'Vessant sud i sud-est',
+      tipusTerreny: 'Prats alpins, blocs granitics i lloms oberts',
+      puntClau: 'Tram final pedregos del cim',
+      grauExposicio: 'Mitja per llargada i meteorologia'
+    },
+    cim_comabona: {
+      situacioAdministrativa: 'Bergueda i Cerdanya, dins el Parc Natural del Cadi Moixero',
+      accesPrincipal: 'Prat d Aguilo o Gresolet',
+      puntPartida: 'Refugi de Prat d Aguilo',
+      rutaHabitual: 'Prat d Aguilo -> Pas dels Gosolans -> Comabona',
+      distanciaHabitualKm: 9.5,
+      desnivellHabitualM: 700,
+      tempsHabitual: '4 - 5 hores',
+      orientacio: 'Vessant nord des de Prat d Aguilo',
+      tipusTerreny: 'Prats alpins, calcari i carena ampla',
+      puntClau: 'Pas dels Gosolans',
+      grauExposicio: 'Mitja en condicions hivernals'
+    },
+    cim_carlit: {
+      situacioAdministrativa: 'Alta Cerdanya, dins el Pirineu oriental',
+      accesPrincipal: 'Llac de les Bulloses',
+      puntPartida: 'Aparcament de les Bulloses',
+      rutaHabitual: 'Bulloses -> Estanys del Carlit -> Carlit',
+      distanciaHabitualKm: 15.0,
+      desnivellHabitualM: 950,
+      tempsHabitual: '6 - 7 hores',
+      orientacio: 'Vessant est des de les Bulloses',
+      tipusTerreny: 'Entorn lacustre, blocs granitics i grimpada final',
+      puntClau: 'Tram final de blocs abans del cim',
+      grauExposicio: 'Mitja a alta al tram final'
+    },
+    cim_pica_d_estats: {
+      comarca: 'Pallars Sobira',
+      situacioAdministrativa: 'Limit entre Catalunya, Arieja i l entorn del massis del Montcalm',
+      accesPrincipal: 'Vall Ferrera per la ruta classica',
+      puntPartida: 'Refugi de Vallferrera, Areu',
+      rutaHabitual: 'Refugi de Vallferrera -> Estany de Sotllo -> Estany d Estats -> Coll de Sotllo -> Pica d Estats',
+      distanciaHabitualKm: 16,
+      desnivellHabitualM: 1200,
+      tempsHabitual: '7 - 9 hores',
+      orientacio: 'Sud per la via catalana i nord per la via francesa',
+      tipusTerreny: 'Alta muntanya pirinenca, tarteres, blocs de granit i colls rocosos',
+      puntClau: 'Coll de Sotllo i connexio amb el Pic de Sotllo',
+      grauExposicio: 'Mitja, amb possible risc en neu o gel'
+    }
+  };
+
+  const cimsAmbFitxaTecnica = cims.map((cim) => ({
+    ...cim,
+    ...(fitxesTecnniquesCims[cim.id] || {})
+  }));
+
+  const puntsInteresCims = [
+    { id: 'poi_la_mola_monestir', cimId: 'cim_la_mola', tipus: 'punt_interes', nom: 'Monestir de Sant Llorenc del Munt', descripcio: 'Element historic situat al cim de La Mola.', altitud: 1104 },
+    { id: 'poi_la_mola_can_robert', cimId: 'cim_la_mola', tipus: 'punt_partida', nom: 'Can Robert', descripcio: 'Punt de sortida habitual per l ascensio classica.', altitud: 650 },
+    { id: 'poi_pedraforca_estasen', cimId: 'cim_pedraforca', tipus: 'refugi', nom: 'Refugi Lluis Estasen', descripcio: 'Refugi guardat al peu de la cara nord del Pedraforca.', altitud: 1640 },
+    { id: 'poi_pedraforca_enforcadura', cimId: 'cim_pedraforca', tipus: 'coll', nom: 'Enforcadura', descripcio: 'Coll entre els pollegons i pas habitual de baixada.', altitud: 2356 },
+    { id: 'poi_puigmal_fontalba', cimId: 'cim_puigmal', tipus: 'punt_partida', nom: 'Collada de Fontalba', descripcio: 'Punt de sortida habitual de la ruta directa al Puigmal.', altitud: 2070 },
+    { id: 'poi_puigmal_nuria', cimId: 'cim_puigmal', tipus: 'punt_interes', nom: 'Vall de Nuria', descripcio: 'Alternativa d acces i retorn per travessa.', altitud: 1960 },
+    { id: 'poi_matagalls_coll_formic', cimId: 'cim_matagalls', tipus: 'punt_partida', nom: 'Coll Formic', descripcio: 'Inici classic per pujar al Matagalls.', altitud: 1145 },
+    { id: 'poi_matagalls_creu', cimId: 'cim_matagalls', tipus: 'punt_interes', nom: 'Creu del Matagalls', descripcio: 'Creu situada al cim.', altitud: 1697 },
+    { id: 'poi_canigo_cortalets', cimId: 'cim_canigo', tipus: 'refugi', nom: 'Refugi de Cortalets', descripcio: 'Refugi principal d acces al Canigo.', altitud: 2150 },
+    { id: 'poi_canigo_pic_jofre', cimId: 'cim_canigo', tipus: 'punt_interes', nom: 'Pic Jofre', descripcio: 'Pas proper a l itinerari normal des de Cortalets.', altitud: 2362 },
+    { id: 'poi_turo_santa_fe', cimId: 'cim_turo_home', tipus: 'punt_partida', nom: 'Santa Fe del Montseny', descripcio: 'Punt de sortida habitual per rutes circulars.', altitud: 1130 },
+    { id: 'poi_turo_agudes', cimId: 'cim_turo_home', tipus: 'punt_interes', nom: 'Les Agudes', descripcio: 'Cim proper sovint combinat amb el Turo de l Home.', altitud: 1706 },
+    { id: 'poi_bastiments_ulldeter', cimId: 'cim_bastiments', tipus: 'refugi', nom: 'Refugi d Ulldeter', descripcio: 'Refugi situat a la capcalera del Ter.', altitud: 2220 },
+    { id: 'poi_bastiments_marrana', cimId: 'cim_bastiments', tipus: 'coll', nom: 'Coll de la Marrana', descripcio: 'Pas clau entre Ulldeter i Bastiments.', altitud: 2529 },
+    { id: 'poi_puigpedros_malniu', cimId: 'cim_puigpedros', tipus: 'refugi', nom: 'Refugi de Malniu', descripcio: 'Punt de sortida habitual per pujar al Puigpedros.', altitud: 2138 },
+    { id: 'poi_puigpedros_estany', cimId: 'cim_puigpedros', tipus: 'estany', nom: 'Estany de Malniu', descripcio: 'Estany proper a la ruta normal.', altitud: 2250 },
+    { id: 'poi_comabona_prat_aguilo', cimId: 'cim_comabona', tipus: 'refugi', nom: 'Refugi de Prat d Aguilo', descripcio: 'Refugi situat sota la cara nord del Cadi.', altitud: 2010 },
+    { id: 'poi_comabona_gosolans', cimId: 'cim_comabona', tipus: 'coll', nom: 'Pas dels Gosolans', descripcio: 'Pas historic entre Cerdanya i Bergueda.', altitud: 2430 },
+    { id: 'poi_carlit_bulloses', cimId: 'cim_carlit', tipus: 'punt_partida', nom: 'Llac de les Bulloses', descripcio: 'Punt d inici de la ruta classica del Carlit.', altitud: 2017 },
+    { id: 'poi_carlit_estanys', cimId: 'cim_carlit', tipus: 'estany', nom: 'Estanys del Carlit', descripcio: 'Conjunt lacustre del recorregut d aproximacio.', altitud: 2200 },
+    { id: 'poi_pica_vallferrera', cimId: 'cim_pica_d_estats', tipus: 'refugi', nom: 'Refugi de Vallferrera', descripcio: 'Punt de sortida principal de la via catalana.', altitud: 1940 },
+    { id: 'poi_pica_baborte', cimId: 'cim_pica_d_estats', tipus: 'refugi', nom: 'Refugi de Baborte', descripcio: 'Alternativa per travesses i aproximacions llargues.', altitud: 2440 },
+    { id: 'poi_pica_sotllo_estats', cimId: 'cim_pica_d_estats', tipus: 'estany', nom: 'Estany de Sotllo i Estany d Estats', descripcio: 'Llacs glacials situats a la ruta normal.', altitud: 2350 },
+    { id: 'poi_pica_coll_sotllo', cimId: 'cim_pica_d_estats', tipus: 'coll', nom: 'Coll de Sotllo', descripcio: 'Pas fronterer entre Catalunya i Arieja.', altitud: 2894 }
+  ];
     /* Afegim alguns cims de 3000m dels Pirineus per provar el repte 3000s
     {
       id: 'cim_aneto',
@@ -620,7 +799,23 @@ async function main() {
   // ------------------------------------------------------------
   // Inserim en ordre logic. skipDuplicates protegeix davant reexecucions.
   await prisma.usuari.createMany({ data: usuaris, skipDuplicates: true });
-  await prisma.cim.createMany({ data: cims, skipDuplicates: true });
+
+  for (const cim of cimsAmbFitxaTecnica) {
+    await prisma.cim.upsert({
+      where: { id: cim.id },
+      update: cim,
+      create: cim
+    });
+  }
+
+  for (const puntInteres of puntsInteresCims) {
+    await prisma.puntInteresCim.upsert({
+      where: { id: puntInteres.id },
+      update: puntInteres,
+      create: puntInteres
+    });
+  }
+
   await prisma.rutaPlanificada.createMany({ data: rutesPlanificades, skipDuplicates: true });
   await prisma.puntRuta.createMany({ data: puntsRuta, skipDuplicates: true });
   await prisma.publicacio.createMany({ data: publicacions, skipDuplicates: true });
@@ -753,7 +948,8 @@ async function main() {
   // ------------------------------------------------------------
   // Mostro per consola el recompte de dades creades, per validar rapidament.
   console.log('Seed completat amb exit:');
-  console.log(`- Cims: ${cims.length}`);
+  console.log(`- Cims: ${cimsAmbFitxaTecnica.length}`);
+  console.log(`- Punts d'interes de cims: ${puntsInteresCims.length}`);
   console.log(`- Usuaris: ${usuaris.length}`);
   console.log(`- Rutes planificades: ${rutesPlanificades.length}`);
   console.log(`- Punts de ruta: ${puntsRuta.length}`);
@@ -776,4 +972,3 @@ main()
   .finally(async () => {
     await prisma.$disconnect();
   });
-

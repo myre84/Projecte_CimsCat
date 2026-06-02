@@ -12,6 +12,19 @@ const ALLOWED_SORT_BY = ['nom', 'alcada', 'comarca', 'massis', 'createdAt'];
 const ALLOWED_SORT_ORDER = ['asc', 'desc'];
 const REQUIRED_PEAK_STRING_FIELDS = ['nom', 'comarca', 'dificultat', 'descripcio', 'imatgeUrl', 'massis'];
 const REQUIRED_PEAK_NUMBER_FIELDS = ['alcada', 'lat', 'lon'];
+const OPTIONAL_PEAK_STRING_FIELDS = [
+  'zonaProtegida',
+  'situacioAdministrativa',
+  'accesPrincipal',
+  'puntPartida',
+  'rutaHabitual',
+  'tempsHabitual',
+  'orientacio',
+  'tipusTerreny',
+  'puntClau',
+  'grauExposicio'
+];
+const OPTIONAL_PEAK_NUMBER_FIELDS = ['distanciaHabitualKm', 'desnivellHabitualM'];
 
 // Helper petit per no repetir literalment el mateix error a cada validacio.
 // Sempre que una query sigui invalida, retornarem aquest codi funcional.
@@ -159,7 +172,7 @@ function parseOptionalString(body, fieldName) {
     return undefined;
   }
 
-  if (body[fieldName] === null) {
+  if (body[fieldName] === null || body[fieldName] === '') {
     return null;
   }
 
@@ -174,6 +187,10 @@ function parseOptionalString(body, fieldName) {
 function parseOptionalNumber(body, fieldName) {
   if (!Object.prototype.hasOwnProperty.call(body, fieldName)) {
     return undefined;
+  }
+
+  if (body[fieldName] === null || body[fieldName] === '') {
+    return null;
   }
 
   const parsed = Number(body[fieldName]);
@@ -197,10 +214,19 @@ function validateCreatePeakBody(body) {
     data[fieldName] = parseRequiredNumber(body, fieldName);
   });
 
-  const zonaProtegida = parseOptionalString(body, 'zonaProtegida');
-  if (typeof zonaProtegida !== 'undefined') {
-    data.zonaProtegida = zonaProtegida;
-  }
+  OPTIONAL_PEAK_STRING_FIELDS.forEach((fieldName) => {
+    const value = parseOptionalString(body, fieldName);
+    if (typeof value !== 'undefined') {
+      data[fieldName] = value;
+    }
+  });
+
+  OPTIONAL_PEAK_NUMBER_FIELDS.forEach((fieldName) => {
+    const value = parseOptionalNumber(body, fieldName);
+    if (typeof value !== 'undefined') {
+      data[fieldName] = value;
+    }
+  });
 
   return data;
 }
@@ -214,7 +240,7 @@ function validateUpdatePeakBody(body) {
 
   const data = {};
 
-  [...REQUIRED_PEAK_STRING_FIELDS, 'zonaProtegida'].forEach((fieldName) => {
+  [...REQUIRED_PEAK_STRING_FIELDS, ...OPTIONAL_PEAK_STRING_FIELDS].forEach((fieldName) => {
     const value = parseOptionalString(body, fieldName);
     if (typeof value !== 'undefined') {
       data[fieldName] = value;
@@ -228,6 +254,13 @@ function validateUpdatePeakBody(body) {
     }
   });
 
+  OPTIONAL_PEAK_NUMBER_FIELDS.forEach((fieldName) => {
+    const value = parseOptionalNumber(body, fieldName);
+    if (typeof value !== 'undefined') {
+      data[fieldName] = value;
+    }
+  });
+
   if (!Object.keys(data).length) {
     throw createAppError(400, 'INVALID_BODY', 'No hi ha canvis per aplicar');
   }
@@ -235,10 +268,50 @@ function validateUpdatePeakBody(body) {
   return data;
 }
 
+function validatePeakPointsOfInterestBody(body) {
+  ensureObject(body);
+
+  if (!Array.isArray(body.points)) {
+    throw createAppError(400, 'INVALID_BODY', 'Cal enviar un array points');
+  }
+
+  if (body.points.length > 20) {
+    throw createAppError(400, 'INVALID_BODY', 'No es poden enviar mes de 20 punts d interes');
+  }
+
+  return body.points.map((point, index) => {
+    if (!point || typeof point !== 'object' || Array.isArray(point)) {
+      throw createAppError(400, 'INVALID_BODY', `El punt ${index + 1} ha de ser un objecte`);
+    }
+
+    const parsedPoint = {
+      tipus: parseRequiredString(point, 'tipus'),
+      nom: parseRequiredString(point, 'nom')
+    };
+
+    ['descripcio'].forEach((fieldName) => {
+      const value = parseOptionalString(point, fieldName);
+      if (typeof value !== 'undefined') {
+        parsedPoint[fieldName] = value;
+      }
+    });
+
+    ['lat', 'lon', 'altitud'].forEach((fieldName) => {
+      const value = parseOptionalNumber(point, fieldName);
+      if (typeof value !== 'undefined') {
+        parsedPoint[fieldName] = value;
+      }
+    });
+
+    return parsedPoint;
+  });
+}
+
 // Exporto validacions per reutilitzar-les al controller.
 module.exports = {
   validatePeaksQuery,
   validatePeakIdParam,
   validateCreatePeakBody,
-  validateUpdatePeakBody
+  validateUpdatePeakBody,
+  validatePeakPointsOfInterestBody
 };

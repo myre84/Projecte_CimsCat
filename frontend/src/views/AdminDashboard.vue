@@ -292,10 +292,17 @@ function openCreateModal() {
   isPeakModalOpen.value = true
 }
 
-function openEditModal(peak) {
+async function openEditModal(peak) {
   peakModalMode.value = 'edit'
   editingPeak.value = peak
   isPeakModalOpen.value = true
+
+  try {
+    const { data } = await api.get(`/peaks/${peak.id}`)
+    editingPeak.value = data.peak || peak
+  } catch (error) {
+    window.alert(getApiErrorMessage(error, 'No hem pogut carregar la fitxa completa del cim.'))
+  }
 }
 
 function closePeakModal() {
@@ -316,7 +323,7 @@ async function uploadPeakImage(file) {
   return data.file.url
 }
 
-async function handlePeakSubmit({ form, file }) {
+async function handlePeakSubmit({ form, file, pointsOfInterest }) {
   isSavingPeak.value = true
 
   try {
@@ -324,13 +331,21 @@ async function handlePeakSubmit({ form, file }) {
     const payload = {
       ...form,
       imatgeUrl: finalImageUrl,
-      zonaProtegida: form.zonaProtegida || undefined,
     }
 
+    let savedPeakId = editingPeak.value?.id
+
     if (peakModalMode.value === 'create') {
-      await api.post('/peaks', payload)
+      const { data } = await api.post('/peaks', payload)
+      savedPeakId = data.peak?.id
     } else {
       await api.put(`/peaks/${editingPeak.value.id}`, payload)
+    }
+
+    if (savedPeakId) {
+      await api.put(`/peaks/${savedPeakId}/points-of-interest`, {
+        points: pointsOfInterest || [],
+      })
     }
 
     closePeakModal()

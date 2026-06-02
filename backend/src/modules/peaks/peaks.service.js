@@ -8,6 +8,35 @@ const { createAppError } = require('../../common/utils/http-error');
 
 // Missatge reaprofitat quan no existeix el cim.
 const PEAK_NOT_FOUND_MESSAGE = "No s'ha trobat cap cim amb aquest id";
+const PEAK_TECHNICAL_SELECT = {
+  situacioAdministrativa: true,
+  accesPrincipal: true,
+  puntPartida: true,
+  rutaHabitual: true,
+  distanciaHabitualKm: true,
+  desnivellHabitualM: true,
+  tempsHabitual: true,
+  orientacio: true,
+  tipusTerreny: true,
+  puntClau: true,
+  grauExposicio: true
+};
+const PEAK_BASE_SELECT = {
+  id: true,
+  nom: true,
+  alcada: true,
+  comarca: true,
+  lat: true,
+  lon: true,
+  dificultat: true,
+  descripcio: true,
+  imatgeUrl: true,
+  massis: true,
+  zonaProtegida: true,
+  ...PEAK_TECHNICAL_SELECT,
+  createdAt: true,
+  updatedAt: true
+};
 
 // Helper per comprovar que el cim existeix abans de crear guardats.
 async function ensurePeakExists(cimId) {
@@ -191,6 +220,7 @@ async function getPeakDetailById(id) {
       imatgeUrl: true,
       massis: true,
       zonaProtegida: true,
+      ...PEAK_TECHNICAL_SELECT,
       createdAt: true,
       updatedAt: true,
       _count: {
@@ -303,6 +333,17 @@ async function getPeakDetailById(id) {
     imatgeUrl: peak.imatgeUrl,
     massis: peak.massis,
     zonaProtegida: peak.zonaProtegida,
+    situacioAdministrativa: peak.situacioAdministrativa,
+    accesPrincipal: peak.accesPrincipal,
+    puntPartida: peak.puntPartida,
+    rutaHabitual: peak.rutaHabitual,
+    distanciaHabitualKm: peak.distanciaHabitualKm,
+    desnivellHabitualM: peak.desnivellHabitualM,
+    tempsHabitual: peak.tempsHabitual,
+    orientacio: peak.orientacio,
+    tipusTerreny: peak.tipusTerreny,
+    puntClau: peak.puntClau,
+    grauExposicio: peak.grauExposicio,
     createdAt: peak.createdAt,
     updatedAt: peak.updatedAt,
     stats: {
@@ -445,23 +486,20 @@ async function createPeak(data) {
       descripcio: data.descripcio,
       imatgeUrl: data.imatgeUrl,
       massis: data.massis,
-      zonaProtegida: typeof data.zonaProtegida === 'undefined' ? null : data.zonaProtegida
+      zonaProtegida: typeof data.zonaProtegida === 'undefined' ? null : data.zonaProtegida,
+      situacioAdministrativa: data.situacioAdministrativa ?? null,
+      accesPrincipal: data.accesPrincipal ?? null,
+      puntPartida: data.puntPartida ?? null,
+      rutaHabitual: data.rutaHabitual ?? null,
+      distanciaHabitualKm: data.distanciaHabitualKm ?? null,
+      desnivellHabitualM: data.desnivellHabitualM ?? null,
+      tempsHabitual: data.tempsHabitual ?? null,
+      orientacio: data.orientacio ?? null,
+      tipusTerreny: data.tipusTerreny ?? null,
+      puntClau: data.puntClau ?? null,
+      grauExposicio: data.grauExposicio ?? null
     },
-    select: {
-      id: true,
-      nom: true,
-      alcada: true,
-      comarca: true,
-      lat: true,
-      lon: true,
-      dificultat: true,
-      descripcio: true,
-      imatgeUrl: true,
-      massis: true,
-      zonaProtegida: true,
-      createdAt: true,
-      updatedAt: true
-    }
+    select: PEAK_BASE_SELECT
   });
 
   return created;
@@ -473,21 +511,7 @@ async function updatePeakById(id, data) {
     const updated = await prisma.cim.update({
       where: { id },
       data,
-      select: {
-        id: true,
-        nom: true,
-        alcada: true,
-        comarca: true,
-        lat: true,
-        lon: true,
-        dificultat: true,
-        descripcio: true,
-        imatgeUrl: true,
-        massis: true,
-        zonaProtegida: true,
-        createdAt: true,
-        updatedAt: true
-      }
+      select: PEAK_BASE_SELECT
     });
 
     return updated;
@@ -498,6 +522,49 @@ async function updatePeakById(id, data) {
 
     throw error;
   }
+}
+
+async function replacePeakPointsOfInterest(id, points) {
+  await ensurePeakExists(id);
+
+  const operations = [
+    prisma.puntInteresCim.deleteMany({
+      where: { cimId: id }
+    })
+  ];
+
+  if (points.length) {
+    operations.push(
+      prisma.puntInteresCim.createMany({
+        data: points.map((point) => ({
+          cimId: id,
+          tipus: point.tipus,
+          nom: point.nom,
+          descripcio: point.descripcio ?? null,
+          lat: point.lat ?? null,
+          lon: point.lon ?? null,
+          altitud: point.altitud ?? null
+        }))
+      })
+    );
+  }
+
+  await prisma.$transaction(operations);
+
+  return prisma.puntInteresCim.findMany({
+    where: { cimId: id },
+    orderBy: [{ tipus: 'asc' }, { nom: 'asc' }],
+    select: {
+      id: true,
+      tipus: true,
+      nom: true,
+      descripcio: true,
+      lat: true,
+      lon: true,
+      altitud: true,
+      createdAt: true
+    }
+  });
 }
 
 // Servei de DELETE /peaks/:id.
@@ -525,5 +592,6 @@ module.exports = {
   savePeakForUser,
   unsavePeakForUser,
   getSavedPeakStatus,
+  replacePeakPointsOfInterest,
   deletePeakById
 };
