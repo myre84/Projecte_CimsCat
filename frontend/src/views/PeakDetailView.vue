@@ -96,7 +96,7 @@
                   <h3 class="publication-card__title">{{ publication.titol }}</h3>
                   <p class="publication-card__author">by {{ formatAuthor(publication.author) }}</p>
                   <button class="publication-card__button" type="button">
-                    Veure pàgina del cim
+                    Veure publicació
                   </button>
                 </div>
               </RouterLink>
@@ -142,6 +142,9 @@ const locationItems = computed(() => {
   const items = []
 
   if (peak.value.massis) items.push({ label: 'Massís', value: peak.value.massis })
+  if (peak.value.situacioAdministrativa) {
+    items.push({ label: 'Situació administrativa', value: peak.value.situacioAdministrativa })
+  }
   if (peak.value.lat && peak.value.lon) {
     items.push({
       label: 'Coordenades',
@@ -154,21 +157,24 @@ const locationItems = computed(() => {
 })
 
 const accessItems = computed(() => {
-  // Si hi ha una ruta vinculada al cim, la fem servir com a accés principal.
-  // Si no n'hi ha, la secció queda buida.
+  // Prioritzem les dades oficials del cim. Les rutes vinculades nomes serveixen de suport.
   if (!peak.value) return []
 
   const primaryRoute = peak.value.routes?.[0]
-  if (!primaryRoute) return []
-
   const items = []
 
-  items.push({ label: primaryRoute.nom, value: primaryRoute.tipusActivitat || 'Ruta principal' })
-  if (primaryRoute.distanciaKm) items.push({ label: 'Distància', value: formatDistance(primaryRoute.distanciaKm) })
-  if (primaryRoute.desnivellPosM || primaryRoute.desnivellPosM === 0) {
-    items.push({ label: 'Desnivell positiu', value: formatMeters(primaryRoute.desnivellPosM) })
+  if (peak.value.accesPrincipal) items.push({ label: 'Accés principal', value: peak.value.accesPrincipal })
+  if (peak.value.puntPartida) items.push({ label: 'Punt de partida', value: peak.value.puntPartida })
+  if (peak.value.rutaHabitual) items.push({ label: 'Ruta habitual', value: peak.value.rutaHabitual })
+  if (hasValue(peak.value.distanciaHabitualKm)) {
+    items.push({ label: 'Distància', value: formatDistance(peak.value.distanciaHabitualKm) })
   }
-  if (primaryRoute.tempsMin || primaryRoute.tempsMin === 0) {
+  if (hasValue(peak.value.desnivellHabitualM)) {
+    items.push({ label: 'Desnivell positiu', value: formatMeters(peak.value.desnivellHabitualM) })
+  }
+  if (peak.value.tempsHabitual) {
+    items.push({ label: 'Temps estimat', value: peak.value.tempsHabitual })
+  } else if (hasValue(primaryRoute?.tempsMin)) {
     items.push({ label: 'Temps estimat', value: formatTime(primaryRoute.tempsMin) })
   }
   if (peak.value.dificultat) items.push({ label: 'Dificultat tècnica', value: peak.value.dificultat })
@@ -181,26 +187,14 @@ const technicalItems = computed(() => {
   // No hi posem estadístiques internes com guardats, publicacions o rutes vinculades.
   if (!peak.value) return []
 
-  const primaryRoute = peak.value.routes?.[0]
   const items = [
     { label: 'Alçada', value: formatMeters(peak.value.alcada) },
   ]
 
-  if (peak.value.dificultat) items.push({ label: 'Dificultat', value: peak.value.dificultat })
-  if (primaryRoute?.distanciaKm) items.push({ label: 'Distància', value: formatDistance(primaryRoute.distanciaKm) })
-  if (primaryRoute?.desnivellPosM || primaryRoute?.desnivellPosM === 0) {
-    items.push({ label: 'Desnivell positiu', value: formatMeters(primaryRoute.desnivellPosM) })
-  }
-  if (primaryRoute?.tempsMin || primaryRoute?.tempsMin === 0) {
-    items.push({ label: 'Temps estimat', value: formatTime(primaryRoute.tempsMin) })
-  }
-  if (primaryRoute?.altitudMaxM || primaryRoute?.altitudMaxM === 0) {
-    items.push({ label: 'Altitud màxima', value: formatMeters(primaryRoute.altitudMaxM) })
-  }
-  if (primaryRoute?.altitudMinM || primaryRoute?.altitudMinM === 0) {
-    items.push({ label: 'Altitud mínima', value: formatMeters(primaryRoute.altitudMinM) })
-  }
-  if (primaryRoute?.ritme) items.push({ label: 'Ritme', value: primaryRoute.ritme })
+  if (peak.value.orientacio) items.push({ label: 'Orientació', value: peak.value.orientacio })
+  if (peak.value.tipusTerreny) items.push({ label: 'Tipus de terreny', value: peak.value.tipusTerreny })
+  if (peak.value.puntClau) items.push({ label: 'Punt clau', value: peak.value.puntClau })
+  if (peak.value.grauExposicio) items.push({ label: "Grau d'exposició", value: peak.value.grauExposicio })
 
   return items
 })
@@ -213,7 +207,7 @@ const refugeItems = computed(() => {
   if (!items.length) return []
 
   return items.map((item) => {
-    const label = item.tipus === 'refugi' ? 'Refugi' : "Punt d'interes"
+    const label = formatPointType(item.tipus)
     const parts = [item.nom]
 
     if (Number.isFinite(Number(item.altitud))) {
@@ -224,7 +218,7 @@ const refugeItems = computed(() => {
       parts.push(item.descripcio)
     }
 
-    if (Number.isFinite(item.lat) && Number.isFinite(item.lon)) {
+    if (Number.isFinite(Number(item.lat)) && Number.isFinite(Number(item.lon))) {
       parts.push(`${Number(item.lat).toFixed(4)}, ${Number(item.lon).toFixed(4)}`)
     }
 
@@ -263,11 +257,27 @@ async function fetchPeakDetail() {
 }
 
 function formatDistance(value) {
-  return `${value} km`
+  return `${Number(value).toLocaleString('ca-ES')} km`
 }
 
 function formatMeters(value) {
-  return `${value} m`
+  return `${Number(value).toLocaleString('ca-ES')} m`
+}
+
+function hasValue(value) {
+  return value !== null && typeof value !== 'undefined' && value !== ''
+}
+
+function formatPointType(type) {
+  const labels = {
+    refugi: 'Refugi',
+    estany: 'Estany',
+    coll: 'Coll',
+    punt_partida: 'Punt de partida',
+    punt_interes: "Punt d'interès",
+  }
+
+  return labels[type] || "Punt d'interès"
 }
 
 function formatTime(value) {

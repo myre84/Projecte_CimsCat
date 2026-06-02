@@ -8,7 +8,8 @@ const {
   validatePeaksQuery,
   validatePeakIdParam,
   validateCreatePeakBody,
-  validateUpdatePeakBody
+  validateUpdatePeakBody,
+  validatePeakPointsOfInterestBody
 } = require('./peaks.validators');
 
 // Importo serveis amb la logica de negoci real i les consultes Prisma.
@@ -21,6 +22,7 @@ const {
   savePeakForUser,
   unsavePeakForUser,
   getSavedPeakStatus,
+  replacePeakPointsOfInterest,
   deletePeakById
 } = require('./peaks.service');
 
@@ -109,6 +111,24 @@ async function updatePeakController(req, res) {
   }
 }
 
+// Controller de PUT /peaks/:id/points-of-interest.
+// Substitueix els punts d'interes del cim amb la llista enviada des del panell admin.
+async function replacePeakPointsOfInterestController(req, res) {
+  try {
+    const id = validatePeakIdParam(req.params);
+    const points = validatePeakPointsOfInterestBody(req.body);
+    const pointsOfInterest = await replacePeakPointsOfInterest(id, points);
+
+    return res.status(200).json({
+      ok: true,
+      message: "Punts d'interes del cim actualitzats correctament",
+      pointsOfInterest
+    });
+  } catch (error) {
+    return sendError(res, error);
+  }
+}
+
 // Controller de POST /peaks/:id/saved
 async function savePeak(req, res) {
   try {
@@ -185,9 +205,9 @@ module.exports = {
   getPeakById,
   createPeak: createPeakController,
   updatePeak: updatePeakController,
+  replacePeakPointsOfInterest: replacePeakPointsOfInterestController,
   savePeak,
   unsavePeak,
   getSavedPeak,
   deletePeak: deletePeakController
 };
-

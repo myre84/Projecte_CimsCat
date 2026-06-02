@@ -39,6 +39,10 @@ router.get('/:id/saved', requireAuth, peaksController.getSavedPeak);
 // Endpoint protegit admin only per actualitzar cims.
 router.put('/:id', requireAuth, requireAdmin, peaksController.updatePeak);
 
+// PUT /peaks/:id/points-of-interest
+// Endpoint protegit admin only per substituir refugis i punts d'interes del cim.
+router.put('/:id/points-of-interest', requireAuth, requireAdmin, peaksController.replacePeakPointsOfInterest);
+
 // DELETE /peaks/:id
 // Endpoint protegit admin only per eliminar cims.
 router.delete('/:id', requireAuth, requireAdmin, peaksController.deletePeak);

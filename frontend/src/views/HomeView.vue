@@ -66,7 +66,7 @@
           Columna esquerra: cards destacades.
           Fem un v-for per reutilitzar el component PeakCard per cada publicació.
         -->
-        <div ref="cardsContainer" class="featured-section__cards">
+        <div class="featured-section__cards">
           <p v-if="isLoadingPeaks" class="featured-section__status">
             Carregant cims destacats...
           </p>
@@ -88,7 +88,6 @@
             :publication="publication"
             class="featured-section__card"
             :class="{ 'featured-section__card--selected': selectedPeakId === publication.peakId }"
-            :ref="(el) => setPeakCardRef(publication.peakId, el)"
             @click="handleCardSelect(publication)"
           />
         </div>
@@ -153,8 +152,6 @@ const peaks = ref([])
 const isLoadingPeaks = ref(true)
 const peaksError = ref('')
 const selectedPeakId = ref(null)
-const cardsContainer = ref(null)
-const peakCardRefs = new Map()
 const markerByPeakId = new Map()
 
 function mapPeakToCard(peak) {
@@ -182,9 +179,17 @@ function mapPeakToCard(peak) {
 }
 
 const displayedPublications = computed(() => {
-  return [...peaks.value]
+  const sortedPeaks = [...peaks.value]
     .sort((a, b) => b.stats.savedCount - a.stats.savedCount)
     .map(mapPeakToCard)
+
+  if (!selectedPeakId.value) return sortedPeaks
+
+  const selectedIndex = sortedPeaks.findIndex((publication) => publication.peakId === selectedPeakId.value)
+  if (selectedIndex <= 0) return sortedPeaks
+
+  const [selectedPublication] = sortedPeaks.splice(selectedIndex, 1)
+  return [selectedPublication, ...sortedPeaks]
 })
 
 // Llista d'imatges del carrusel.
@@ -231,37 +236,6 @@ function getApiErrorMessage(error) {
   return message
 }
 
-function setPeakCardRef(peakId, el) {
-  if (!el) {
-    peakCardRefs.delete(peakId)
-    return
-  }
-
-  peakCardRefs.set(peakId, el.$el || el)
-}
-
-async function scrollToPeakCard(peakId) {
-  await nextTick()
-
-  const container = cardsContainer.value
-  const card = peakCardRefs.get(peakId)
-
-  if (!container || !card) return
-
-  const containerRect = container.getBoundingClientRect()
-  const cardRect = card.getBoundingClientRect()
-  const targetTop = container.scrollTop + cardRect.top - containerRect.top - 8
-
-  container.scrollTo({
-    top: Math.max(0, targetTop),
-    behavior: 'smooth',
-  })
-
-  setTimeout(() => {
-    container.scrollTop = Math.max(0, targetTop)
-  }, 180)
-}
-
 function updateMarkerIcons() {
   markerByPeakId.forEach((marker, peakId) => {
     marker.setIcon(peakId === selectedPeakId.value ? selectedPeakIcon : peakIcon)
@@ -271,10 +245,6 @@ function updateMarkerIcons() {
 function selectPeak(publication, options = {}) {
   selectedPeakId.value = publication.peakId
   updateMarkerIcons()
-
-  if (options.scrollCard) {
-    scrollToPeakCard(publication.peakId)
-  }
 
   const marker = markerByPeakId.get(publication.peakId)
   if (marker && options.openPopup) {
@@ -323,9 +293,7 @@ async function renderMarkers() {
       `)
 
     marker.on('click', () => {
-      selectPeak(publication, {
-        scrollCard: true,
-      })
+      selectPeak(publication)
     })
 
     markerLayer.addLayer(marker)

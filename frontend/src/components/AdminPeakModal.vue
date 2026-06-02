@@ -76,6 +76,85 @@
 
             <section class="admin-peak-modal__section">
               <div class="admin-peak-modal__section-heading">
+                <p>Accessos principals</p>
+                <small>Dades oficials que es mostren a la fitxa pública del cim.</small>
+              </div>
+
+              <div class="admin-peak-modal__grid">
+                <label class="admin-peak-modal__field">
+                  <span>Situació administrativa</span>
+                  <input v-model.trim="form.situacioAdministrativa" type="text" placeholder="Pallars Sobirà, límit amb França" />
+                </label>
+
+                <label class="admin-peak-modal__field">
+                  <span>Accés principal</span>
+                  <input v-model.trim="form.accesPrincipal" type="text" placeholder="Vall Ferrera" />
+                </label>
+
+                <label class="admin-peak-modal__field">
+                  <span>Punt de partida</span>
+                  <input v-model.trim="form.puntPartida" type="text" placeholder="Refugi de Vallferrera" />
+                </label>
+
+                <label class="admin-peak-modal__field">
+                  <span>Temps habitual</span>
+                  <input v-model.trim="form.tempsHabitual" type="text" placeholder="7 - 9 hores" />
+                </label>
+              </div>
+
+              <label class="admin-peak-modal__field admin-peak-modal__field--full">
+                <span>Ruta habitual</span>
+                <input
+                  v-model.trim="form.rutaHabitual"
+                  type="text"
+                  placeholder="Refugi de Vallferrera → Estany de Sotllo → Coll de Sotllo → Pica d'Estats"
+                />
+              </label>
+
+              <div class="admin-peak-modal__grid">
+                <label class="admin-peak-modal__field">
+                  <span>Distància habitual (km)</span>
+                  <input v-model.trim="form.distanciaHabitualKm" inputmode="decimal" type="text" placeholder="16" />
+                </label>
+
+                <label class="admin-peak-modal__field">
+                  <span>Desnivell habitual (m)</span>
+                  <input v-model.trim="form.desnivellHabitualM" inputmode="numeric" type="text" placeholder="1200" />
+                </label>
+              </div>
+            </section>
+
+            <section class="admin-peak-modal__section">
+              <div class="admin-peak-modal__section-heading">
+                <p>Característiques tècniques</p>
+                <small>Informació de muntanya que completa la fitxa del cim.</small>
+              </div>
+
+              <div class="admin-peak-modal__grid">
+                <label class="admin-peak-modal__field">
+                  <span>Orientació</span>
+                  <input v-model.trim="form.orientacio" type="text" placeholder="Sud / Nord" />
+                </label>
+
+                <label class="admin-peak-modal__field">
+                  <span>Tipus de terreny</span>
+                  <input v-model.trim="form.tipusTerreny" type="text" placeholder="Tarteres, blocs de granit i colls rocosos" />
+                </label>
+
+                <label class="admin-peak-modal__field">
+                  <span>Punt clau</span>
+                  <input v-model.trim="form.puntClau" type="text" placeholder="Coll de Sotllo" />
+                </label>
+
+                <label class="admin-peak-modal__field">
+                  <span>Grau d'exposició</span>
+                  <input v-model.trim="form.grauExposicio" type="text" placeholder="Mitjà" />
+                </label>
+              </div>
+            </section>
+
+            <section class="admin-peak-modal__section">
+              <div class="admin-peak-modal__section-heading">
                 <p>Descripció de la fitxa</p>
                 <small>Text públic del cim. Es pot deixar breu i professional.</small>
               </div>
@@ -88,6 +167,72 @@
                   placeholder="L'Aneto és el cim més alt dels Pirineus i una de les ascensions més emblemàtiques de l'alta muntanya pirinenca."
                 />
               </label>
+            </section>
+
+            <section class="admin-peak-modal__section">
+              <div class="admin-peak-modal__section-heading admin-peak-modal__section-heading--row">
+                <div>
+                  <p>Refugis i punts d'interès</p>
+                  <small>Es guardaran a la base de dades i es mostraran a la fitxa pública.</small>
+                </div>
+                <button type="button" class="admin-peak-modal__button" @click="addPoint">
+                  Afegir punt
+                </button>
+              </div>
+
+              <div v-if="form.pointsOfInterest.length" class="admin-peak-modal__points">
+                <div
+                  v-for="(point, index) in form.pointsOfInterest"
+                  :key="point.localId"
+                  class="admin-peak-modal__point"
+                >
+                  <div class="admin-peak-modal__grid admin-peak-modal__grid--three">
+                    <label class="admin-peak-modal__field">
+                      <span>Tipus</span>
+                      <select v-model="point.tipus">
+                        <option value="refugi">Refugi</option>
+                        <option value="estany">Estany</option>
+                        <option value="coll">Coll</option>
+                        <option value="punt_partida">Punt de partida</option>
+                        <option value="punt_interes">Punt d'interès</option>
+                      </select>
+                    </label>
+
+                    <label class="admin-peak-modal__field">
+                      <span>Nom</span>
+                      <input v-model.trim="point.nom" type="text" placeholder="Refugi de Vallferrera" />
+                    </label>
+
+                    <label class="admin-peak-modal__field">
+                      <span>Altitud</span>
+                      <input v-model.trim="point.altitud" inputmode="numeric" type="text" placeholder="1940" />
+                    </label>
+                  </div>
+
+                  <label class="admin-peak-modal__field admin-peak-modal__field--full">
+                    <span>Descripció</span>
+                    <input v-model.trim="point.descripcio" type="text" placeholder="Punt de sortida principal" />
+                  </label>
+
+                  <div class="admin-peak-modal__grid admin-peak-modal__grid--three">
+                    <label class="admin-peak-modal__field">
+                      <span>Latitud</span>
+                      <input v-model.trim="point.lat" inputmode="decimal" type="text" placeholder="Opcional" />
+                    </label>
+
+                    <label class="admin-peak-modal__field">
+                      <span>Longitud</span>
+                      <input v-model.trim="point.lon" inputmode="decimal" type="text" placeholder="Opcional" />
+                    </label>
+
+                    <button type="button" class="admin-peak-modal__button admin-peak-modal__button--danger" @click="removePoint(index)">
+                      Eliminar punt
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              <p v-else class="admin-peak-modal__empty">Encara no hi ha punts d'interès per aquest cim.</p>
             </section>
           </div>
 
@@ -166,6 +311,18 @@ const form = reactive({
   descripcio: '',
   imatgeUrl: '',
   zonaProtegida: '',
+  situacioAdministrativa: '',
+  accesPrincipal: '',
+  puntPartida: '',
+  rutaHabitual: '',
+  distanciaHabitualKm: '',
+  desnivellHabitualM: '',
+  tempsHabitual: '',
+  orientacio: '',
+  tipusTerreny: '',
+  puntClau: '',
+  grauExposicio: '',
+  pointsOfInterest: [],
 })
 
 const previewImage = computed(() => {
@@ -187,6 +344,18 @@ function fillForm(peak) {
   form.descripcio = peak?.descripcio || ''
   form.imatgeUrl = peak?.imatgeUrl || ''
   form.zonaProtegida = peak?.zonaProtegida || ''
+  form.situacioAdministrativa = peak?.situacioAdministrativa || ''
+  form.accesPrincipal = peak?.accesPrincipal || ''
+  form.puntPartida = peak?.puntPartida || ''
+  form.rutaHabitual = peak?.rutaHabitual || ''
+  form.distanciaHabitualKm = peak?.distanciaHabitualKm ?? ''
+  form.desnivellHabitualM = peak?.desnivellHabitualM ?? ''
+  form.tempsHabitual = peak?.tempsHabitual || ''
+  form.orientacio = peak?.orientacio || ''
+  form.tipusTerreny = peak?.tipusTerreny || ''
+  form.puntClau = peak?.puntClau || ''
+  form.grauExposicio = peak?.grauExposicio || ''
+  form.pointsOfInterest = normalizePoints(peak?.pointsOfInterest || [])
   selectedFile.value = null
   errorMessage.value = ''
 }
@@ -225,6 +394,32 @@ function validateForm() {
     return false
   }
 
+  const optionalNumbers = [
+    ['distanciaHabitualKm', form.distanciaHabitualKm],
+    ['desnivellHabitualM', form.desnivellHabitualM],
+  ]
+
+  const invalidOptionalNumber = optionalNumbers.find(([, value]) => {
+    if (String(value ?? '').trim() === '') return false
+    return !Number.isFinite(parseLocaleNumber(value))
+  })
+
+  if (invalidOptionalNumber) {
+    errorMessage.value = `El camp ${invalidOptionalNumber[0]} ha de ser numeric.`
+    return false
+  }
+
+  const invalidPoint = form.pointsOfInterest.find((point) => {
+    if (!point.tipus || !point.nom.trim()) return true
+    const numericFields = [point.altitud, point.lat, point.lon]
+    return numericFields.some((value) => String(value ?? '').trim() !== '' && !Number.isFinite(parseLocaleNumber(value)))
+  })
+
+  if (invalidPoint) {
+    errorMessage.value = "Revisa els punts d'interès: tipus, nom i camps numèrics."
+    return false
+  }
+
   return true
 }
 
@@ -237,6 +432,43 @@ function parseLocaleNumber(value) {
 function handleFileChange(event) {
   selectedFile.value = event.target.files?.[0] || null
   errorMessage.value = ''
+}
+
+function normalizePoints(points) {
+  return points.map((point, index) => ({
+    localId: point.id || `point-${Date.now()}-${index}`,
+    tipus: point.tipus || 'punt_interes',
+    nom: point.nom || '',
+    descripcio: point.descripcio || '',
+    lat: point.lat ?? '',
+    lon: point.lon ?? '',
+    altitud: point.altitud ?? '',
+  }))
+}
+
+function addPoint() {
+  form.pointsOfInterest.push({
+    localId: `point-${Date.now()}-${form.pointsOfInterest.length}`,
+    tipus: 'punt_interes',
+    nom: '',
+    descripcio: '',
+    lat: '',
+    lon: '',
+    altitud: '',
+  })
+}
+
+function removePoint(index) {
+  form.pointsOfInterest.splice(index, 1)
+}
+
+function optionalText(value) {
+  return String(value || '').trim() || null
+}
+
+function optionalNumber(value) {
+  if (String(value ?? '').trim() === '') return null
+  return parseLocaleNumber(value)
 }
 
 function handleSubmit() {
@@ -253,9 +485,28 @@ function handleSubmit() {
       lon: parseLocaleNumber(form.lon),
       descripcio: form.descripcio.trim(),
       imatgeUrl: form.imatgeUrl.trim(),
-      zonaProtegida: form.zonaProtegida.trim(),
+      zonaProtegida: optionalText(form.zonaProtegida),
+      situacioAdministrativa: optionalText(form.situacioAdministrativa),
+      accesPrincipal: optionalText(form.accesPrincipal),
+      puntPartida: optionalText(form.puntPartida),
+      rutaHabitual: optionalText(form.rutaHabitual),
+      distanciaHabitualKm: optionalNumber(form.distanciaHabitualKm),
+      desnivellHabitualM: optionalNumber(form.desnivellHabitualM),
+      tempsHabitual: optionalText(form.tempsHabitual),
+      orientacio: optionalText(form.orientacio),
+      tipusTerreny: optionalText(form.tipusTerreny),
+      puntClau: optionalText(form.puntClau),
+      grauExposicio: optionalText(form.grauExposicio),
     },
     file: selectedFile.value,
+    pointsOfInterest: form.pointsOfInterest.map((point) => ({
+      tipus: point.tipus,
+      nom: point.nom.trim(),
+      descripcio: optionalText(point.descripcio),
+      lat: optionalNumber(point.lat),
+      lon: optionalNumber(point.lon),
+      altitud: optionalNumber(point.altitud),
+    })),
   })
 }
 
@@ -350,6 +601,13 @@ watch(
   margin-bottom: 0.85rem;
 }
 
+.admin-peak-modal__section-heading--row {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  align-items: flex-start;
+}
+
 .admin-peak-modal__section-heading p,
 .admin-peak-modal__media-copy p {
   margin: 0;
@@ -386,7 +644,8 @@ watch(
 }
 
 .admin-peak-modal__field input,
-.admin-peak-modal__field textarea {
+.admin-peak-modal__field textarea,
+.admin-peak-modal__field select {
   width: 100%;
   border: 1px solid var(--color-border);
   border-radius: 12px;
@@ -443,6 +702,25 @@ watch(
   color: #9a3e34;
 }
 
+.admin-peak-modal__points {
+  display: grid;
+  gap: 0.9rem;
+}
+
+.admin-peak-modal__point {
+  display: grid;
+  gap: 0.8rem;
+  border: 1px solid #e0dfd9;
+  border-radius: 12px;
+  padding: 0.85rem;
+  background: #fbfaf7;
+}
+
+.admin-peak-modal__empty {
+  margin: 0;
+  color: var(--color-text-soft);
+}
+
 .admin-peak-modal__footer {
   justify-content: flex-end;
 }
@@ -460,6 +738,11 @@ watch(
   background: var(--color-button-primary);
   color: var(--color-button-primary-text);
   border-color: var(--color-button-primary);
+}
+
+.admin-peak-modal__button--danger {
+  border-color: #c9a19a;
+  color: #8b372d;
 }
 
 @media (max-width: 900px) {
