@@ -98,10 +98,10 @@ async function evaluateAndAssignBadges(userId) {
 
   if (!toCreate.length) return { created: 0 };
 
-  // Create candidates in transaction but ignore duplicates if any race
-  await prisma.$transaction(
-    toCreate.map((data) => prisma.userBadge.create({ data }).catch(() => null))
-  );
+  await prisma.userBadge.createMany({
+    data: toCreate,
+    skipDuplicates: true
+  });
 
   return { created: toCreate.length };
 }
