@@ -434,10 +434,10 @@ onBeforeUnmount(() => {
 }
 
 .hero__intro {
-  max-width: 620px;
+  max-width: 1000px;
   margin: 0.7rem auto 0;
   color: var(--color-text-soft);
-  font-size: 1.08rem;
+  font-size: 1.55rem;
   line-height: 1.5;
 }
 
